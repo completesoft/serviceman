@@ -9,30 +9,23 @@
     <meta name="author" content="">
     <title>ServiceMan</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/signin.css" rel="stylesheet">
 </head>
 <body>
+<!-- header -->
 
-<form role="form" class="form-horizontal" style="margin-top: 3em;">
+<div class="container">
 
-    <div class="form-group">
-        <div class="col-sm-offset-5 col-sm-2 col-sm-offset-5">
-             <input type="text" class="form-control" id="mail" placeholder="Имя">
-        </div>
-     </div>
+<form role="form" class="form-signin" action="order_list.html">
+  <input type="text" class="form-control" id="name" placeholder="Имя" required autofocus>
+  <input type="password" class="form-control" id="pass" placeholder="Пароль" required>
 
-    <div class="form-group">
-        <div class="col-sm-offset-5 col-sm-2 col-sm-offset-5">
-            <input type="password" class="form-control" id="pass" placeholder="Пароль">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <div class="col-sm-offset-5 col-sm-2 col-sm-offset-5">
-            <button type="submit" class="btn btn-success center-block">Вход</button>
-        </div>
-    </div>
-
+  <button type="submit" class="btn btn-success btn-lg btn-block">Вход</button>
 </form>
 
+</div>
+
+
+<!-- footer -->
 </body>
 </html>

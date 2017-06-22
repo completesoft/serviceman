@@ -1,0 +1,21 @@
+.red {
+  color: darkred;
+}
+
+.green {
+  color: green;
+}
+
+.blue {
+  color: blue;
+}
+
+.yellow {
+  color: yellow;
+}
+
+.brown {
+  color: brown;
+}
+
+body { padding-top: 70px; }
