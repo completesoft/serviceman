@@ -1,0 +1,120 @@
+{% extends "repair/base.html" %}
+
+{% block table_main %}
+    <!--<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">  -->
+    <div class="row">
+        <div class="col-sm-2 col-md-2">
+            <div class="panel panel-info">
+            <div class="panel-heading">Штрихкод заказа:</div>
+            <div class="panel-body">{{ order.order_barcode }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">Данные заказа</h3>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-3 col-md-4">
+                    <p>Дата оформления:</p>
+                    <p>{{ order.order_datetime }}</p>
+                </div>
+                <div class="col-sm-3 col-md-4">
+                    <p>Кем оформлен:</p>
+                    <p>{{ order.user }}</p>
+
+                </div>
+                <div class="col-sm-3 col-md-4">
+                    <p>Текущий статус</p>
+                    <p>
+                    {% with order.last_action as last_act %}
+                        {% if last_act == "Новый" %}
+                          <span class="label label-default">{{ last_act }}</span>
+                        {% elif last_act == "В работе" %}
+                          <span class="label label-primary">{{ last_act }}</span>
+                        {% elif last_act == "Ожидание" %}
+                          <span class="label label-warning">{{ last_act }}</span>
+                        {% elif last_act == "Выполнен" %}
+                          <span class="label label-success">{{ last_act }}</span>
+                        {% elif last_act == "Просрочен" %}
+                          <span class="label label-danger">{{ last_act }}</span>
+                        {% else %}
+                          <span class="label label-danger">НЕТ СТАТУСА</span>
+                        {% endif %}
+                    {% endwith %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3 col-md-4">
+            <p>Зказчик:</p>
+            <p>{{ order.client }}</p>
+        </div>
+        <div class="col-sm-7 col-md-6">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Контакты заказчика</h3>
+              </div>
+              <div class="panel-body">
+                {{ order.client }}
+              </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3 col-md-4">
+            <p>Наименование устройства:</p>
+            <p>{{ order.device_name }}</p>
+        </div>
+        <div class="col-sm-3 col-md-4">
+            <p>Серийный номер:</p>
+            <p>{{ order.device_serial }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-8">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Неисправности</h3>
+              </div>
+              <div class="panel-body">
+                {{ order.device_defect }}
+              </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-8">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Комментарий</h3>
+              </div>
+              <div class="panel-body">
+                {{ order.order_comment }}
+              </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <a href="{% url 'repair:order_change' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить заказ</a>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-8">
+            <div class="list-group">
+                {% for act in order_action %}
+                    <h4 class="list-group-item-heading">Статус: {{ act.status }}</h4>
+                    <p class="list-group-item-text">
+                        Дата: {{ act.action_datetime|date:"d.m.Y" }} <br>
+                        Установил статус: {{ act.user }} <br>
+                        Комментарий статуса: {{ act.action_comment }}
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+

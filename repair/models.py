@@ -17,8 +17,6 @@ class Clients(models.Model):
         return '{}'.format(self.client_name)
 
 class DocOrderHeader (models.Model):
-
-    user = models.ForeignKey(User, null=False, blank=True)
     order_barcode = models.IntegerField("Штрихкод", null=False, blank=False)
     order_datetime = models.DateTimeField("Дата", auto_now_add=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
@@ -34,14 +32,23 @@ class DocOrderHeader (models.Model):
         verbose_name_plural = "Заказы"
 
     def __str__(self):
-        return "{} и самое интересное {}".format(self.order_datetime, self.client_id)
+        return "{} ИД заказа {}".format(self.order_datetime, self.id)
 
     def last_action(self):
         acts = self.docorderaction_set.all().latest()
-        return acts.status.status_name
+        return acts
+        # return acts.status.status_name
 
 
 class DirStatus (models.Model):
+
+    # status_set = (
+    #     ('Новый', 'Новый'),
+    #     ('В работе', 'В работе'),
+    #     ('Ожидение', 'Ожидение'),
+    #     ('Выполнен', 'Выполнен'),
+    #     ('Просрочен', 'Просрочен')
+    # )
 
     status_name = models.CharField("Состояние", max_length=100, null=False, blank=False)
 
@@ -58,7 +65,8 @@ class DocOrderAction(models.Model):
 
     doc_order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE, null=True, blank=False)
     action_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False)
+    manager_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False)
+    executor_user = models.ForeignKey(User, related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
     status = models.ForeignKey(DirStatus, on_delete=models.SET_NULL, null=True)
     action_comment = models.TextField("Комментарий операции", max_length=100, null=True, blank=True)
 

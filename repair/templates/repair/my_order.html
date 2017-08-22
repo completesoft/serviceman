@@ -1,154 +1,93 @@
-<!DOCTYPE html>
-<html lang="ru-RU">
-  <head>
-    {% load staticfiles %}
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="{% static 'repair/img/cs_logo.png' %}">
+{% extends "repair/base.html" %}
 
-    <title>ServiceMan</title>
+{% block sidebar_navigation %}
+  <h4 class="list-group-item-heading">Навигация:</h4>
+  <ul class="nav nav-sidebar">
+    <li><a href="#"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
+    <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
+  </ul>
+{% endblock %}
 
-    <!-- Bootstrap core CSS -->
-    <link href="{% static 'repair/css/bootstrap.min.css' %}" rel="stylesheet">
+{% block sidebar_thesaurus %}
+  <h4 class="list-group-item-heading">Справочники:</h4>
+  <ul class="nav nav-sidebar">
+    <li><a href=""><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
+    <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
+  </ul>
+{% endblock %}
 
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <link href="{% static 'repair/css/ie10-viewport-bug-workaround.css' %}" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="{% static 'repair/css/dashboard.css' %}" rel="stylesheet">
-
-    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
-    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-    <script src="js/ie-emulation-modes-warning.js"></script>
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
-
-  <body>
-
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#"><img style="	width: 28px;" src="{% static 'repair/img/cs_logo.png' %}" alt="Dispute Bills"></a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li><a href="#"></span>ServiceMan</a></li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#"><span class="glyphicon glyphicon-cog"></span> Настройки</a></li>
-            <li><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-in"></span> Выход</a></li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
-          <ul class="nav nav-sidebar">
-            <li class="active"><a href="#">Обзор <span class="sr-only">(current)</span></a></li>
-            <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-briefcase"></span> Добавить заказ</a></li>
-            <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-            <li><a href=""><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
-            <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
-          </ul>
-        </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-
-          <h2 class="sub-header">Текущие ремонты</h2>
-
-          <div class="progress">
-            <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
-            aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
-              40% Завершено
-            </div>
-          </div>
+{% block sidebar_action %}
+  <h4 class="list-group-item-heading">Действуем:</h4>
+  <ul class="nav nav-sidebar">
+    <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Добавить заказ</a></li>
+    <li><a href=""><span class="glyphicon glyphicon-tint"></span> Слить БД конкурентам</a></li>
+  </ul>
+{% endblock %}
 
 
-          <div class="table-responsive">
 
+{% block sub_header_progress_bar %}
+  <h2 class="sub-header">Мои ремонты</h2>
 
-            <table class="table table-hover table-striped">
-              <thead>
-                <th><span class="glyphicon glyphicon-barcode"></span></th>
-                <th>Дата приемки</th>
-                <th>Статус</th>
-                <th>Клиент</th>
-                <th>Устройство</th>
-                <th>Серийный номер</th>
-                <th class="hidden-xs">Заявленная неисправность</th>
-                <th>Мастер</th>
-                <th>Действия</th>
-              </thead>
-
-
-              {% for order in orders %}
-              <tr>
-                <td>{{ order.id }}</td>
-                <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-                  {% with order.last_action as last_act %}
-                    {% if last_act == "Новый" %}
-                      <td><span class="label label-default">{{ last_act }}</span></td>
-                    {% elif last_act == "В работе" %}
-                      <td><span class="label label-primary">{{ last_act }}</span></td>
-                    {% elif last_act == "Ожидание" %}
-                      <td><span class="label label-warning">{{ last_act }}</span></td>
-                    {% elif last_act == "Выполнен" %}
-                      <td><span class="label label-success">{{ last_act }}</span></td>
-                    {% elif last_act == "Просрочен" %}
-                      <td><span class="label label-danger">{{ last_act }}</span></td>
-                    {% else %}
-                      <td><span class="label label-danger">НЕТ СТАТУСА</span></td>
-                    {% endif %}
-                  {% endwith %}
-                <td>{{ order.client.client_name }}</td>
-                <td>{{ order.device_name }}</td>
-                <td>{{ order.device_serial }}</td>
-                <td class="hidden-xs">{{ order.device_defect }}</td>
-                {% if order.user.last_name %}
-                <td>{{ order.user.last_name }} {{ order.user.first_name }}</td>
-                {% else %}
-                <td>{{ order.user.username }}</td>
-                {% endif %}
-                <td>
-                  <a href="#"><span class="glyphicon glyphicon-play green"></span></a>
-                  <a href="#"><span class="glyphicon glyphicon-pause brown"></span></a>
-                  <a href="#"><span class="glyphicon glyphicon-stop red"></span></a>
-                </td>
-              </tr>
-              {% endfor %}
-            </table>
-          </div>
-        </div>
-      </div>
+  <div class="progress">
+    <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+    aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
+      40% Завершено
     </div>
+  </div>
+{% endblock %}
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
-    <script src="{% static 'repair/js/bootstrap.min.js' %}"></script>
-    <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
-    <script src="../../assets/js/vendor/holder.min.js"></script>
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
-  </body>
-</html>
+
+{% block table_main %}
+  <div class="table-responsive">
+    <table class="table table-hover table-striped">
+      <thead>
+        <th><span class="glyphicon glyphicon-barcode"></span></th>
+        <th>Дата приемки</th>
+        <th>Статус</th>
+        <th>Клиент</th>
+        <th>Устройство</th>
+        <th>Серийный номер</th>
+        <th class="hidden-xs">Заявленная неисправность</th>
+        <th>Мастер</th>
+        <th>Действия</th>
+      </thead>
+
+      {% for order in orders %}
+      <tr>
+        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.id }}</a></td>
+        <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
+          {% with order.last_action as last_act %}
+            {% if last_act == "Новый" %}
+              <td><span class="label label-default">{{ last_act }}</span></td>
+            {% elif last_act == "В работе" %}
+              <td><span class="label label-primary">{{ last_act }}</span></td>
+            {% elif last_act == "Ожидание" %}
+              <td><span class="label label-warning">{{ last_act }}</span></td>
+            {% elif last_act == "Выполнен" %}
+              <td><span class="label label-success">{{ last_act }}</span></td>
+            {% elif last_act == "Просрочен" %}
+              <td><span class="label label-danger">{{ last_act }}</span></td>
+            {% else %}
+              <td><span class="label label-danger">НЕТ СТАТУСА</span></td>
+            {% endif %}
+          {% endwith %}
+        <td>{{ order.client.client_name }}</td>
+        <td>{{ order.device_name }}</td>
+        <td>{{ order.device_serial }}</td>
+        <td class="hidden-xs">{{ order.device_defect }}</td>
+        {% if order.user.last_name %}
+        <td>{{ order.user.last_name }} {{ order.user.first_name }}</td>
+        {% else %}
+        <td>{{ order.user.username }}</td>
+        {% endif %}
+        <td>
+          <a href="#"><span class="glyphicon glyphicon-play green"></span></a>
+          <a href="#"><span class="glyphicon glyphicon-pause brown"></span></a>
+          <a href="#"><span class="glyphicon glyphicon-stop red"></span></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endblock %}

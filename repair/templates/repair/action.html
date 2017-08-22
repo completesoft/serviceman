@@ -26,23 +26,31 @@
 
 
 {% block sub_header_progress_bar %}
-  <h2 class="sub-header">Добавляем новый заказ</h2>
+  <h2 class="sub-header">Мои ремонты</h2>
 {% endblock %}
 
 
+
+
 {% block table_main %}
-<div class="table-responsive">
-  <form class="form-horizontal" action="" method="post" autocomplete="off">
+
+<form action="{% url 'repair:order_change' order_id=order_id %}" method="post" autocomplete="off">
     {% csrf_token %}
-    {% for field in form %}
-      <div class="form-group">
-      <label class="col-xs-2 control-label">{{ field.label }}:</label>
-      <div class="col-xs-8">
-        {{ field }}
-      </div>
-    </div>
+    {{ action_form.as_p }}
+    {{spare_formset.management_form }}
+    {{service_formset.management_form }}
+    {% for form in spare_formset %}
+        {{ form.as_p }}
     {% endfor %}
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-  </form>
-</div>
+    {% for form in service_formset %}
+        {{ form.as_p }}
+    {% endfor %}
+
+
+
+
+    <input type="submit" class="btn btn-info" id="sub_button" value="Отправить"/>
+</form>
+
+
 {% endblock %}

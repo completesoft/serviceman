@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'serviseman.urls'
+ROOT_URLCONF = 'serviceman.urls'
 
 TEMPLATES = [
     {
@@ -68,7 +68,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'serviseman.wsgi.application'
+WSGI_APPLICATION = 'serviceman.wsgi.application'
 
 
 # Database
