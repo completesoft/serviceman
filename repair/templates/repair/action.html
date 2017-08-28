@@ -1,4 +1,5 @@
 {% extends "repair/base.html" %}
+{% load staticfiles %}
 
 {% block sidebar_navigation %}
   <h4 class="list-group-item-heading">Навигация:</h4>
@@ -26,27 +27,95 @@
 
 
 {% block sub_header_progress_bar %}
-  <h2 class="sub-header">Мои ремонты</h2>
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Текущие данные заказа</h3>
+        </div>
+        <div class="panel-body">
+            <div class="col-sm-3 col-md-3">
+                Штрихкод: {{ order.order_barcode }}
+            </div>
+            <div class="col-sm-3 col-md-3">
+                Последнее изменение: {{ order.last_action.action_datetime|date:"d.m.Y" }}
+            </div>
+            <div class="col-sm-3 col-md-3">
+                {% with order.last_status as last_act %}
+                Текущий статус:
+                    {% if last_act == "Новый" %}
+                      <span class="label label-default">{{ last_act }}</span>
+                    {% elif last_act == "В работе" %}
+                      <span class="label label-primary">{{ last_act }}</span>
+                    {% elif last_act == "Ожидание" %}
+                      <span class="label label-warning">{{ last_act }}</span>
+                    {% elif last_act == "Выполнен" %}
+                      <span class="label label-success">{{ last_act }}</span>
+                    {% elif last_act == "Просрочен" %}
+                      <span class="label label-danger">{{ last_act }}</span>
+                    {% else %}
+                      <span class="label label-danger">НЕТ СТАТУСА</span>
+                    {% endif %}
+                  {% endwith %}
+            </div>
+            <div class="col-sm-3 col-md-3">
+                Текущий исполнитель: {{ order.last_action.executor_user.get_full_name }}
+            </div>
+        </div>
+    </div>
+  <h2 class="sub-header">Новые действия по заказу:</h2>
 {% endblock %}
 
 
 
 
 {% block table_main %}
-
-<form action="{% url 'repair:order_change' order_id=order_id %}" method="post" autocomplete="off">
+{% load bootstrap3 %}
+<form action="{% url 'repair:order_change' order_id=order.id %}" method="post" autocomplete="off">
     {% csrf_token %}
     {{ action_form.as_p }}
     {{spare_formset.management_form }}
     {{service_formset.management_form }}
-    {% for form in spare_formset %}
-        {{ form.as_p }}
-    {% endfor %}
-    {% for form in service_formset %}
-        {{ form.as_p }}
-    {% endfor %}
-
-
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Использованные запчасти</h4></div>
+        <div class="panel-body">
+            <div id="spare_div">
+                {% for form in spare_formset %}
+                    {% if forloop.first %}
+                    <fieldset id="spare_block">
+                        {{ form.as_p }}
+                        <hr />
+                    </fieldset>
+                    {% else %}
+                    <div class="form-group has-success">
+                        {{ form.as_p }}
+                    </div>
+                        <hr />
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <input id="add_spare" type="button" class="btn btn-info" value="Добавить запчастей" />
+        </div>
+    </div>
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4>Выполненные работы</h4></div>
+        <div class="panel-body">
+            <div id="service_div">
+                {% for form in service_formset %}
+                    {% if forloop.first %}
+                    <fieldset id="service_block">
+                        {{ form.as_p }}
+                        <hr />
+                    </fieldset>
+                    {% else %}
+                    <div class="form-group has-success">
+                        {{ form.as_p }}
+                    </div>
+                        <hr />
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <input id="add_service" type="button" class="btn btn-info" value="Добавить работ" />
+        </div>
+    </div>
 
 
     <input type="submit" class="btn btn-info" id="sub_button" value="Отправить"/>

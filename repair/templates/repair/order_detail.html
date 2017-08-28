@@ -1,12 +1,18 @@
 {% extends "repair/base.html" %}
-
+{% load staticfiles %}
 {% block table_main %}
     <!--<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">  -->
     <div class="row">
-        <div class="col-sm-2 col-md-2">
+        <div class="col-sm-3 col-md-4">
             <div class="panel panel-info">
-            <div class="panel-heading">Штрихкод заказа:</div>
-            <div class="panel-body">{{ order.order_barcode }}</div>
+                <div class="panel-heading">
+                    <h3 class="panel-title">Штрихкод заказа</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="col-sm-3 col-md-4">
+                        {{ order.order_barcode }}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -28,7 +34,7 @@
                 <div class="col-sm-3 col-md-4">
                     <p>Текущий статус</p>
                     <p>
-                    {% with order.last_action as last_act %}
+                    {% with order.last_status as last_act %}
                         {% if last_act == "Новый" %}
                           <span class="label label-default">{{ last_act }}</span>
                         {% elif last_act == "В работе" %}
@@ -48,6 +54,7 @@
             </div>
         </div>
     </div>
+    {% if not outsource %}
     <div class="row">
         <div class="col-sm-3 col-md-4">
             <p>Зказчик:</p>
@@ -64,6 +71,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     <div class="row">
         <div class="col-sm-3 col-md-4">
             <p>Наименование устройства:</p>
@@ -108,7 +116,7 @@
                     <h4 class="list-group-item-heading">Статус: {{ act.status }}</h4>
                     <p class="list-group-item-text">
                         Дата: {{ act.action_datetime|date:"d.m.Y" }} <br>
-                        Установил статус: {{ act.user }} <br>
+                        Установил статус: {{ act.manager_user }} <br>
                         Комментарий статуса: {{ act.action_comment }}
                     </p>
                 {% endfor %}

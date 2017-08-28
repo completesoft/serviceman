@@ -1,10 +1,13 @@
 {% extends "repair/base.html" %}
+{% load staticfiles %}
 
 {% block sidebar_navigation %}
   <h4 class="list-group-item-heading">Навигация:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href="#"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
+    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
+    {% if not outsource %}
     <li><a href="{% url 'repair:my_order' %}"><span class="glyphicon glyphicon-briefcase"></span> Мои ремонты</a></li>
+    {% endif %}
     <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
   </ul>
 {% endblock %}
@@ -46,9 +49,13 @@
 
       {% for order in orders %}
       <tr>
+        {% if outsource %}
+        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.id }}</a></td>
+        {% else %}
         <td>{{ order.id }}</td>
+        {% endif %}
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-          {% with order.last_action.status.status_name as last_act %}
+          {% with order.last_status as last_act %}
             {% if last_act == "Новый" %}
               <td><span class="label label-default">{{ last_act }}</span></td>
             {% elif last_act == "В работе" %}
@@ -63,15 +70,15 @@
               <td><span class="label label-danger">НЕТ СТАТУСА</span></td>
             {% endif %}
           {% endwith %}
-        <td>{{ order.client.client_name }}</td>
+          {%if not outsource %}
+            <td>{{ order.client.client_name }}</td>
+          {% else %}
+            <td> пусто </td>
+          {% endif %}
         <td>{{ order.device_name }}</td>
         <td>{{ order.device_serial }}</td>
         <td class="hidden-xs">{{ order.device_defect }}</td>
-        {% if order.user.last_name %}
-        <td>{{ order.user.last_name }} {{ order.user.first_name }}</td>
-        {% else %}
-        <td>{{ order.user.username }}</td>
-        {% endif %}
+        <td>{{ order.last_action.executor_user.get_full_name }}</td>
         <td>
           <a href="#"><span class="glyphicon glyphicon-play green"></span></a>
           <a href="#"><span class="glyphicon glyphicon-pause brown"></span></a>
