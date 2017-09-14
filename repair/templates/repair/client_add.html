@@ -11,7 +11,7 @@
 {% block sidebar_thesaurus %}
   <h4 class="list-group-item-heading">Справочники:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href=""><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
+    <li><a href="{% url 'repair:clients' %}"><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
     <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
   </ul>
 {% endblock %}
@@ -19,13 +19,13 @@
 {% block sidebar_action %}
   <h4 class="list-group-item-heading">Действуем:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Добавить заказ</a></li>
+
   </ul>
 {% endblock %}
 
 
 {% block sub_header_progress_bar %}
-  <h2 class="sub-header">Добавляем новый заказ</h2>
+  <h2 class="sub-header">Регистрируем нового клиента</h2>
 {% endblock %}
 
 
@@ -37,14 +37,14 @@
       <div class="form-group">
       <label class="col-xs-2 control-label">{{ field.label }}:</label>
       <div class="col-xs-8">
-        {% if field.name in "client" %}
-        {{field}}<a id="ajax_client_add" target="_blank" href="{% url 'repair:clients_add' %}" title="Добавить нового клиента"><img alt="Add" src="{% static 'repair/img/add.svg' %}" /></a>
-        {% else %}
         {{ field }}
-        {% endif %}
       </div>
     </div>
     {% endfor %}
+    <div id="dep_block" class="form-group hidden">
+      <h3>Добавляем отделения клиента:</h3>
+    </div>
+    <input id="add_dep" type="button" class="btn btn-success hidden" value="Добавить отделение"/>
     <button type="submit" class="btn btn-primary">Сохранить</button>
   </form>
 </div>

@@ -4,7 +4,7 @@
 {% block sidebar_navigation %}
   <h4 class="list-group-item-heading">Навигация:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href="#"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
+    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
     <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
   </ul>
 {% endblock %}
@@ -21,7 +21,6 @@
   <h4 class="list-group-item-heading">Действуем:</h4>
   <ul class="nav nav-sidebar">
     <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Добавить заказ</a></li>
-    <li><a href=""><span class="glyphicon glyphicon-tint"></span> Слить БД конкурентам</a></li>
   </ul>
 {% endblock %}
 
@@ -61,7 +60,7 @@
             </div>
         </div>
     </div>
-  <h2 class="sub-header">Новые действия по заказу:</h2>
+  <h2 class="sub-header">Новый статус заказа:</h2>
 {% endblock %}
 
 
@@ -69,55 +68,9 @@
 
 {% block table_main %}
 {% load bootstrap3 %}
-<form action="{% url 'repair:order_change' order_id=order.id %}" method="post" autocomplete="off">
+<form action="" method="post" autocomplete="off">
     {% csrf_token %}
-    {{ action_form.as_p }}
-    {{spare_formset.management_form }}
-    {{service_formset.management_form }}
-    <div class="panel panel-primary">
-        <div class="panel-heading"><h4>Использованные запчасти</h4></div>
-        <div class="panel-body">
-            <div id="spare_div">
-                {% for form in spare_formset %}
-                    {% if forloop.first %}
-                    <fieldset id="spare_block">
-                        {{ form.as_p }}
-                        <hr />
-                    </fieldset>
-                    {% else %}
-                    <div class="form-group has-success">
-                        {{ form.as_p }}
-                    </div>
-                        <hr />
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <input id="add_spare" type="button" class="btn btn-info" value="Добавить запчастей" />
-        </div>
-    </div>
-    <div class="panel panel-primary">
-        <div class="panel-heading"><h4>Выполненные работы</h4></div>
-        <div class="panel-body">
-            <div id="service_div">
-                {% for form in service_formset %}
-                    {% if forloop.first %}
-                    <fieldset id="service_block">
-                        {{ form.as_p }}
-                        <hr />
-                    </fieldset>
-                    {% else %}
-                    <div class="form-group has-success">
-                        {{ form.as_p }}
-                    </div>
-                        <hr />
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <input id="add_service" type="button" class="btn btn-info" value="Добавить работ" />
-        </div>
-    </div>
-
-
+    {{ form.as_p }}
     <input type="submit" class="btn btn-info" id="sub_button" value="Отправить"/>
 </form>
 

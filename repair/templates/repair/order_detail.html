@@ -1,17 +1,32 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
+
+{% block sidebar_action %}
+  <h4 class="list-group-item-heading">Действуем:</h4>
+  <ul class="nav nav-sidebar">
+    {% if not outsource %}
+        <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Установить статус</a></li>
+        <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Добавить выполненных работ</a></li>
+        <li><a href="{% url 'repair:spares_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Использованные запчасти</a></li>
+    {% else %}
+        <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Добавить выполненных работ</a></li>
+    {% endif %}
+  </ul>
+{% endblock %}
+
+
+
+
+
 {% block table_main %}
-    <!--<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">  -->
     <div class="row">
-        <div class="col-sm-3 col-md-4">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Штрихкод заказа</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="col-sm-3 col-md-4">
-                        {{ order.order_barcode }}
-                    </div>
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Штрихкод заказа</h3>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-3 col-md-4">
+                    {{ order.order_barcode }}
                 </div>
             </div>
         </div>
@@ -24,11 +39,11 @@
             <div class="panel-body">
                 <div class="col-sm-3 col-md-4">
                     <p>Дата оформления:</p>
-                    <p>{{ order.order_datetime }}</p>
+                    <p>{{ order.order_datetime|date:"d.m.Y" }}</p>
                 </div>
                 <div class="col-sm-3 col-md-4">
                     <p>Кем оформлен:</p>
-                    <p>{{ order.user }}</p>
+                    <p>{{ order_action.0.setting_user }}</p>
 
                 </div>
                 <div class="col-sm-3 col-md-4">
@@ -56,19 +71,20 @@
     </div>
     {% if not outsource %}
     <div class="row">
-        <div class="col-sm-3 col-md-4">
-            <p>Зказчик:</p>
-            <p>{{ order.client }}</p>
-        </div>
-        <div class="col-sm-7 col-md-6">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h3 class="panel-title">Контакты заказчика</h3>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Заказчик</h3>
+          </div>
+          <div class="panel-body">
+              <div class="col-sm-3 col-md-4">
+                    <p>Наименование заказчика:</p>
+                    <p>{{ order.client }}</p>
               </div>
-              <div class="panel-body">
-                {{ order.client }}
+              <div class="col-sm-3 col-md-4">
+                    <p>Размещение у клиента:</p>
+                    <p>{{ order.client_position }}</p>
               </div>
-            </div>
+          </div>
         </div>
     </div>
     {% endif %}
@@ -107,18 +123,42 @@
         </div>
     </div>
     <div class="row">
-        <a href="{% url 'repair:order_change' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить заказ</a>
-    </div>
-    <div class="row">
-        <div class="col-sm-6 col-md-8">
+        <div class="col-sm-4 col-md-4">
             <div class="list-group">
                 {% for act in order_action %}
                     <h4 class="list-group-item-heading">Статус: {{ act.status }}</h4>
                     <p class="list-group-item-text">
                         Дата: {{ act.action_datetime|date:"d.m.Y" }} <br>
-                        Установил статус: {{ act.manager_user }} <br>
+                        Установил статус: {{ act.setting_user.get_full_name }} <br>
+                        Руководитель заказа: {{ act.manager_user.get_full_name }} <br>
+                        Исполнитель заказа: {{ act.executor_user.get_full_name }} <br>
                         Комментарий статуса: {{ act.action_comment }}
                     </p>
+                    <hr />
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-4">
+            <div class="list-group">
+                {% for spare in spares %}
+                    <h4 class="list-group-item-heading">Использованные запчасти:</h4>
+                    <p class="list-group-item-text">
+                        Наименование запчасти: {{ spare.spare_name }}<br>
+                        Серийный № запчасти: {{ spare.spare_serial }}
+                    </p>
+                    <hr />
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-4">
+            <div class="list-group">
+                {% for service in services %}
+                    <h4 class="list-group-item-heading">Выполненные работы:</h4>
+                    <p class="list-group-item-text">
+                        Наименование работ: {{ service.service_name }}<br>
+                        Количество работ: {{ service.service_qty }}
+                    </p>
+                    <hr />
                 {% endfor %}
             </div>
         </div>

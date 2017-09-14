@@ -3,7 +3,7 @@
 {% block sidebar_navigation %}
   <h4 class="list-group-item-heading">Навигация:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href="#"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
+    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
     <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
   </ul>
 {% endblock %}
@@ -11,7 +11,7 @@
 {% block sidebar_thesaurus %}
   <h4 class="list-group-item-heading">Справочники:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href=""><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
+    <li><a href="{% url 'repair:clients' %}"><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
     <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
   </ul>
 {% endblock %}
@@ -20,14 +20,27 @@
   <h4 class="list-group-item-heading">Действуем:</h4>
   <ul class="nav nav-sidebar">
     <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Добавить заказ</a></li>
-    <li><a href=""><span class="glyphicon glyphicon-tint"></span> Слить БД конкурентам</a></li>
   </ul>
 {% endblock %}
 
 
 
 {% block sub_header_progress_bar %}
-  <h2 class="sub-header">Мои ремонты</h2>
+  {% if not outsource %}
+    {% if messages %}
+      {% for message in messages %}
+        <p>
+          <div class="alert alert alert-success alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <strong>Поздравления! </strong>{{ message }}
+          </div>
+        </p>
+      {% endfor %}
+    {% endif %}
+  <h2 class="sub-header">Заказы, в которых Вы - {{ user.get_full_name }}: "Менеджер заказа"</h2>
+  {% else %}
+  <h2 class="sub-header">Мои заказы"</h2>
+  {% endif %}
 
   <div class="progress">
     <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"

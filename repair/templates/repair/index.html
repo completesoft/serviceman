@@ -4,25 +4,57 @@
 {% block sidebar_navigation %}
   <h4 class="list-group-item-heading">Навигация:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
+    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор <span class="badge pull-right">{{ orders.count }}</span></a></li>
     {% if not outsource %}
-    <li><a href="{% url 'repair:my_order' %}"><span class="glyphicon glyphicon-briefcase"></span> Мои ремонты</a></li>
+    <li><a href="{% url 'repair:my_order' %}"><span class="glyphicon glyphicon-briefcase"></span> Мои ремонты(заказы где вы менеджер заказа)</a></li>
     {% endif %}
     <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
   </ul>
 {% endblock %}
 
 {% block sidebar_thesaurus %}
+{% if not outsource %}
   <h4 class="list-group-item-heading">Справочники:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href=""><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
+    <li><a href="{% url 'repair:clients' %}"><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
     <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
   </ul>
+{% else %}
+<h4 class="list-group-item-heading">Напоминалочка:</h4>
+  <ul class="nav nav-sidebar">
+    <li><span class="glyphicon glyphicon-user"></span> Чтобы указать по конткретному заказу выполненные работы,
+        необходимо зайти в нужный заказ (нажать на штрихкод) и там Вы увидите кнопочку "Добавить работы, запчасти по заказу"</li>
+  </ul>
+{% endif %}
 {% endblock %}
 
-{% block sub_header_progress_bar %}
-  <h2 class="sub-header">Текущие ремонты</h2>
+{% block sidebar_action %}
+  {% if not outsource %}
+    <h4 class="list-group-item-heading">Действуем:</h4>
+    <ul class="nav nav-sidebar">
+      <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Добавить заказ</a></li>
+    </ul>
+  {% endif %}
+{% endblock %}
 
+
+{% block sub_header_progress_bar %}
+  <p><h4 class="sub-header">Здравствуйте {{ user.get_full_name }} :)</h4></p>
+  {% if not outsource %}
+  <h2 class="sub-header">Все заказы</h2>
+  {% else %}
+    {% if messages %}
+      {% for message in messages %}
+        <p>
+          <div class="alert alert alert-success alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <strong>Поздравления! </strong>{{ message }}
+          </div>
+        </p>
+      {% endfor %}
+    {% endif %}
+  <h2 class="sub-header">Ваши заказы</h2>
+  {% endif %}
   <div class="progress">
     <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
     aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
@@ -39,7 +71,9 @@
         <th><span class="glyphicon glyphicon-barcode"></span></th>
         <th>Дата приемки</th>
         <th>Статус</th>
+        {% if not outsource %}
         <th>Клиент</th>
+        {% endif %}
         <th>Устройство</th>
         <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
@@ -49,11 +83,7 @@
 
       {% for order in orders %}
       <tr>
-        {% if outsource %}
         <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.id }}</a></td>
-        {% else %}
-        <td>{{ order.id }}</td>
-        {% endif %}
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
           {% with order.last_status as last_act %}
             {% if last_act == "Новый" %}
@@ -72,8 +102,6 @@
           {% endwith %}
           {%if not outsource %}
             <td>{{ order.client.client_name }}</td>
-          {% else %}
-            <td> пусто </td>
           {% endif %}
         <td>{{ order.device_name }}</td>
         <td>{{ order.device_serial }}</td>

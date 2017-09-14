@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 class Clients(models.Model):
     client_name = models.CharField("Имя клиента", max_length=100, default='', null=False, blank=False)
     client_contact = models.CharField("Контакты клиента", max_length=100, default='', null=False, blank=False)
-    client_corp = models.BooleanField("Корпоративность клиента", null=False, blank=False)
+    client_corp = models.BooleanField("Корпоративность клиента", null=False, blank=False, default=False)
 
     class Meta():
         db_table = 'clients'
@@ -18,12 +18,12 @@ class Clients(models.Model):
         return '{}'.format(self.client_name)
 
 class DocOrderHeader (models.Model):
-    order_barcode = models.IntegerField("Штрихкод", null=False, blank=False)
+    order_barcode = models.CharField("Штрихкод", max_length=100, default='', null=False, blank=False)
     order_datetime = models.DateTimeField("Дата", auto_now_add=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
     client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=False)
     device_name = models.CharField("Наименование устройства", default='',max_length=100, null=False, blank=False)
-    device_defect = models.CharField("Заявленная неисправность", default='', max_length=255, null=False, blank=False)
+    device_defect = models.CharField("Заявленная неисправность", default='', max_length=155, null=False, blank=False)
     device_serial = models.CharField("Серийный номер устройства", default='', max_length=100, null=False, blank=False)
     order_comment = models.CharField("Комментарий", max_length=255, null=True, blank=True)
 
@@ -70,7 +70,8 @@ class DocOrderAction(models.Model):
     action_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
     manager_user = models.ForeignKey(User, verbose_name="Руководитель заказа", on_delete=models.SET_NULL, null=True, blank=False)
     executor_user = models.ForeignKey(User,verbose_name="Исполнитель заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
-    status = models.ForeignKey(DirStatus, on_delete=models.SET_NULL, null=True, blank=False)
+    setting_user = models.ForeignKey(User,verbose_name="Установил статус заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
+    status = models.ForeignKey(DirStatus, verbose_name="Статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
     action_comment = models.TextField("Комментарий операции", max_length=100, null=True, blank=True)
 
     class Meta():
@@ -88,7 +89,7 @@ class DocOrderServiceContent(models.Model):
 
     order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE, null=False, blank=False)
     service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
-    service_qty = models.DecimalField("Количество работ", max_digits=4, decimal_places=2, default=1.0, null=False, blank=False)
+    service_qty = models.PositiveIntegerField("Количество работ", default=1, null=False, blank=False)
 
     class Meta():
         db_table = 'doc_order_service_content'

@@ -1,0 +1,74 @@
+{% extends "repair/base.html" %}
+{% load staticfiles %}
+
+{% block sidebar_action %}
+  <h4 class="list-group-item-heading">Действуем:</h4>
+  <ul class="nav nav-sidebar">
+    <li><a href=""><span class="glyphicon glyphicon-plus"></span> Установить статус</a></li>
+    <li><a href=""><span class="glyphicon glyphicon-plus"></span> Добавить выполненных работ</a></li>
+    <li><a href=""><span class="glyphicon glyphicon-plus"></span> Использованные запчасти</a></li>
+  </ul>
+{% endblock %}
+
+
+
+
+
+{% block table_main %}
+    <div class="row">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">Данные клиента</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-sm-3 col-md-3">
+                        <p>Наименование клиента:</p>
+                        <p>{{ client.client_name }}</p>
+                    </div>
+                    <div class="col-sm-3 col-md-3">
+                        <p>Контакты клиента:</p>
+                        <p>{{ client.client_contact }}</p>
+                    </div>
+                    <div class="col-sm-3 col-md-3">
+                        Корпоративный: {% if client.client_corp %}<span class="label label-success">Да</span>{% else %}<span class="label label-primary">Нет</span>{% endif %}
+                    </div>
+                    <div class="col-sm-2 col-md-2">
+                       <a href="{% url 'repair:client_edit' client_id=client.id %}" class="btn btn-warning btn-md active" role="button">Редактировать</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if client.client_corp %}
+    <div class="row">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Отделения корпоративного клиента:</h3>
+          </div>
+          <div class="panel-body">
+        {% if department %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead>
+                    <th>№ п/п</th>
+                    <th>Подразделение клиента</th>
+                  </thead>
+            {% for dep in department %}
+                <tr>
+                    <td>{{ forloop.counter }}.</td>
+                    <td>{{ dep.client_dep_name }}</td>
+                </tr>
+            {% endfor %}
+                </table>
+            </div>
+        {% else %}
+              Нет зарегистрированных отделений
+        {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+
