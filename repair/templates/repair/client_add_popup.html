@@ -30,25 +30,26 @@
 
 
 {% block table_main %}
-  <form class="form-horizontal" action="" method="post" autocomplete="off">
-    {% csrf_token %}
+  <form class="form-horizontal" action="{% url 'repair:popup_client_add' %}" method="post" autocomplete="off">
     {% for field in form %}
       <div class="form-group">
-        <label class="col-xs-4 control-label">{{ field.label }}:</label>
-        <div class="col-xs-6">
-          {{ field }}
-        </div>
+      <label class="col-xs-4 control-label">{{ field.label }}:</label>
+      <div class="col-xs-6">
+        {{ field }}
+      </div>
     </div>
     {% endfor %}
     <div id="dep_block" class="form-group hidden">
       <h3>Добавляем отделения клиента:</h3>
     </div>
     <input id="add_dep" type="button" class="btn btn-success hidden" value="Добавить отделение"/>
-    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <p><input type="submit" value="Добавить клиента"/> | <a href="javascript:window.close()">Cancel</a></p>
   </form>
 {% endblock %}
 
-
 {% block script_block %}
-    <script src="{% static 'repair/js/action.js' %}"></script>
+<!--<script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>-->
+<script src="{% static 'repair/js/action.js' %}"></script>
+<script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+<script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
 {% endblock %}

@@ -84,6 +84,12 @@
                     <p>Размещение у клиента:</p>
                     <p>{{ order.client_position }}</p>
               </div>
+              {%if order.client.client_corp %}
+              <div class="col-sm-3 col-md-4">
+                    <p>Отделение корпоративного клиента:</p>
+                    <p>{{ order.client_dep }}</p>
+              </div>
+              {% endif %}
           </div>
         </div>
     </div>

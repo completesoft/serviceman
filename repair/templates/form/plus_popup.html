@@ -1,0 +1,4 @@
+{% load staticfiles %}
+<a href="/add/{{ field.name }}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);">
+    <img src="{% static 'repair/img/add.svg' %}" width="20" height="20" alt="Add Another"/>
+</a>

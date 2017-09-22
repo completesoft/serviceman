@@ -14,7 +14,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="{% static 'repair/css/bootstrap.min.css' %}" rel="stylesheet">
-
+    <link href="{% static 'repair/css/style-table-sort.css' %}" rel="stylesheet">
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 
 
@@ -26,6 +26,7 @@
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
+
       <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
@@ -71,6 +72,8 @@
           {% block sub_header_progress_bar %}{% endblock %}
 
           {% block table_main %}{% endblock %}
+
+          {% block pagination %}{% endblock %}
         </div>
       </div>
     </div>
@@ -80,6 +83,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="{% static 'repair/js/bootstrap.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'repair/js/action.js' %}"></script>
+    <link href="{% static 'repair/css/style-table-sort.css' %}" rel="stylesheet">
+    {% block script_block %}{% endblock %}
   </body>
 </html>

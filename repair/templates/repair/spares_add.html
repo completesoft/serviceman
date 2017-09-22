@@ -67,7 +67,6 @@
 
 
 {% block table_main %}
-{% load bootstrap3 %}
 <form action="" method="post" autocomplete="off">
     {% csrf_token %}
     {{spare_formset.management_form }}
@@ -89,6 +88,8 @@
 
     <input type="submit" class="btn btn-info" id="sub_button" value="Отправить"/>
 </form>
+{% endblock %}
 
-
+{% block script_block %}
+<script type="text/javascript" src="{% static 'repair/js/action.js' %}"></script>
 {% endblock %}

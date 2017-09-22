@@ -12,7 +12,7 @@
 
 {% block table_main %}
   <div class="table-responsive">
-    <table class="table table-hover table-striped">
+    <table class="table table-hover table-striped tablesorter" id="table">
       <thead>
         <th>№ п/п</th>
         <th>Клиент</th>
@@ -22,7 +22,7 @@
 
       {% for client in clients %}
       <tr>
-        <td><a href="{% url 'repair:client_detail' client_id=client.id %}">{{ forloop.counter }}</a></td>
+        <td><a href="{% url 'repair:client_detail' client_id=client.id %}">{{ client.id }}</a></td>
         <td>{{ client.client_name }}</td>
         <td>{{ client.client_contact }}</td>
         {% if client.client_corp %}
@@ -35,3 +35,38 @@
     </table>
   </div>
 {% endblock %}
+
+<--
+{% block pagination %}
+{% if paginator.num_pages > 1 %}
+<div class="text-center">
+  <ul class="pagination text-center">
+    {% if page_obj.has_previous %}
+      <li><a href="{% url 'repair:clients' %}?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><a href="#">&laquo;</a></li>
+    {% endif %}
+    {% for pn in paginator.page_range %}
+      {% if page_obj.number == pn %}
+        <li class="active"><a href="{% url 'repair:clients' %}?page={{ pn }}"> {{ pn }} <span class="sr-only">(current)</span></a></li>
+      {% else %}
+        <li><a href="{% url 'repair:clients' %}?page={{ pn }}"> {{ pn }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <li><a href="{% url 'repair:clients' %}?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><a href="#">&raquo;</a></li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}
+-->
+
+{% block script_block %}
+  <script src="{% static 'repair/js/jquery.tablesorter.js' %}"></script>
+  <script src="{% static 'repair/js/tab_sort.js' %}"></script>
+{% endblock %}
+
+

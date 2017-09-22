@@ -1,3 +1,4 @@
+(function($) {
 
 $(document).ready(function(){
 
@@ -25,9 +26,29 @@ $(document).ready(function(){
             ableDep("#dep_block", "#add_dep");
     });
 
-//    $("#ajax_client_add").attr("target","_blank");
+    $("#id_client").change(function() {
+            ajaxUpdate("#id_client", "#id_client_dep");
+    });
 
 });
+
+function ajaxUpdate(source, destination){
+    var csrf = $("[name=csrfmiddlewaretoken]").attr("value");
+    request_url = '/repair/dep-update/' + $(source).val() + '/';
+    var $destination = $(destination);
+    $.ajax({
+        url: request_url,
+        type:'POST',
+        headers: { "X-CSRFToken": csrf },
+        success: function(json){
+            $destination.empty();
+            $.each(json, function(i, item) {
+                $destination.append($('<option></option>').attr('value', item.id).text(item.client_dep_name));
+            });
+        }
+    });
+}
+
 
 function ableDep(block, button){
     if ($("#id_client_corp").is(':checked') ) {
@@ -48,8 +69,6 @@ function addBlockShort(destination){
           </div>";
     $(destination).append(block);
 }
-
-
 
 
 function addBlock(source, destination, forms_counter, init_forms){
@@ -93,3 +112,5 @@ function delBlock(source, destination, forms_counter, init_forms){
             $(init_forms).val(currentcount-1);
           }
 }
+
+})(jQuery);

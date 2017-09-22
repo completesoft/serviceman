@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, render_to_response
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -10,10 +10,13 @@ from django.core.urlresolvers import reverse
 from .forms import OrderHeaderForm, ActionForm, SpareForm, ServiceForm, ServiceOutForm, ClientForm, ClientDepForm, ClientEditForm
 from django.utils.decorators import method_decorator
 from django.forms import formset_factory
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from serviceman.settings import LOGIN_URL
 from django.contrib import messages
-from django.core.exceptions import FieldError
+from django.core.exceptions import FieldError, ValidationError
+from django.utils.html import escape
+from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, InvalidPage
 
 
 @login_required
@@ -21,13 +24,27 @@ def index (request):
     user = request.user
     outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
     if user.is_active:
+        # try:
+        #     page_num = request.GET["page"]
+        # except KeyError:
+        #     page_num = 1
         if not outsource_group:
+            # paginator = Paginator(DocOrderHeader.objects.all(), 15)
+            # try:
+            #     orders = paginator.page(page_num)
+            # except InvalidPage:
+            #     orders = paginator.page(1)
             orders = DocOrderHeader.objects.all()
             return render(request, 'repair/index.html', {"orders": orders, "user": request.user, "outsource": False})
         else:
             # for "outsource" group
             raw_orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).distinct()
             orders = [obj for obj in raw_orders if obj.last_action().executor_user == user]
+            # paginator = Paginator(orders_set, 15)
+            # try:
+            #     orders = paginator.page(page_num)
+            # except InvalidPage:
+            #     orders = paginator.page(1)
             return render(request, 'repair/index.html', {"orders": orders, "user": request.user, "outsource": True})
     redirect(LOGIN_URL)
 
@@ -37,6 +54,16 @@ def my_order(request):
     outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
     if user.is_active:
         if not outsource_group:
+            # try:
+            #     page_num = request.GET["page"]
+            # except KeyError:
+            #     page_num = 1
+            # orders_set = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
+            # paginator = Paginator(orders_set, 15)
+            # try:
+            #     orders = paginator.page(page_num)
+            # except InvalidPage:
+            #     orders = paginator.page(1)
             orders = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
             return render(request, 'repair/my_order.html', {"orders": orders, "user": request.user})
         else:
@@ -44,39 +71,32 @@ def my_order(request):
     return redirect(LOGIN_URL)
 
 
-
-
-
 class OrderCreateView(CreateView):
     form_class = OrderHeaderForm
     model = DocOrderHeader
     template_name = "repair/order_add.html"
 
-
     def get(self, request, *args, **kwargs):
-        user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if user.is_active and (user.is_superuser or not outsource_group):
-            return super(OrderCreateView, self).get(request, *args, **kwargs)
-        else:
-            return redirect(LOGIN_URL)
+        self.initial["client_dep"]=ClientsDep.objects.none()
+        return super(OrderCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.success_url=reverse("repair:my_order")
-        user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if user.is_active and (user.is_superuser or not outsource_group):
-            return super(OrderCreateView, self).post(request, *args, **kwargs)
-        else:
-            return redirect(LOGIN_URL)
+        return super(OrderCreateView, self).post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(OrderCreateView, self).get_context_data(**kwargs)
+        context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
         return context
 
     @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(OrderCreateView, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
+        if user.is_active and (user.is_superuser or not outsource_group):
+            return super(OrderCreateView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
 
     def form_valid(self, form):
         resp = super(OrderCreateView, self).form_valid(form)
@@ -202,9 +222,10 @@ class ClientListView(ListView):
     model = Clients
     ordering = "client_name"
     context_object_name = "clients"
+    # paginate_by = 15
 
-    def get_queryset(self):
-        return Clients.objects.all().order_by("client_name")
+    # def get_queryset(self):
+    #     return Clients.objects.all().order_by("client_name")
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -314,3 +335,53 @@ class ClientEditView(UpdateView):
             return super(ClientEditView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
+
+
+def handlePopAdd(request, addForm, field):
+    if request.method == "POST":
+        form = addForm(request.POST)
+        if form.is_valid():
+            try:
+                newObject = form.save()
+            except ValidationError:
+                newObject = None
+            if newObject:
+                client_dep_post = request.POST.getlist("client_dep_name")
+                if client_dep_post:
+                    for dep in client_dep_post:
+                        if dep == "":
+                            continue
+                        client_dep = ClientsDep(client=newObject, client_dep_name=dep)
+                        client_dep.save()
+                return HttpResponse('<script type="text/javascript">opener.dismissAddAnotherPopup(window, "%s", "%s");</script>' % \
+                    (escape(newObject._get_pk_val()), escape(newObject)))
+    else:
+        form = addForm()
+    pageContext = {'form': form, 'field': field}
+    return render_to_response("repair/client_add_popup.html", pageContext)
+
+
+@login_required
+@csrf_exempt
+def popupClientView(request):
+    user = request.user
+    outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
+    if user.is_active and not outsource_group:
+        return handlePopAdd(request, ClientForm, 'client')
+    else:
+        return redirect(LOGIN_URL)
+
+
+@login_required
+def dep_update(request, **kwargs):
+    user = request.user
+    outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
+    if user.is_active and not outsource_group:
+        department_set = [{"id": "", "client_dep_name": "Не выбрано"}]
+        if request.method == "POST" and request.is_ajax():
+            departments = list(ClientsDep.objects.filter(client=Clients.objects.get(pk=kwargs["client_id"])).values("id", "client_dep_name"))
+            if departments:
+                department_set.extend(departments)
+        return JsonResponse(department_set, safe=False)
+    else:
+        return redirect(LOGIN_URL)

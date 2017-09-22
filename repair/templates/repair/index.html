@@ -4,7 +4,7 @@
 {% block sidebar_navigation %}
   <h4 class="list-group-item-heading">Навигация:</h4>
   <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор <span class="badge pull-right">{{ orders.count }}</span></a></li>
+    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор <span class="badge pull-right">{{ orders.paginator.count }}</span></a></li>
     {% if not outsource %}
     <li><a href="{% url 'repair:my_order' %}"><span class="glyphicon glyphicon-briefcase"></span> Мои ремонты(заказы где вы менеджер заказа)</a></li>
     {% endif %}
@@ -66,7 +66,7 @@
 
 {% block table_main %}
   <div class="table-responsive">
-    <table class="table table-hover table-striped">
+    <table class="table table-hover table-striped tablesorter" id="table">
       <thead>
         <th><span class="glyphicon glyphicon-barcode"></span></th>
         <th>Дата приемки</th>
@@ -116,4 +116,38 @@
       {% endfor %}
     </table>
   </div>
+{% endblock %}
+
+
+<--
+{% block pagination %}
+{% if orders.paginator.num_pages > 1 %}
+<div class="text-center">
+  <ul class="pagination text-center">
+    {% if orders.has_previous %}
+      <li><a href="{% url 'repair:index' %}?page={{ orders.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><a href="#">&laquo;</a></li>
+    {% endif %}
+    {% for pn in orders.paginator.page_range %}
+      {% if orders.number == pn %}
+        <li class="active"><a href="{% url 'repair:index' %}?page={{ pn }}"> {{ pn }} <span class="sr-only">(current)</span></a></li>
+      {% else %}
+        <li><a href="{% url 'repair:index' %}?page={{ pn }}"> {{ pn }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if orders.has_next %}
+      <li><a href="{% url 'repair:index' %}?page={{ orders.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><a href="#">&raquo;</a></li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}
+-->
+
+{% block script_block %}
+  <script src="{% static 'repair/js/jquery.tablesorter.js' %}"></script>
+  <script src="{% static 'repair/js/tab_sort.js' %}"></script>
 {% endblock %}

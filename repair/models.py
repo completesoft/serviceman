@@ -21,11 +21,13 @@ class DocOrderHeader (models.Model):
     order_barcode = models.CharField("Штрихкод", max_length=100, default='', null=False, blank=False)
     order_datetime = models.DateTimeField("Дата", auto_now_add=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
+    client_dep = models.ForeignKey('ClientsDep', verbose_name="Отделение клиента", null=True, blank=True)
     client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=False)
     device_name = models.CharField("Наименование устройства", default='',max_length=100, null=False, blank=False)
     device_defect = models.CharField("Заявленная неисправность", default='', max_length=155, null=False, blank=False)
     device_serial = models.CharField("Серийный номер устройства", default='', max_length=100, null=False, blank=False)
     order_comment = models.CharField("Комментарий", max_length=255, null=True, blank=True)
+
 
     class Meta():
         db_table = 'doc_order_header'
@@ -42,6 +44,7 @@ class DocOrderHeader (models.Model):
     def last_status(self):
         acts = DocOrderAction.objects.filter(doc_order=self).latest()
         return acts.status.status_name
+
 
 class DirStatus (models.Model):
 

@@ -30,7 +30,6 @@
 
 
 {% block table_main %}
-<div class="table-responsive">
   <form class="form-horizontal" action="" method="post" autocomplete="off">
     {% csrf_token %}
     {% for field in form %}
@@ -38,7 +37,10 @@
       <label class="col-xs-2 control-label">{{ field.label }}:</label>
       <div class="col-xs-8">
         {% if field.name in "client" %}
-        {{field}}<a id="ajax_client_add" target="_blank" href="{% url 'repair:clients_add' %}" title="Добавить нового клиента"><img alt="Add" src="{% static 'repair/img/add.svg' %}" /></a>
+        {{field}}
+        <a href="/repair/add/{{ field.name }}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);" title="Добавить нового клиента">
+          <img src="{% static 'repair/img/add.svg' %}" width="20" height="20" alt="Добавить клиента"/>
+        </a>
         {% else %}
         {{ field }}
         {% endif %}
@@ -47,5 +49,10 @@
     {% endfor %}
     <button type="submit" class="btn btn-primary">Сохранить</button>
   </form>
-</div>
+{% endblock %}
+
+{% block script_block %}
+<script src="{% static 'repair/js/action.js' %}"></script>
+<script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+<script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
 {% endblock %}

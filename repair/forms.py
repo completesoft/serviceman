@@ -12,17 +12,18 @@ class MyModelChoiceField(ModelChoiceField):
 class OrderHeaderForm (forms.ModelForm):
     class Meta:
         model = DocOrderHeader
-        fields = ["order_barcode", "client", "client_position", "device_name", "device_defect", "device_serial",
+        fields = ["order_barcode", "client", "client_dep", "client_position", "device_name", "device_defect", "device_serial",
                   "order_comment"]
 
-    # client = forms.ModelChoiceField(queryset=)
     order_barcode = forms.CharField(max_length=150, label="Штрихкод")
     client_position = forms.CharField(max_length=150, label="Размещение у клиента", widget=forms.Textarea)
     device_name = forms.CharField(max_length=100, required=True, label="Наименование устройства", widget=forms.TextInput(attrs={'size':'80'}))
     device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность")
     device_serial = forms.CharField(required=True, label="Серийный номер устройства")
-    order_comment = forms.CharField(max_length=255, label="Комментарий", widget=forms.Textarea)
+    order_comment = forms.CharField(max_length=255, label="Комментарий", widget=forms.Textarea, required=False)
+    client_dep = forms.ModelChoiceField(label="Отделения клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False)
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.all(), required=True, empty_label="Выберите исполнителя")
+
 
 class ActionForm(forms.ModelForm):
     class Meta:
@@ -82,3 +83,6 @@ class ClientEditForm(forms.ModelForm):
     class Meta:
         model = Clients
         fields = ["client_contact"]
+
+
+
