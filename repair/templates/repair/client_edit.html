@@ -1,17 +1,9 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
 
-{% block sidebar_action %}
-  <h4 class="list-group-item-heading">Действуем:</h4>
-  <ul class="nav nav-sidebar">
-    <li><a href=""><span class="glyphicon glyphicon-plus"></span> Установить статус</a></li>
-    <li><a href=""><span class="glyphicon glyphicon-plus"></span> Добавить выполненных работ</a></li>
-    <li><a href=""><span class="glyphicon glyphicon-plus"></span> Использованные запчасти</a></li>
-  </ul>
+{% block top_menu %}
+  {% include "includes/top_menu.html" %}
 {% endblock %}
-
-
-
 
 
 {% block table_main %}
@@ -68,7 +60,7 @@
     {% endif %}
     <form role="form" class="form-horizontal" action="" method="post" autocomplete="off">
         {% csrf_token %}
-        <h3>Редактируемые поля</h3>
+        <h3>Редактируемые поля:</h3>
         <div class="form-group">
             <label class="control-label" for="{{ form.client_contact.name }}">{{ form.client_contact.label }}:</label>
             <textarea class="form-control" name="{{ form.client_contact.name }}" id="{{ form.client_contact.name }}" placeholder="{{ client.client_contact }}">{{ client.client_contact }}</textarea>

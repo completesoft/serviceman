@@ -43,14 +43,15 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#"><img style="	width: 28px;" src="{% static 'repair/img/cs_logo.png' %}" alt="Dispute Bills"></a>
+          <a class="navbar-brand" href="{% url 'repair:index' %}"><img style="	width: 28px;" src="{% static 'repair/img/cs_logo.png' %}" alt="Dispute Bills"></a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a href="#"></span>ServiceMan</a></li>
+            <li><a href="{% url 'repair:index' %}"></span>ServiceMan</a></li>
+            {% block top_menu %}{% endblock %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#"><span class="glyphicon glyphicon-cog"></span> Настройки</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{user.get_full_name}}</a></li>
             <li><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-in"></span> Выход</a></li>
           </ul>
         </div>
@@ -60,9 +61,8 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
-          {% block sidebar_navigation %}{% endblock %}
-          {% block sidebar_thesaurus %}{% endblock %}
-          {% block sidebar_action %}{% endblock %}
+          {% block sidebar_action %}
+          {% endblock %}
         </div>
 
 

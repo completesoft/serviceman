@@ -40,32 +40,13 @@ class SpareForm(forms.ModelForm):
         fields = ["spare_name", "spare_serial"]
 
 
-    def save(self, order_id):
-        obj = super(SpareForm, self).save(commit=False)
-        obj.order = DocOrderHeader.objects.get(pk=order_id)
-        return obj.save()
-
-
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = DocOrderServiceContent
-        fields = ["service_name", "service_qty"]
-
-    def save(self, order_id):
-        obj = super(ServiceForm, self).save(commit=False)
-        obj.order = DocOrderHeader.objects.get(pk=order_id)
-        return obj.save()
-
-
-class ServiceOutForm(forms.ModelForm):
-    class Meta:
-        model = DocOrderServiceContent
-        fields = ["service_name", "service_qty"]
-
-    def save(self, order_id):
-        obj = super(ServiceOutForm, self).save(commit=False)
-        obj.order = DocOrderHeader.objects.get(pk=order_id)
-        return obj.save()
+        fields = ["service_name", "service_qty", "cost"]
+        widgets = {
+            'service_name': forms.Textarea(attrs={'cols': 60, 'rows': 4}),
+        }
 
 
 class ClientForm(forms.ModelForm):

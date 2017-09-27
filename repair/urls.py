@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from . import views
-from .views import OrderCreateView, OrderDetailView, ActionCreateView, ClientListView, ClientCreateView, ClientDetailView, ClientEditView
+from .views import OrderCreateView, OrderDetailView, ActionCreateView, ClientListView, ClientCreateView, ClientDetailView, ClientEditView, OrderArchiveView
 
 app_name = 'repair'
 
@@ -18,4 +18,5 @@ urlpatterns = [
     url(r'^clients/(?P<client_id>\d+)/edit$', ClientEditView.as_view(), name="client_edit"),
     url(r'^add/client/?$', views.popupClientView, name="popup_client_add"),
     url(r'^dep-update/(?P<client_id>\d+)/$', views.dep_update, name="dep_update"),
+    url(r'^order-archive/$', OrderArchiveView.as_view(), name="order_archive"),
 ]

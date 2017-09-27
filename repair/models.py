@@ -18,7 +18,7 @@ class Clients(models.Model):
         return '{}'.format(self.client_name)
 
 class DocOrderHeader (models.Model):
-    order_barcode = models.CharField("Штрихкод", max_length=100, default='', null=False, blank=False)
+    order_barcode = models.CharField("Штрихкод", max_length=100, default='', unique=True, null=False, blank=False)
     order_datetime = models.DateTimeField("Дата", auto_now_add=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
     client_dep = models.ForeignKey('ClientsDep', verbose_name="Отделение клиента", null=True, blank=True)
@@ -42,7 +42,7 @@ class DocOrderHeader (models.Model):
         return acts
 
     def last_status(self):
-        acts = DocOrderAction.objects.filter(doc_order=self).latest()
+        acts = self.docorderaction_set.all().latest()
         return acts.status.status_name
 
 
@@ -93,6 +93,7 @@ class DocOrderServiceContent(models.Model):
     order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE, null=False, blank=False)
     service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
     service_qty = models.PositiveIntegerField("Количество работ", default=1, null=False, blank=False)
+    cost = models.PositiveIntegerField("Стоимость работ", default=0, null=True, blank=False)
 
     class Meta():
         db_table = 'doc_order_service_content'
@@ -112,7 +113,7 @@ class DocOrderSparesContent (models.Model):
         verbose_name_plural = "Использованные запчасти"
 
 
-class ClientsDep (models.Model):
+class ClientsDep(models.Model):
 
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
     client_dep_name = models.CharField("Подразделение клиента", max_length=100, default="", null=False, blank=False)

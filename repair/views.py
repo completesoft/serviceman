@@ -7,9 +7,9 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.core.urlresolvers import reverse
-from .forms import OrderHeaderForm, ActionForm, SpareForm, ServiceForm, ServiceOutForm, ClientForm, ClientDepForm, ClientEditForm
+from .forms import OrderHeaderForm, ActionForm, SpareForm, ServiceForm, ClientForm, ClientDepForm, ClientEditForm
 from django.utils.decorators import method_decorator
-from django.forms import formset_factory
+from django.forms import formset_factory, modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from serviceman.settings import LOGIN_URL
 from django.contrib import messages
@@ -17,7 +17,6 @@ from django.core.exceptions import FieldError, ValidationError
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator, InvalidPage
-
 
 @login_required
 def index (request):
@@ -34,12 +33,13 @@ def index (request):
             #     orders = paginator.page(page_num)
             # except InvalidPage:
             #     orders = paginator.page(1)
-            orders = DocOrderHeader.objects.all()
+            raw_orders = DocOrderHeader.objects.all()
+            orders = [obj for obj in raw_orders if obj.last_status() != "Архивный"]
             return render(request, 'repair/index.html', {"orders": orders, "user": request.user, "outsource": False})
         else:
             # for "outsource" group
-            raw_orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).distinct()
-            orders = [obj for obj in raw_orders if obj.last_action().executor_user == user]
+            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).distinct("order_barcode")
+            # orders = [obj for obj in raw_orders if obj.last_action().executor_user == user and obj.last_status()!="Архивный"]
             # paginator = Paginator(orders_set, 15)
             # try:
             #     orders = paginator.page(page_num)
@@ -64,7 +64,8 @@ def my_order(request):
             #     orders = paginator.page(page_num)
             # except InvalidPage:
             #     orders = paginator.page(1)
-            orders = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
+            raw_orders = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
+            orders = [obj for obj in raw_orders if obj.last_status() != "Архивный"]
             return render(request, 'repair/my_order.html', {"orders": orders, "user": request.user})
         else:
             return redirect(reverse("repair:index"))
@@ -126,6 +127,12 @@ class OrderDetailView(DetailView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_active:
+            order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
+            outsource_group = True if request.user.groups.filter(name='outsource').values_list('name', flat=True) else False
+            if outsource_group:
+                act = DocOrderAction.objects.filter(doc_order=order).filter(executor_user=request.user)
+                if not act:
+                    return redirect("repair:my_order")
             return super(OrderDetailView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -138,12 +145,13 @@ class ActionCreateView(CreateView):
 
     def get(self, request, *args, **kwargs):
         order = DocOrderHeader.objects.get(pk=kwargs["order_id"])
-
         self.initial["manager_user"]= order.last_action().manager_user
         return super(ActionCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.success_url = reverse("repair:my_order")
+        if not self.request.user.is_superuser and request.POST["status"] == "Архивный":
+            return self.get(request, *args, **kwargs)
         return super(ActionCreateView, self).post(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -154,6 +162,8 @@ class ActionCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super(ActionCreateView, self).get_context_data(**kwargs)
         context["order"] = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
+        if not self.request.user.is_superuser:
+            context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name="Архивный")
         return context
 
     @method_decorator(login_required)
@@ -163,31 +173,29 @@ class ActionCreateView(CreateView):
             return redirect(LOGIN_URL)
         if outsource_group:
             return redirect("repair:index")
+        order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
+        if order.last_status()== "Архивный" and not request.user.is_superuser:
+            return redirect("repair:index")
         return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
 
 
 @login_required
 def service_add(request, order_id):
     user = request.user
-    order = DocOrderHeader.objects.get(pk=order_id)
     if user.is_active:
+        order = DocOrderHeader.objects.get(pk=order_id)
         outsource_group = True if user.groups.filter(name='outsource').values_list('name', flat=True) else False
         service_prefix = 'service'
+        ServiceFormSet = inlineformset_factory(DocOrderHeader, DocOrderServiceContent, form=ServiceForm, extra=1)
         if request.method == 'POST':
-            ServiceFormSet = formset_factory(ServiceForm, extra=0)
-            service_formset = ServiceFormSet(request.POST, prefix=service_prefix)
+            service_formset = ServiceFormSet(request.POST, prefix=service_prefix, instance=order)
             if service_formset.is_valid():
-                for form in service_formset:
-                    form.save(order_id)
+                service_formset.save()
                 return redirect("repair:order_detail", order_id=order_id)
-            return render(request, 'repair/service_add.html', {'service_formset': service_formset, 'order': order, "outsource": outsource_group})
         # non POST method
         else:
-            data_raw = {'{}-TOTAL_FORMS': '1', '{}-INITIAL_FORMS': '1', '{}-MAX_NUM_FORMS': ''}
-            data_service = {k.format(service_prefix): v for k, v in data_raw.items()}
-            ServiceFormSet = formset_factory(ServiceOutForm, extra=0)
-            service_formset = ServiceFormSet(data_service, prefix=service_prefix)
-            return render(request, 'repair/service_add.html', {'service_formset': service_formset, 'order': order, "outsource": outsource_group})
+            service_formset = ServiceFormSet(instance=order, prefix=service_prefix)
+        return render(request, 'repair/service_add.html', {'service_formset': service_formset, 'order': order, "outsource": outsource_group})
     else:
         return redirect(LOGIN_URL)
 
@@ -198,21 +206,17 @@ def spares_add(request, order_id):
     order = DocOrderHeader.objects.get(pk=order_id)
     outsource_group = True if user.groups.filter(name='outsource').values_list('name', flat=True) else False
     if user.is_active and not outsource_group:
+        order = DocOrderHeader.objects.get(pk=order_id)
         spare_prefix = 'spare'
+        SpareFormSet = inlineformset_factory(DocOrderHeader, DocOrderSparesContent, form=SpareForm, extra=1)
         if request.method == 'POST':
-            SpareFormSet = formset_factory(SpareForm, extra=0)
-            spare_formset = SpareFormSet(request.POST, prefix=spare_prefix)
+            spare_formset = SpareFormSet(request.POST, prefix=spare_prefix, instance=order)
             if spare_formset.is_valid():
-                for form in spare_formset:
-                    form.save(order_id)
+                spare_formset.save()
                 return redirect("repair:order_detail", order_id=order_id)
-            return render(request, 'repair/spares_add.html',{'spare_formset': spare_formset, 'order': order})
         else:
-            data_raw = {'{}-TOTAL_FORMS': '1', '{}-INITIAL_FORMS': '1', '{}-MAX_NUM_FORMS': ''}
-            data_spare = {k.format(spare_prefix): v for k, v in data_raw.items()}
-            SpareFormSet = formset_factory(SpareForm, extra=0)
-            spare_formset = SpareFormSet(data_spare, prefix=spare_prefix)
-            return render(request, 'repair/spares_add.html', {'spare_formset': spare_formset, 'order': order})
+            spare_formset = SpareFormSet(instance=order, prefix=spare_prefix)
+        return render(request, 'repair/spares_add.html', {'spare_formset': spare_formset, 'order': order})
     else:
         return redirect(LOGIN_URL)
 
@@ -385,3 +389,22 @@ def dep_update(request, **kwargs):
         return JsonResponse(department_set, safe=False)
     else:
         return redirect(LOGIN_URL)
+
+
+class OrderArchiveView(ListView):
+    template_name = "repair/order_archive.html"
+    context_object_name = "orders"
+
+    def get_queryset(self):
+        raw_orders = DocOrderHeader.objects.all()
+        orders = [obj for obj in raw_orders if obj.last_status() == "Архивный"]
+        return orders
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
+        if user.is_active and not outsource_group:
+            return super(OrderArchiveView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)

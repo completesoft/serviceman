@@ -1,45 +1,17 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
 
-{% block sidebar_navigation %}
-  <h4 class="list-group-item-heading">Навигация:</h4>
-  <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор <span class="badge pull-right">{{ orders.paginator.count }}</span></a></li>
-    {% if not outsource %}
-    <li><a href="{% url 'repair:my_order' %}"><span class="glyphicon glyphicon-briefcase"></span> Мои ремонты(заказы где вы менеджер заказа)</a></li>
-    {% endif %}
-    <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
-  </ul>
+{% block top_menu %}
+  {% include "includes/top_menu.html" %}
 {% endblock %}
 
-{% block sidebar_thesaurus %}
-{% if not outsource %}
-  <h4 class="list-group-item-heading">Справочники:</h4>
-  <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:clients' %}"><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
-    <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
-  </ul>
-{% else %}
-<h4 class="list-group-item-heading">Напоминалочка:</h4>
-  <ul class="nav nav-sidebar">
-    <li><span class="glyphicon glyphicon-user"></span> Чтобы указать по конткретному заказу выполненные работы,
-        необходимо зайти в нужный заказ (нажать на штрихкод) и там Вы увидите кнопочку "Добавить работы, запчасти по заказу"</li>
-  </ul>
-{% endif %}
-{% endblock %}
 
 {% block sidebar_action %}
-  {% if not outsource %}
-    <h4 class="list-group-item-heading">Действуем:</h4>
-    <ul class="nav nav-sidebar">
-      <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Добавить заказ</a></li>
-    </ul>
-  {% endif %}
+  {% include "includes/action_menu.html" with menu_set="1" %}
 {% endblock %}
 
 
 {% block sub_header_progress_bar %}
-  <p><h4 class="sub-header">Здравствуйте {{ user.get_full_name }} :)</h4></p>
   {% if not outsource %}
   <h2 class="sub-header">Все заказы</h2>
   {% else %}
@@ -55,12 +27,14 @@
     {% endif %}
   <h2 class="sub-header">Ваши заказы</h2>
   {% endif %}
+<!--
   <div class="progress">
     <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
     aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
       40% Завершено
     </div>
   </div>
+-->
 {% endblock %}
 
 
@@ -83,22 +57,10 @@
 
       {% for order in orders %}
       <tr>
-        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.id }}</a></td>
+        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
           {% with order.last_status as last_act %}
-            {% if last_act == "Новый" %}
-              <td><span class="label label-default">{{ last_act }}</span></td>
-            {% elif last_act == "В работе" %}
-              <td><span class="label label-primary">{{ last_act }}</span></td>
-            {% elif last_act == "Ожидание" %}
-              <td><span class="label label-warning">{{ last_act }}</span></td>
-            {% elif last_act == "Выполнен" %}
-              <td><span class="label label-success">{{ last_act }}</span></td>
-            {% elif last_act == "Просрочен" %}
-              <td><span class="label label-danger">{{ last_act }}</span></td>
-            {% else %}
-              <td><span class="label label-danger">НЕТ СТАТУСА</span></td>
-            {% endif %}
+            {% include "includes/order_status.html" %}
           {% endwith %}
           {%if not outsource %}
             <td>{{ order.client.client_name }}</td>

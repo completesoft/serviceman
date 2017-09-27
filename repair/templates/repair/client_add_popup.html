@@ -1,27 +1,5 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
-{% block sidebar_navigation %}
-  <h4 class="list-group-item-heading">Навигация:</h4>
-  <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:index' %}"><span class="glyphicon glyphicon-search"></span> Обзор</a></li>
-    <li><a href="#"><span class="glyphicon glyphicon-usd"></span> Начисления</a></li>
-  </ul>
-{% endblock %}
-
-{% block sidebar_thesaurus %}
-  <h4 class="list-group-item-heading">Справочники:</h4>
-  <ul class="nav nav-sidebar">
-    <li><a href="{% url 'repair:clients' %}"><span class="glyphicon glyphicon-user"></span> Клиенты</a></li>
-    <li><a href=""><span class="glyphicon glyphicon-wrench"></span> Виды работ</a></li>
-  </ul>
-{% endblock %}
-
-{% block sidebar_action %}
-  <h4 class="list-group-item-heading">Действуем:</h4>
-  <ul class="nav nav-sidebar">
-
-  </ul>
-{% endblock %}
 
 
 {% block sub_header_progress_bar %}

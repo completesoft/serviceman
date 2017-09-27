@@ -1,0 +1,17 @@
+{% if last_act == "Новый" %}
+  <td><span class="label label-default">{{ last_act }}</span></td>
+{% elif last_act == "В работе" %}
+  <td><span class="label label-primary">{{ last_act }}</span></td>
+{% elif last_act == "Ожидание" %}
+  <td><span class="label label-warning">{{ last_act }}</span></td>
+{% elif last_act == "Выполнен" %}
+  <td><span class="label label-success">{{ last_act }}</span></td>
+% elif last_act == "Передан клиенту" %}
+  <td><span class="label label-success">{{ last_act }}</span></td>
+{% elif last_act == "Просрочен" %}
+  <td><span class="label label-danger">{{ last_act }}</span></td>
+{% elif last_act == "Архивный" %}
+  <td><span class="label label-danger">{{ last_act }}</span></td>
+{% else %}
+  <td><span class="label label-danger">НЕТ СТАТУСА {{ last_act }}</span></td>
+{% endif %}

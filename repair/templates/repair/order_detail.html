@@ -1,21 +1,14 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
 
-{% block sidebar_action %}
-  <h4 class="list-group-item-heading">Действуем:</h4>
-  <ul class="nav nav-sidebar">
-    {% if not outsource %}
-        <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Установить статус</a></li>
-        <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Добавить выполненных работ</a></li>
-        <li><a href="{% url 'repair:spares_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Использованные запчасти</a></li>
-    {% else %}
-        <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Добавить выполненных работ</a></li>
-    {% endif %}
-  </ul>
+{% block top_menu %}
+  {% include "includes/top_menu.html" %}
 {% endblock %}
 
 
-
+{% block sidebar_action %}
+    {% include "includes/action_menu.html" with menu_set="345" %}
+{% endblock %}
 
 
 {% block table_main %}
@@ -26,6 +19,9 @@
             </div>
             <div class="panel-body">
                 <div class="col-sm-3 col-md-4">
+                    {% for x in "145" %}
+                        {{ x }}
+                    {% endfor %}
                     {{ order.order_barcode }}
                 </div>
             </div>
@@ -50,19 +46,7 @@
                     <p>Текущий статус</p>
                     <p>
                     {% with order.last_status as last_act %}
-                        {% if last_act == "Новый" %}
-                          <span class="label label-default">{{ last_act }}</span>
-                        {% elif last_act == "В работе" %}
-                          <span class="label label-primary">{{ last_act }}</span>
-                        {% elif last_act == "Ожидание" %}
-                          <span class="label label-warning">{{ last_act }}</span>
-                        {% elif last_act == "Выполнен" %}
-                          <span class="label label-success">{{ last_act }}</span>
-                        {% elif last_act == "Просрочен" %}
-                          <span class="label label-danger">{{ last_act }}</span>
-                        {% else %}
-                          <span class="label label-danger">НЕТ СТАТУСА</span>
-                        {% endif %}
+                        {% include "includes/order_status.html" %}
                     {% endwith %}
                     </p>
                 </div>
@@ -87,7 +71,7 @@
               {%if order.client.client_corp %}
               <div class="col-sm-3 col-md-4">
                     <p>Отделение корпоративного клиента:</p>
-                    <p>{{ order.client_dep }}</p>
+                    <p>{{ order.client_dep.client_dep_name }}</p>
               </div>
               {% endif %}
           </div>
@@ -128,45 +112,98 @@
             </div>
         </div>
     </div>
+
+<!--Status section-->
     <div class="row">
-        <div class="col-sm-4 col-md-4">
-            <div class="list-group">
-                {% for act in order_action %}
-                    <h4 class="list-group-item-heading">Статус: {{ act.status }}</h4>
-                    <p class="list-group-item-text">
-                        Дата: {{ act.action_datetime|date:"d.m.Y" }} <br>
-                        Установил статус: {{ act.setting_user.get_full_name }} <br>
-                        Руководитель заказа: {{ act.manager_user.get_full_name }} <br>
-                        Исполнитель заказа: {{ act.executor_user.get_full_name }} <br>
-                        Комментарий статуса: {{ act.action_comment }}
-                    </p>
-                    <hr />
-                {% endfor %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Статусы заказа</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th>Комментарий</th>
+                    <th>Руководитель заказа</th>
+                    <th>Исполнитель заказа</th>
+                    <th>Установил статус</th>
+                  </thead>
+
+                  {% for act in order_action %}
+                  <tr>
+                    <td>{{ act.action_datetime|date:"d.m.Y" }} {{ act.action_datetime|time:"H:i" }}</td>
+                    <td>
+                        {% include "includes/order_status.html" with last_act=act.status.status_name %}
+                    </td>
+                    <td>{{ act.action_comment }}</td>
+                    <td>{{ act.manager_user.get_full_name }}</td>
+                    <td>{{ act.executor_user.get_full_name }}</td>
+                    <td>{{ act.setting_user.get_full_name }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>НЕТ ЗАПИСЕЙ</tr>
+                  {% endfor %}
+                </table>
             </div>
+          </div>
         </div>
-        <div class="col-sm-4 col-md-4">
-            <div class="list-group">
-                {% for spare in spares %}
-                    <h4 class="list-group-item-heading">Использованные запчасти:</h4>
-                    <p class="list-group-item-text">
-                        Наименование запчасти: {{ spare.spare_name }}<br>
-                        Серийный № запчасти: {{ spare.spare_serial }}
-                    </p>
-                    <hr />
-                {% endfor %}
+    </div>
+
+<!--Spares section-->
+    <div class="row">
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">Использованные запчасти</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead>
+                    <th>Наименование запчасти</th>
+                    <th>Серийный № запчасти</th>
+                  </thead>
+
+                  {% for spare in spares %}
+                  <tr>
+                    <td>{{ spare.spare_name }}</td>
+                    <td>{{ spare.spare_serial }}</td>
+                  </tr>
+                  {% empty %}
+                    <tr>НЕТ ЗАПИСЕЙ</tr>
+                  {% endfor %}
+                </table>
             </div>
+          </div>
         </div>
-        <div class="col-sm-4 col-md-4">
-            <div class="list-group">
-                {% for service in services %}
-                    <h4 class="list-group-item-heading">Выполненные работы:</h4>
-                    <p class="list-group-item-text">
-                        Наименование работ: {{ service.service_name }}<br>
-                        Количество работ: {{ service.service_qty }}
-                    </p>
-                    <hr />
-                {% endfor %}
+    </div>
+
+<!--Service section-->
+     <div class="row">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Выполненные работы</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead>
+                    <th>Наименование работ</th>
+                    <th>Количество работ</th>
+                  </thead>
+
+                  {% for service in services %}
+                  <tr>
+                    <td>{{ service.service_name }}</td>
+                    <td>{{ service.service_qty }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>НЕТ ЗАПИСЕЙ</tr>
+                  {% endfor %}
+                </table>
             </div>
+          </div>
         </div>
     </div>
 {% endblock %}

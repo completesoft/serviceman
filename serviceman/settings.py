@@ -130,3 +130,5 @@ LOGOUT_URL = '/logout/'
 
 LOGIN_REDIRECT_URL = '/repair/'
 
+#session
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

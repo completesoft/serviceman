@@ -1,0 +1,58 @@
+{% extends "repair/base.html" %}
+{% load staticfiles %}
+
+{% block top_menu %}
+  {% include "includes/top_menu.html" %}
+{% endblock %}
+
+
+{% block sidebar_action %}
+{% endblock %}
+
+
+
+{% block table_main %}
+  <div class="table-responsive">
+    <table class="table table-hover table-striped tablesorter" id="table">
+      <thead>
+        <th><span class="glyphicon glyphicon-barcode"></span></th>
+        <th>Дата приемки</th>
+        <th>Статус</th>
+        <th>Клиент</th>
+        <th>Устройство</th>
+        <th>Серийный номер</th>
+        <th class="hidden-xs">Заявленная неисправность</th>
+        <th>Мастер</th>
+        <th>Действия</th>
+      </thead>
+
+      {% for order in orders %}
+      <tr>
+        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
+        <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
+        <td><span class="label label-danger">{{ last_act }}</span></td>
+        <td>{{ order.client.client_name }}</td>
+        <td>{{ order.device_name }}</td>
+        <td>{{ order.device_serial }}</td>
+        <td class="hidden-xs">{{ order.device_defect }}</td>
+        <td>{{ order.last_action.executor_user.get_full_name }}</td>
+        <td>
+          <a href="#"><span class="glyphicon glyphicon-play green"></span></a>
+          <a href="#"><span class="glyphicon glyphicon-pause brown"></span></a>
+          <a href="#"><span class="glyphicon glyphicon-stop red"></span></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>НЕТ АРХИВНЫХ ЗАКАЗОВ</tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endblock %}
+
+
+{% block script_block %}
+  <script src="{% static 'repair/js/jquery.tablesorter.js' %}"></script>
+  <script src="{% static 'repair/js/tab_sort.js' %}"></script>
+{% endblock %}
+
+
