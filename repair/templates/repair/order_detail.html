@@ -13,21 +13,22 @@
 
 {% block table_main %}
     <div class="row">
+      <div class="col-md-3">
         <div class="panel panel-info">
             <div class="panel-heading">
-                <h3 class="panel-title">Штрихкод заказа</h3>
+              <h3 class="panel-title">Штрихкод</h3>
             </div>
             <div class="panel-body">
-                <div class="col-sm-3 col-md-4">
                     {% for x in "145" %}
                         {{ x }}
                     {% endfor %}
                     {{ order.order_barcode }}
-                </div>
             </div>
         </div>
+      </div>
     </div>
     <div class="row">
+      <div class="col-md-6">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <h3 class="panel-title">Данные заказа</h3>
@@ -52,44 +53,57 @@
                 </div>
             </div>
         </div>
-    </div>
+      </div>
+    <!-- </div> -->
     {% if not outsource %}
-    <div class="row">
+    <!-- <div class="row"> -->
+      <div class="col-md-6">
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Заказчик</h3>
           </div>
           <div class="panel-body">
-              <div class="col-sm-3 col-md-4">
-                    <p>Наименование заказчика:</p>
+              <div class="col-md-4">
+                    <p>Наименование:</p>
                     <p>{{ order.client }}</p>
               </div>
-              <div class="col-sm-3 col-md-4">
-                    <p>Размещение у клиента:</p>
+              <div class="col-md-4">
+                    <p>Размещение:</p>
                     <p>{{ order.client_position }}</p>
               </div>
               {%if order.client.client_corp %}
-              <div class="col-sm-3 col-md-4">
-                    <p>Отделение корпоративного клиента:</p>
+              <div class="col-md-4">
+                    <p>Подразделение:</p>
                     <p>{{ order.client_dep.client_dep_name }}</p>
               </div>
               {% endif %}
           </div>
         </div>
+      </div>
     </div>
     {% endif %}
     <div class="row">
-        <div class="col-sm-3 col-md-4">
-            <p>Наименование устройства:</p>
-            <p>{{ order.device_name }}</p>
-        </div>
-        <div class="col-sm-3 col-md-4">
-            <p>Серийный номер:</p>
-            <p>{{ order.device_serial }}</p>
-        </div>
+      <div class="col-md-6">
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Устройство</h3>
+          </div>
+          <div class="panel-body">
+
+            <div class="col-md-6">
+                <p>Наименование устройства:</p>
+                <p>{{ order.device_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p>Серийный номер:</p>
+                <p>{{ order.device_serial }}</p>
+            </div>
+          </div>
+      </div>
     </div>
-    <div class="row">
-        <div class="col-sm-6 col-md-8">
+
+        <div class="col-md-3">
             <div class="panel panel-default">
               <div class="panel-heading">
                 <h3 class="panel-title">Неисправности</h3>
@@ -99,9 +113,8 @@
               </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-6 col-md-8">
+
+        <div class="col-md-3">
             <div class="panel panel-default">
               <div class="panel-heading">
                 <h3 class="panel-title">Комментарий</h3>
@@ -115,9 +128,10 @@
 
 <!--Status section-->
     <div class="row">
+        <div class="col-md-12">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Статусы заказа</h3>
+            <h3 class="panel-title">История</h3>
           </div>
           <div class="panel-body">
             <div class="table-responsive">
@@ -134,9 +148,7 @@
                   {% for act in order_action %}
                   <tr>
                     <td>{{ act.action_datetime|date:"d.m.Y" }} {{ act.action_datetime|time:"H:i" }}</td>
-                    <td>
-                        {% include "includes/order_status.html" with last_act=act.status.status_name %}
-                    </td>
+                    <td>{% include "includes/order_status.html" with last_act=act.status.status_name %} </td>
                     <td>{{ act.action_comment }}</td>
                     <td>{{ act.manager_user.get_full_name }}</td>
                     <td>{{ act.executor_user.get_full_name }}</td>
@@ -149,10 +161,12 @@
             </div>
           </div>
         </div>
+        </div>
     </div>
 
 <!--Spares section-->
     <div class="row">
+        <div class="col-md-12">
         <div class="panel panel-info">
           <div class="panel-heading">
             <h3 class="panel-title">Использованные запчасти</h3>
@@ -177,10 +191,12 @@
             </div>
           </div>
         </div>
+        </div>
     </div>
 
 <!--Service section-->
      <div class="row">
+         <div class="col-md-12">
         <div class="panel panel-primary">
           <div class="panel-heading">
             <h3 class="panel-title">Выполненные работы</h3>
@@ -205,7 +221,6 @@
             </div>
           </div>
         </div>
+        </div>
     </div>
 {% endblock %}
-
-

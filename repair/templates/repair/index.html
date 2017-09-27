@@ -52,7 +52,6 @@
         <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
         <th>Мастер</th>
-        <th>Действия</th>
       </thead>
 
       {% for order in orders %}
@@ -60,7 +59,7 @@
         <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
           {% with order.last_status as last_act %}
-            {% include "includes/order_status.html" %}
+            <td>{% include "includes/order_status.html" %}</td>
           {% endwith %}
           {%if not outsource %}
             <td>{{ order.client.client_name }}</td>
@@ -69,11 +68,6 @@
         <td>{{ order.device_serial }}</td>
         <td class="hidden-xs">{{ order.device_defect }}</td>
         <td>{{ order.last_action.executor_user.get_full_name }}</td>
-        <td>
-          <a href="#"><span class="glyphicon glyphicon-play green"></span></a>
-          <a href="#"><span class="glyphicon glyphicon-pause brown"></span></a>
-          <a href="#"><span class="glyphicon glyphicon-stop red"></span></a>
-        </td>
       </tr>
       {% endfor %}
     </table>

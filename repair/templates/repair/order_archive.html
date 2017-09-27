@@ -23,7 +23,6 @@
         <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
         <th>Мастер</th>
-        <th>Действия</th>
       </thead>
 
       {% for order in orders %}
@@ -36,11 +35,7 @@
         <td>{{ order.device_serial }}</td>
         <td class="hidden-xs">{{ order.device_defect }}</td>
         <td>{{ order.last_action.executor_user.get_full_name }}</td>
-        <td>
-          <a href="#"><span class="glyphicon glyphicon-play green"></span></a>
-          <a href="#"><span class="glyphicon glyphicon-pause brown"></span></a>
-          <a href="#"><span class="glyphicon glyphicon-stop red"></span></a>
-        </td>
+
       </tr>
       {% empty %}
       <tr>НЕТ АРХИВНЫХ ЗАКАЗОВ</tr>
@@ -54,5 +49,3 @@
   <script src="{% static 'repair/js/jquery.tablesorter.js' %}"></script>
   <script src="{% static 'repair/js/tab_sort.js' %}"></script>
 {% endblock %}
-
-

@@ -10,12 +10,15 @@
   {% include "includes/action_menu.html" with menu_set="2" %}
 {% endblock %}
 
+{% block sub_header_progress_bar %}
+  <h2 class="sub-header">Клиенты</h2>
+{% endblock %}
 
 {% block table_main %}
   <div class="table-responsive">
     <table class="table table-hover table-striped tablesorter" id="table">
       <thead>
-        <th>№ п/п</th>
+        <th>1№ п/п</th>
         <th>Клиент</th>
         <th>Контакты клиента</th>
         <th>Корпоративный клиент</th>
@@ -69,5 +72,3 @@
   <script src="{% static 'repair/js/jquery.tablesorter.js' %}"></script>
   <script src="{% static 'repair/js/tab_sort.js' %}"></script>
 {% endblock %}
-
-
