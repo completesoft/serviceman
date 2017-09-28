@@ -1,5 +1,7 @@
 {% if outsource %}
     <li><a href="{% url 'repair:index' %}"></span>Обзор</a></li>
+    <li><a href="{% url 'repair:my_order' %}"></span>Начисления</a></li>
+    <li><a href="{% url 'repair:order_archive' %}"></span>Архив</a></li>
 {% else %}
     <li><a href="{% url 'repair:index' %}"></span>Обзор</a></li>
     <li><a href="{% url 'repair:my_order' %}"></span>Мои заказы</a></li>

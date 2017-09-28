@@ -15,7 +15,7 @@ class OrderHeaderForm (forms.ModelForm):
         fields = ["order_barcode", "client", "client_dep", "client_position", "device_name", "device_defect", "device_serial",
                   "order_comment"]
 
-    order_barcode = forms.CharField(max_length=150, label="Штрихкод")
+    order_barcode = forms.CharField(max_length=150, label="Штрихкод", widget=forms.TextInput(attrs={'class':'form-control'}))
     client_position = forms.CharField(max_length=150, label="Размещение у клиента", widget=forms.Textarea)
     device_name = forms.CharField(max_length=100, required=True, label="Наименование устройства", widget=forms.TextInput(attrs={'size':'80'}))
     device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность")
@@ -64,6 +64,3 @@ class ClientEditForm(forms.ModelForm):
     class Meta:
         model = Clients
         fields = ["client_contact"]
-
-
-
