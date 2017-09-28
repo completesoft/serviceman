@@ -23,12 +23,20 @@
       <div class="form-group">
 
         <label class="col-md-3 control-label">{{ field.label }}:</label>
-        <div class="col-md-9">
+        <div class="col-md-5">
           {% if field.name in "client" %}
+          <div class="input-group">
+
           {{field}}
-          <a href="/repair/add/{{ field.name }}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);" title="Добавить нового клиента">
+            <span class="input-group-addon">
+              <a href="/repair/add/{{ field.name }}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);" title="Добавить нового клиента">
+                <i class="glyphicon glyphicon-plus text-success"></i>
+              </a>
+            </span>
+          </div>
+          <!-- <a href="/repair/add/{{ field.name }}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);" title="Добавить нового клиента">
             <img src="{% static 'repair/img/add.svg' %}" width="20" height="20" alt="Добавить клиента"/>
-          </a>
+          </a> -->
           {% else %}
           {{ field }}
           {% endif %}

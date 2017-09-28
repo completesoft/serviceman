@@ -29,7 +29,9 @@
       <tr>
         <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-        <td><span class="label label-danger">{{ last_act }}</span></td>
+        {% with order.last_status as last_act %}
+          <td>{% include "includes/order_status.html" %}</td>
+        {% endwith %}
         <td>{{ order.client.client_name }}</td>
         <td>{{ order.device_name }}</td>
         <td>{{ order.device_serial }}</td>

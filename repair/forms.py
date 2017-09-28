@@ -12,18 +12,19 @@ class MyModelChoiceField(ModelChoiceField):
 class OrderHeaderForm (forms.ModelForm):
     class Meta:
         model = DocOrderHeader
-        fields = ["order_barcode", "client", "client_dep", "client_position", "device_name", "device_defect", "device_serial",
+        fields = ["order_barcode", "client", "client_dep", "client_position", "device_name", "device_serial", "device_defect",
                   "order_comment"]
 
     order_barcode = forms.CharField(max_length=150, label="Штрихкод", widget=forms.TextInput(attrs={'class':'form-control'}))
-    client_position = forms.CharField(max_length=150, label="Размещение у клиента", widget=forms.Textarea)
-    device_name = forms.CharField(max_length=100, required=True, label="Наименование устройства", widget=forms.TextInput(attrs={'size':'80'}))
-    device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность")
-    device_serial = forms.CharField(required=True, label="Серийный номер устройства")
+    client_position = forms.CharField(max_length=150, label="Размещение у клиента", widget=forms.TextInput(attrs={'class':'form-control'}))
+    device_name = forms.CharField(max_length=100, required=True, label="Наименование устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
+    device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
+    device_serial = forms.CharField(required=True, label="Серийный номер устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
     order_comment = forms.CharField(max_length=255, label="Комментарий", widget=forms.Textarea, required=False)
-    client_dep = forms.ModelChoiceField(label="Отделения клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False)
-    executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.all(), required=True, empty_label="Выберите исполнителя")
-
+    client_dep = forms.ModelChoiceField(label="Отделения клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
+    executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.all(), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
+    client = forms.ModelChoiceField(label="Клиент", initial=Clients.objects.none(), queryset=Clients.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
+    order_comment = forms.CharField(label="Комментарий", widget=forms.TextInput(attrs={'class':'form-control'}))
 
 class ActionForm(forms.ModelForm):
     class Meta:
