@@ -177,7 +177,11 @@ class ActionCreateView(CreateView):
         context = super(ActionCreateView, self).get_context_data(**kwargs)
         context["order"] = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
         if not self.request.user.is_superuser:
-            context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name="Архивный")
+            if self.request.user.groups.filter(name='outsource').values_list('name', flat=True):
+                print(self.request.user.groups.filter(name='outsource').values_list('name', flat=True))
+                context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name__in=["Архивный", "Передан клиенту"])
+            else:
+                context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name="Архивный")
         return context
 
     @method_decorator(login_required)
@@ -185,8 +189,6 @@ class ActionCreateView(CreateView):
         outsource_group = True if request.user.groups.filter(name='outsource').values_list('name', flat=True) else False
         if not request.user.is_active:
             return redirect(LOGIN_URL)
-        if outsource_group:
-            return redirect("repair:index")
         order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
         if order.last_status() == "Архивный" and not request.user.is_superuser:
             return redirect("repair:order_detail", order_id=kwargs["order_id"])
@@ -423,6 +425,12 @@ class OrderArchiveView(ListView):
             raw_orders = DocOrderHeader.objects.all()
         orders = [obj for obj in raw_orders if obj.last_status() == "Архивный"]
         return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(OrderArchiveView, self).get_context_data(**kwargs)
+        outsource_group = self.request.user.groups.filter(name='outsource').values_list('name', flat=True)
+        context["outsource"] = True if outsource_group else False
+        return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):

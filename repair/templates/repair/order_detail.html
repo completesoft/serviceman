@@ -7,7 +7,9 @@
 
 
 {% block sidebar_action %}
+    {% if order.last_status != "Архивный" %}
     {% include "includes/action_menu.html" with menu_set="3" %}
+    {% endif %}
 {% endblock %}
 
 

@@ -23,19 +23,19 @@
       <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/repair/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="177" column="0" selection-start-line="177" selection-start-column="0" selection-end-line="178" selection-end-column="0" />
+            <state relative-caret-position="421">
+              <caret line="432" column="22" selection-start-line="432" selection-start-column="22" selection-end-line="432" selection-end-column="22" />
               <folding>
                 <element signature="e#0#51#0" expanded="true" />
-                <element signature="e#9457#10441#0" expanded="false" />
-                <element signature="e#10499#11447#0" expanded="false" />
-                <element signature="e#11486#12122#0" expanded="false" />
-                <element signature="e#12165#13623#0" expanded="false" />
-                <element signature="e#13666#14456#0" expanded="false" />
-                <element signature="e#14497#16081#0" expanded="false" />
-                <element signature="e#16131#17125#0" expanded="false" />
-                <element signature="e#17191#17451#0" expanded="false" />
-                <element signature="e#17509#18235#0" expanded="false" />
+                <element signature="e#9743#10727#0" expanded="false" />
+                <element signature="e#10785#11733#0" expanded="false" />
+                <element signature="e#11772#12408#0" expanded="false" />
+                <element signature="e#12451#13909#0" expanded="false" />
+                <element signature="e#13952#14742#0" expanded="false" />
+                <element signature="e#14783#16367#0" expanded="false" />
+                <element signature="e#16417#17411#0" expanded="false" />
+                <element signature="e#17477#17737#0" expanded="false" />
+                <element signature="e#17795#18521#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -63,10 +63,42 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="order_detail.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/repair/templates/repair/order_detail.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="187">
+              <caret line="11" column="15" selection-start-line="11" selection-start-column="15" selection-end-line="11" selection-end-column="15" />
+              <folding>
+                <element signature="n#thead#0;n#table#0;n#div#0;n#div#1;n#div#0;n#div#0;n#div#5;n#!!top" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="order_archive.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/repair/templates/repair/order_archive.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="top_menu.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/repair/templates/includes/top_menu.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="187">
+              <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/repair/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="407">
+            <state relative-caret-position="1274">
               <caret line="112" column="28" selection-start-line="112" selection-start-column="28" selection-end-line="112" selection-end-column="28" />
               <folding>
                 <marker date="1507026133546" expanded="true" signature="2100:2347" ph="..." />
@@ -130,10 +162,10 @@
         <option value="$PROJECT_DIR$/repair/templates/repair/client_add_popup.html" />
         <option value="$PROJECT_DIR$/repair/templates/repair/index.html" />
         <option value="$PROJECT_DIR$/repair/forms.py" />
-        <option value="$PROJECT_DIR$/repair/views.py" />
-        <option value="$PROJECT_DIR$/repair/templates/repair/order_detail.html" />
         <option value="$PROJECT_DIR$/repair/templates/repair/ajax/ajax_add_spare_form.html" />
         <option value="$PROJECT_DIR$/repair/templates/includes/action_menu.html" />
+        <option value="$PROJECT_DIR$/repair/templates/repair/order_detail.html" />
+        <option value="$PROJECT_DIR$/repair/views.py" />
       </list>
     </option>
   </component>
@@ -555,7 +587,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1052" extended-state="7" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17650159" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -563,7 +595,7 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329718" sideWeight="0.49789253" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32964602" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24868283" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21583514" sideWeight="0.4915701" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21583514" sideWeight="0.4915701" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="PlantUML" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -615,13 +647,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/serviceman/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="16" column="14" selection-start-line="16" selection-start-column="14" selection-end-line="16" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/repair/templates/repair/service_add.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="867">
@@ -895,16 +920,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/repair/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="407">
-          <caret line="112" column="28" selection-start-line="112" selection-start-column="28" selection-end-line="112" selection-end-column="28" />
-          <folding>
-            <marker date="1507026133546" expanded="true" signature="2100:2347" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/repair/templates/repair/ajax/ajax_add_service_tr.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
@@ -929,14 +944,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/repair/templates/includes/top_menu.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/repair/tests.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="51">
@@ -950,16 +957,6 @@
         <state relative-caret-position="759">
           <caret line="92" column="0" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/repair/templates/repair/order_detail.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="278" column="98" selection-start-line="278" selection-start-column="98" selection-end-line="278" selection-end-column="98" />
-          <folding>
-            <element signature="n#thead#0;n#table#0;n#div#0;n#div#1;n#div#0;n#div#0;n#div#5;n#!!top" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -981,6 +978,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/repair/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1274">
+          <caret line="112" column="28" selection-start-line="112" selection-start-column="28" selection-end-line="112" selection-end-column="28" />
+          <folding>
+            <marker date="1507026133546" expanded="true" signature="2100:2347" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/repair/templates/includes/action_menu.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="340">
@@ -989,21 +996,47 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/repair/templates/includes/top_menu.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/repair/templates/repair/order_detail.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="15" selection-start-line="11" selection-start-column="15" selection-end-line="11" selection-end-column="15" />
+          <folding>
+            <element signature="n#thead#0;n#table#0;n#div#0;n#div#1;n#div#0;n#div#0;n#div#5;n#!!top" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/repair/templates/repair/order_archive.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/repair/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="177" column="0" selection-start-line="177" selection-start-column="0" selection-end-line="178" selection-end-column="0" />
+        <state relative-caret-position="421">
+          <caret line="432" column="22" selection-start-line="432" selection-start-column="22" selection-end-line="432" selection-end-column="22" />
           <folding>
             <element signature="e#0#51#0" expanded="true" />
-            <element signature="e#9457#10441#0" expanded="false" />
-            <element signature="e#10499#11447#0" expanded="false" />
-            <element signature="e#11486#12122#0" expanded="false" />
-            <element signature="e#12165#13623#0" expanded="false" />
-            <element signature="e#13666#14456#0" expanded="false" />
-            <element signature="e#14497#16081#0" expanded="false" />
-            <element signature="e#16131#17125#0" expanded="false" />
-            <element signature="e#17191#17451#0" expanded="false" />
-            <element signature="e#17509#18235#0" expanded="false" />
+            <element signature="e#9743#10727#0" expanded="false" />
+            <element signature="e#10785#11733#0" expanded="false" />
+            <element signature="e#11772#12408#0" expanded="false" />
+            <element signature="e#12451#13909#0" expanded="false" />
+            <element signature="e#13952#14742#0" expanded="false" />
+            <element signature="e#14783#16367#0" expanded="false" />
+            <element signature="e#16417#17411#0" expanded="false" />
+            <element signature="e#17477#17737#0" expanded="false" />
+            <element signature="e#17795#18521#0" expanded="false" />
           </folding>
         </state>
       </provider>
