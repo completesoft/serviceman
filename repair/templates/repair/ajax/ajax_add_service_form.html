@@ -1,0 +1,15 @@
+<form action="{% url 'repair:ajax_add_service' order_id=order_id %}" method="POST" id="service_form" autocomplete="off">
+{% csrf_token %}
+    <div class="form-group">
+    <label for="{{ service_form.service_name.id_for_label }}">Наименование работ: {{ service_form.service_name.errors }}</label>
+    {{ service_form.service_name }}
+    </div>
+    <div class="form-group">
+    <label for="{{ service_form.service_qty.id_for_label }}">Кол-во: {{ service_form.service_qty.errors }}</label>
+    {{ service_form.service_qty }}
+    </div>
+    <div class="form-group">
+    <label for="{{ service_form.cost.id_for_label }}">Стоимость 1 шт: {{ service_form.cost.errors }}</label>
+    {{ service_form.cost }}
+    </div>
+</form>

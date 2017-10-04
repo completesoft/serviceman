@@ -53,7 +53,8 @@ class DirStatus (models.Model):
     #     ('В работе', 'В работе'),
     #     ('Ожидание', 'Ожидание'),
     #     ('Выполнен', 'Выполнен'),
-    #     ('Просрочен', 'Просрочен')
+    #     ('Просрочен', 'Просрочен'),
+    #     ('Передан клиенту', 'Передан клиенту')
     # )
 
     status_name = models.CharField("Состояние", max_length=100, null=False, blank=False)
@@ -90,10 +91,12 @@ class DocOrderAction(models.Model):
 
 class DocOrderServiceContent(models.Model):
 
+    add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
     order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE, null=False, blank=False)
     service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
-    service_qty = models.PositiveIntegerField("Количество работ", default=1, null=False, blank=False)
-    cost = models.PositiveIntegerField("Стоимость работ", default=0, null=True, blank=False)
+    service_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
+    cost = models.PositiveIntegerField("Стоимость 1 шт", default=0, null=True, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Установил статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
 
     class Meta():
         db_table = 'doc_order_service_content'
@@ -103,9 +106,12 @@ class DocOrderServiceContent(models.Model):
 
 class DocOrderSparesContent (models.Model):
 
+    add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
     order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE, null=False, blank=False)
     spare_name = models.CharField("Наименование запчасти", max_length=255, default="", null=False, blank=False)
     spare_serial = models.CharField("Серийный № запчасти", max_length=100, default="", null=False, blank=False)
+    spares_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Установил статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
 
     class Meta():
         db_table = 'doc_order_spares_content'
@@ -122,6 +128,9 @@ class ClientsDep(models.Model):
         db_table = 'clients_dep'
         verbose_name = "Подразделения клиента"
         verbose_name_plural = "Подразделения клиентов"
+
+    def __str__(self):
+        return "{}".format(self.client_dep_name)
 
 
 class Images(models.Model):

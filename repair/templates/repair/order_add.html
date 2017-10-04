@@ -34,11 +34,8 @@
               </a>
             </span>
           </div>
-          <!-- <a href="/repair/add/{{ field.name }}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);" title="Добавить нового клиента">
-            <img src="{% static 'repair/img/add.svg' %}" width="20" height="20" alt="Добавить клиента"/>
-          </a> -->
           {% else %}
-          {{ field }}
+          {{ field }}{{ field.errors }}
           {% endif %}
         </div>
       </div>

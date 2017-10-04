@@ -7,7 +7,7 @@
 
 
 {% block sidebar_action %}
-    {% include "includes/action_menu.html" with menu_set="345" %}
+    {% include "includes/action_menu.html" with menu_set="3" %}
 {% endblock %}
 
 
@@ -19,9 +19,6 @@
               <h3 class="panel-title">Штрихкод</h3>
             </div>
             <div class="panel-body">
-                    {% for x in "145" %}
-                        {{ x }}
-                    {% endfor %}
                     {{ order.order_barcode }}
             </div>
         </div>
@@ -147,7 +144,7 @@
 
                   {% for act in order_action %}
                   <tr>
-                    <td>{{ act.action_datetime|date:"d.m.Y" }} {{ act.action_datetime|time:"H:i" }}</td>
+                    <td>{{ act.action_datetime|date:"d.m.Y H:i" }}</td>
                     <td>{% include "includes/order_status.html" with last_act=act.status.status_name %} </td>
                     <td>{{ act.action_comment }}</td>
                     <td>{{ act.manager_user.get_full_name }}</td>
@@ -173,7 +170,7 @@
           </div>
           <div class="panel-body">
             <div class="table-responsive">
-                <table class="table table-hover table-striped">
+                <table class="table table-hover table-striped" id="spare_table">
                   <thead>
                     <th>Дата</th>
                     <th>Наименование запчасти</th>
@@ -186,24 +183,18 @@
                   <tbody>
                     {% for spare in spares %}
                     <tr>
-                      <td>01.01.2001 18:39</td>
+                      <td>{{ spare.add_datetime|date:"d.m.Y H:i" }}</td>
                       <td>{{ spare.spare_name }}</td>
                       <td>{{ spare.spare_serial }}</td>
-                      <td>1</td>
-                      <td>Пупкин Пупок</td>
-                      <td><button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+                      <td>{{ spare.spares_qty }}</td>
+                      <td>{{ spare.setting_user.get_full_name }}</td>
+                      <td><button type="button" class="btn btn-danger delete"  url="{% url 'repair:spare' %}" order="{{ order.id }}" id="spare{{ spare.id }}" value="{{ spare.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
                     </tr>
-
-                    {% empty %}
-                      <tr>НЕТ ЗАПИСЕЙ</tr>
                     {% endfor %}
+
                     <tr>
-                      <td></td>
-                      <td><input class="form-control" /></td>
-                      <td><input class="form-control" /></td>
-                      <td><input class="form-control" /></td>
-                      <td></td>
-                      <td><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                      <td colspan="5" ></td>
+                      <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_spare_add" id="super_spare_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
                     </tr>
                   </tbody>
 
@@ -223,7 +214,7 @@
           </div>
           <div class="panel-body">
             <div class="table-responsive">
-                <table class="table table-hover table-striped">
+                <table class="table table-hover table-striped" id="service_table">
                   <thead>
                     <th>Дата</th>
                     <th>Наименование работ</th>
@@ -236,24 +227,24 @@
                 <tbody>
                   {% for service in services %}
                   <tr>
-                    <td>01.01.2001 18:39</td>
+                    <td>{{ service.add_datetime|date:"d.m.Y H:i" }}</td>
                     <td>{{ service.service_name }}</td>
-                    <td>2</td>
+                    <td>{{ service.service_qty }}</td>
                     <td>{{ service.cost }}</td>
-                    <td>Пупкин Пупок</td>
-                    <td><button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+                    <td>{{ service.setting_user.get_full_name }}</td>
+                    <td><button type="button" class="btn btn-danger delete" url="{% url 'repair:service' %}" order="{{ order.id }}" id="service{{ service.id }}" value="{{ service.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
                   </tr>
-                  {% empty %}
-                  <tr>НЕТ ЗАПИСЕЙ</tr>
                   {% endfor %}
+
                   <tr>
-                    <td></td>
-                    <td><input class="form-control" /></td>
-                    <td><input class="form-control" /></td>
-                    <td><input class="form-control" /></td>
-                    <td></td>
-                    <td><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                    <td colspan="5" ></td>
+                    <td>
+                      <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_service_add" id="super_service_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button>
+                    </td>
                   </tr>
+
+
+
                 </tbody>
                 </table>
             </div>
@@ -261,4 +252,86 @@
         </div>
         </div>
     </div>
+
+<!-- modAl for Spare add -->
+<div id="modal_spare_add" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Добавить запчасти по заказу</h4>
+      </div>
+
+          <div class="modal-body" id="spare_panel">
+              <form action="{% url 'repair:ajax_add_spare' order_id=order.id %}" method="POST" id="spare_form" autocomplete="off">
+            {% csrf_token %}
+              <div class="form-group">
+                <label for="{{ spare_form.spare_name.id_for_label }}">Наименование запчасти: {{ spare_form.spare_name.errors }}</label>
+                {{ spare_form.spare_name }}
+              </div>
+              <div class="form-group">
+                <label for="{{ spare_form.spare_serial.id_for_label }}">Серийный № запчасти: {{ spare_form.spare_serial.errors }}</label>
+                {{ spare_form.spare_serial }}
+              </div>
+              <div class="form-group">
+                <label for="{{ spare_form.spares_qty.id_for_label }}">Кол-во: {{ spare_form.spares_qty.errors }}</label>
+                {{ spare_form.spares_qty }}
+              </div>
+            </form>
+          </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="add_spare_button">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- modAl for Service add -->
+<div id="modal_service_add" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Добавить работу по заказу</h4>
+      </div>
+
+          <div class="modal-body" id="service_panel">
+              <form action="{% url 'repair:ajax_add_service' order_id=order.id %}" method="POST" id="service_form" autocomplete="off">
+            {% csrf_token %}
+              <div class="form-group">
+                <label for="{{ service_form.service_name.id_for_label }}">Наименование работ: {{ service_form.service_name.errors }}</label>
+                {{ service_form.service_name }}
+              </div>
+              <div class="form-group">
+                <label for="{{ service_form.service_qty.id_for_label }}">Кол-во: {{ service_form.service_qty.errors }}</label>
+                {{ service_form.service_qty }}
+              </div>
+              <div class="form-group">
+                <label for="{{ service_form.cost.id_for_label }}">Стоимость 1 шт: {{ service_form.cost.errors }}</label>
+                {{ service_form.cost }}
+              </div>
+            </form>
+          </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="add_service_button">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block script_block %}
+<script type="text/javascript" src="{% static 'repair/js/action.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,15 @@
+<form action="{% url 'repair:ajax_add_spare' order_id=order_id %}" method="POST" id="spare_form" autocomplete="off">
+{% csrf_token %}
+  <div class="form-group">
+    <label for="{{ spare_form.spare_name.id_for_label }}">Наименование запчасти: {{ spare_form.spare_name.errors }}</label>
+    {{ spare_form.spare_name }}
+  </div>
+  <div class="form-group">
+    <label for="{{ spare_form.spare_serial.id_for_label }}">Серийный № запчасти: {{ spare_form.spare_serial.errors }}</label>
+    {{ spare_form.spare_serial }}
+  </div>
+  <div class="form-group">
+    <label for="{{ spare_form.spares_qty.id_for_label }}">Кол-во: {{ spare_form.spares_qty.errors }}</label>
+    {{ spare_form.spares_qty }}
+  </div>
+</form>

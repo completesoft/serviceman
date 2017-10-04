@@ -18,7 +18,7 @@
     </div>
     {% endfor %}
     <div id="dep_block" class="form-group hidden">
-      <h3>Добавляем отделения клиента:</h3>
+      <h4>Добавляем отделения клиента:</h4>
     </div>
     <input id="add_dep" type="button" class="btn btn-success hidden" value="Добавить отделение"/>
     <p><input type="submit" value="Добавить клиента"/> | <a href="javascript:window.close()">Cancel</a></p>
@@ -26,7 +26,6 @@
 {% endblock %}
 
 {% block script_block %}
-<!--<script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>-->
 <script src="{% static 'repair/js/action.js' %}"></script>
 <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
 <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>

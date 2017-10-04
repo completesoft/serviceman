@@ -18,6 +18,8 @@
         {% else %}
             {% if menu_item == '4' %}
                 <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
+            {% elif menu_item == '3' %}
+                <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
             {% endif %}
         {% endif %}
     {% endfor %}

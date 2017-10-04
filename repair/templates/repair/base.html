@@ -15,6 +15,7 @@
     <!-- Bootstrap core CSS -->
     <link href="{% static 'repair/css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'repair/css/style-table-sort.css' %}" rel="stylesheet">
+    {% block other_css %}{% endblock %}
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 
 
@@ -51,7 +52,7 @@
             {% block top_menu %}{% endblock %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{user.get_full_name}}</a></li>
+            <li><a href="{% url 'repair:change_pass' %}"><span class="glyphicon glyphicon-user"></span> {{user.get_full_name}}</a></li>
             <li><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-in"></span> Выход</a></li>
           </ul>
         </div>
@@ -68,7 +69,7 @@
 
 
 
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" id="x_block">
           {% block sub_header_progress_bar %}{% endblock %}
 
           {% block table_main %}{% endblock %}
@@ -81,9 +82,8 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="{% static 'repair/js/jquery-1.12.4.min.js' %}"></script>
     <script src="{% static 'repair/js/bootstrap.min.js' %}"></script>
-    <link href="{% static 'repair/css/style-table-sort.css' %}" rel="stylesheet">
     {% block script_block %}{% endblock %}
   </body>
 </html>

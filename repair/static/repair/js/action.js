@@ -10,14 +10,6 @@ $(document).ready(function(){
     addBlock("#service_block", "#service_div", "#id_service-TOTAL_FORMS", "#id_service-INITIAL_FORMS");
     });
 
-    $("#del_service").click(function() {
-    delBlock("#service_block", "#service_div", "#id_service-TOTAL_FORMS", "#id_service-INITIAL_FORMS");
-    });
-
-    $("#del_spare").click(function() {
-            delBlock("#spare_block", "#spare_div", "#id_spare-TOTAL_FORMS", "#id_spare-INITIAL_FORMS");
-    });
-
     $("#add_dep").click(function() {
             addBlockShort("#dep_block");
     });
@@ -30,7 +22,127 @@ $(document).ready(function(){
             ajaxUpdate("#id_client", "#id_client_dep");
     });
 
+    $("#modal_service_add").on("click", "#add_service_button", function () {
+      ajaxServiceAdd();
+    });
+
+    $("#service_table").on("click", "button.delete", function () {
+      ajaxServiceDel(this);
+    });
+
+    $("#modal_spare_add").on("click", "#add_spare_button", function () {
+      ajaxSpareAdd();
+    });
+
+    $("#spare_table").on("click", "button.delete", function () {
+      ajaxSpareDel(this);
+    });
+
 });
+
+function ajaxSpareDel(button){
+    var order_id = $(button).attr("order");
+    var spare_id = $(button).attr("value");
+    var url = $(button).attr("url");
+    $.ajax({
+            data: {"order_id": order_id, "spare_id": spare_id},
+            type: "GET",
+            url: url,
+            success: function(json){
+                result = confirm("Вы действительно хотите удалить эти запчасти?");
+                if (!result){
+                    return false;
+                }
+                $.ajax({
+                        data: {"order_id": json.order_id, "spare_id": json.spare_id},
+                        type: "POST",
+                        url: url,
+                        headers: { "X-CSRFToken": json.csrf_token },
+                        success: function(json){
+                            tr = $(button).parent().parent();
+                            $(tr).remove();
+                        }
+                });
+                return false;
+            }
+    });
+    return false;
+}
+
+
+function ajaxSpareAdd(){
+    var form = $("#spare_form");
+    var csrf = $("#spare_form input[name=csrfmiddlewaretoken]").attr("value");
+    $.ajax({
+            headers: { "X-CSRFToken": csrf },
+            data: form.serialize(),
+            type: form.attr("method"),
+            url: form.attr("action"),
+            success: function(json){
+                if (json.tr=="error") {
+                    $("#spare_panel").html(json.form);
+                }
+                else{
+                    $("#spare_panel").html(json.form);
+                    $("#spare_table tbody").find("tr:last").before(json.tr);
+                }
+            }
+    });
+    return false;
+}
+
+
+function ajaxServiceDel(button){
+    var order_id = $(button).attr("order");
+    var service_id = $(button).attr("value");
+    var url = $(button).attr("url");
+    $.ajax({
+            data: {"order_id": order_id, "service_id": service_id},
+            type: "GET",
+            url: url,
+            success: function(json){
+                result = confirm("Вы действительно хотите удалить эти работы?");
+                if (!result){
+                    return false;
+                }
+                $.ajax({
+                        data: {"order_id": json.order_id, "service_id": json.service_id},
+                        type: "POST",
+                        url: url,
+                        headers: { "X-CSRFToken": json.csrf_token },
+                        success: function(json){
+                            tr = $(button).parent().parent();
+                            $(tr).remove();
+                        }
+                });
+                return false;
+            }
+    });
+    return false;
+}
+
+
+function ajaxServiceAdd(){
+    var form = $("#service_form");
+    var csrf = $("#service_form input[name=csrfmiddlewaretoken]").attr("value");
+    $.ajax({
+            headers: { "X-CSRFToken": csrf },
+            data: form.serialize(),
+            type: form.attr("method"),
+            url: form.attr("action"),
+            success: function(json){
+                if (json.tr=="error") {
+                    $("#service_panel").html(json.form);
+                }
+                else{
+                    $("#service_panel").html(json.form);
+                    $("#service_table tbody").find("tr:last").before(json.tr);
+                }
+            }
+    });
+    return false;
+}
+
 
 function ajaxUpdate(source, destination){
     var csrf = $("[name=csrfmiddlewaretoken]").attr("value");
@@ -99,18 +211,6 @@ function addBlock(source, destination, forms_counter, init_forms){
           $(forms_counter).val(currentcount+1);
           $(init_forms).val(currentcount+1);
           $(destination).append(block);
-}
-
-function delBlock(source, destination, forms_counter, init_forms){
-
-          var currentcount = parseInt($(forms_counter).val());
-          var block = $(destination).children("fieldset:last");
-
-          if(currentcount>1){
-            $(block).remove();
-            $(forms_counter).val(currentcount-1);
-            $(init_forms).val(currentcount-1);
-          }
 }
 
 })(jQuery);
