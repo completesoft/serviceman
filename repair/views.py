@@ -1,7 +1,11 @@
 from django.template.loader import render_to_string
-from django.shortcuts import render, redirect, render_to_response
+from django.template.response import TemplateResponse
+from django.shortcuts import render, redirect, render_to_response, resolve_url
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import Group, User
+from django.contrib.auth.views import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import deprecate_current_app
 from django.views.decorators.cache import never_cache
 from .models import DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent, DocOrderSparesContent, Clients, \
     ClientsDep
@@ -17,7 +21,8 @@ from serviceman.settings import LOGIN_URL
 from django.contrib import messages
 from django.core.exceptions import FieldError, ValidationError, ObjectDoesNotExist
 from django.utils.html import escape
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
+from django.views.decorators.debug import sensitive_post_parameters
 from django.core.paginator import Paginator, InvalidPage
 from django.middleware.csrf import get_token
 
@@ -538,3 +543,36 @@ def spare(request):
                     "csrf_token": get_token(request)}
             return JsonResponse(data)
     return redirect("repair:order_detail", order_id=order_id)
+
+
+@sensitive_post_parameters()
+@csrf_protect
+@login_required
+@deprecate_current_app
+def password_change(request,
+                    template_name='registration/password_change_form.html',
+                    post_change_redirect=None,
+                    password_change_form=PasswordChangeForm,
+                    extra_context=None):
+    if post_change_redirect is None:
+        post_change_redirect = reverse('password_change_done')
+    else:
+        post_change_redirect = resolve_url(post_change_redirect)
+    if request.method == "POST":
+        form = password_change_form(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            # Updating the password logs out all other sessions for the user
+            # except the current one.
+            update_session_auth_hash(request, form.user)
+            messages.add_message(request, messages.SUCCESS, "Пароль изменен!!!")
+            return HttpResponseRedirect(post_change_redirect)
+    else:
+        form = password_change_form(user=request.user)
+    context = {
+        'form': form,
+    }
+    if extra_context is not None:
+        context.update(extra_context)
+
+    return TemplateResponse(request, template_name, context)

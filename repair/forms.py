@@ -25,7 +25,7 @@ class OrderHeaderForm (forms.ModelForm):
     client_dep = forms.ModelChoiceField(label="Отделения клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.all(), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
-    order_comment = forms.CharField(label="Комментарий", widget=forms.TextInput(attrs={'class':'form-control'}))
+    order_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
 
 class ActionForm(forms.ModelForm):
     class Meta:

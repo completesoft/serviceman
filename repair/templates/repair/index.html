@@ -14,20 +14,20 @@
 
 
 {% block sub_header_progress_bar %}
+  {% if messages %}
+    {% for message in messages %}
+      <p>
+        <div class="alert alert alert-success alert-dismissable">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {{ message }}
+        </div>
+      </p>
+    {% endfor %}
+  {% endif %}
   {% if not outsource %}
-  <h2 class="sub-header">Все заказы</h2>
+    <h2 class="sub-header">Все заказы</h2>
   {% else %}
-    {% if messages %}
-      {% for message in messages %}
-        <p>
-          <div class="alert alert alert-success alert-dismissable">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            {{ message }}
-          </div>
-        </p>
-      {% endfor %}
-    {% endif %}
-  <h2 class="sub-header">Ваши заказы</h2>
+    <h2 class="sub-header">Ваши заказы</h2>
   {% endif %}
 <!--
   <div class="progress">
