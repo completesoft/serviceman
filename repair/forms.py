@@ -17,7 +17,7 @@ class OrderHeaderForm (forms.ModelForm):
                   "order_comment"]
 
     order_barcode = forms.CharField(max_length=150, label="Штрихкод", widget=forms.TextInput(attrs={'class':'form-control'}), error_messages={'unique': 'Поле должно быть уникальным'})
-    client_position = forms.CharField(max_length=150, label="Размещение у клиента", widget=forms.TextInput(attrs={'class':'form-control'}))
+    client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
     device_name = forms.CharField(max_length=100, required=True, label="Наименование устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
     device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
     device_serial = forms.CharField(required=True, label="Серийный номер устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
@@ -26,6 +26,23 @@ class OrderHeaderForm (forms.ModelForm):
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.all(), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
     order_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
+
+    def clean(self):
+        cleaned_data = super(OrderHeaderForm, self).clean()
+        client = cleaned_data.get("client")
+        client_position = cleaned_data.get("client_position")
+        client_dep = cleaned_data.get("client_dep")
+        # obj_client = Clients.objects.get(pk=client)
+
+        if client.client_corp and not client_dep:
+            msg = "У корпоративного клиента не указано отделение"
+            self.add_error('client_dep', msg)
+        if  not client.client_corp and not client_position:
+            msg = "Обязательно укажите размещение у клиента"
+            self.add_error('client_position', msg)
+
+
+
 
 class ActionForm(forms.ModelForm):
     class Meta:
