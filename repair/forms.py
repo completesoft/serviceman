@@ -16,7 +16,7 @@ class OrderHeaderForm (forms.ModelForm):
         fields = ["order_barcode", "client", "client_dep", "client_position", "device_name", "device_serial", "device_defect",
                   "order_comment"]
 
-    order_barcode = forms.CharField(max_length=150, label="Штрихкод", widget=forms.TextInput(attrs={'class':'form-control'}), error_messages={'unique': 'Поле должно быть уникальным'})
+    order_barcode = forms.CharField(max_length=150, label="Штрихкод", widget=forms.TextInput(attrs={'class':'form-control'}), error_messages={'unique': 'Этот штрихкод уже существует'})
     client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
     device_name = forms.CharField(max_length=100, required=True, label="Наименование устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
     device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
@@ -37,7 +37,7 @@ class OrderHeaderForm (forms.ModelForm):
         if client.client_corp and not client_dep:
             msg = "У корпоративного клиента не указано отделение"
             self.add_error('client_dep', msg)
-        if  not client.client_corp and not client_position:
+        if client.client_corp and not client_position:
             msg = "Обязательно укажите размещение у клиента"
             self.add_error('client_position', msg)
 
