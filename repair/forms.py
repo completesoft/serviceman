@@ -1,6 +1,6 @@
 from django import forms
 from repair.models import DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent, DirStatus, Clients, ClientsDep
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
 
@@ -22,8 +22,8 @@ class OrderHeaderForm (forms.ModelForm):
     device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
     device_serial = forms.CharField(required=True, label="Серийный номер устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
     order_comment = forms.CharField(max_length=255, label="Комментарий", widget=forms.Textarea, required=False)
-    client_dep = forms.ModelChoiceField(label="Отделения клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
-    executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.all(), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
+    client_dep = forms.ModelChoiceField(label="Отделение клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
+    executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
     order_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
 
@@ -51,8 +51,16 @@ class ActionForm(forms.ModelForm):
 
     status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all())
     manager_user = MyModelChoiceField(queryset= User.objects.exclude(groups__name="outsource"), label="Руководитель заказа", required=True)
-    executor_user = MyModelChoiceField(queryset= User.objects.all(), label="Исполнитель заказа", required=True)
+    executor_user = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True)
 
+
+class ActionFormOut(forms.ModelForm):
+    class Meta:
+        model = DocOrderAction
+        fields = ["status", "action_comment"]
+
+    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all())
+    action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.Textarea(attrs={'class': 'form-control'}))
 
 class SpareForm(forms.ModelForm):
     class Meta:

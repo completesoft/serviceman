@@ -13,7 +13,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.core.urlresolvers import reverse
-from .forms import OrderHeaderForm, ActionForm, SpareForm, ServiceForm, ClientForm, ClientDepForm, ClientEditForm
+from .forms import OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, ServiceForm, ClientForm, ClientDepForm, ClientEditForm
 from django.utils.decorators import method_decorator
 from django.forms import formset_factory, modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
@@ -25,7 +25,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_p
 from django.views.decorators.debug import sensitive_post_parameters
 from django.core.paginator import Paginator, InvalidPage
 from django.middleware.csrf import get_token
-
+from django.db.models import Q
 
 @login_required
 def index(request):
@@ -74,7 +74,8 @@ def my_order(request):
             #     orders = paginator.page(page_num)
             # except InvalidPage:
             #     orders = paginator.page(1)
-            raw_orders = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
+            # raw_orders = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
+            raw_orders = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user)|Q(docorderaction__executor_user=user)).order_by('-id').distinct()
             orders = [obj for obj in raw_orders if obj.last_status() != "Архивный"]
             return render(request, 'repair/my_order.html', {"orders": orders, "user": request.user})
         else:
@@ -97,9 +98,11 @@ class OrderCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(OrderCreateView, self).get_context_data(**kwargs)
-        # context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
+        context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
         if context["form"]['client'].data:
             context["form"].fields['client_dep'].queryset = ClientsDep.objects.filter(client=context["form"]['client'].data)
+        else:
+            context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
         return context
 
     @method_decorator(login_required)
@@ -158,32 +161,47 @@ class OrderDetailView(DetailView):
 
 
 class ActionCreateView(CreateView):
-    form_class = ActionForm
     model = DocOrderAction
     template_name = "repair/action_add.html"
 
     def get(self, request, *args, **kwargs):
+        outsource_group = request.user.groups.filter(name='outsource').values_list('name', flat=True)
+        if outsource_group:
+            self.form_class = ActionFormOut
+        else:
+            self.form_class = ActionForm
         order = DocOrderHeader.objects.get(pk=kwargs["order_id"])
         self.initial["manager_user"] = order.last_action().manager_user
         return super(ActionCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.success_url = reverse("repair:my_order")
-        if not self.request.user.is_superuser and request.POST["status"] == "Архивный":
+        outsource_group = request.user.groups.filter(name='outsource').values_list('name', flat=True)
+        if outsource_group:
+            self.form_class = ActionFormOut
+        else:
+            self.form_class = ActionForm
+        if not request.user.is_superuser and request.POST["status"] == "Архивный":
             return self.get(request, *args, **kwargs)
         return super(ActionCreateView, self).post(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.doc_order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
         form.instance.setting_user = self.request.user
+        outsource_group = self.request.user.groups.filter(name='outsource').values_list('name', flat=True)
+        if outsource_group:
+            last_act = DocOrderHeader.objects.get(pk=self.kwargs["order_id"]).last_action()
+            form.instance.manager_user = last_act.manager_user
+            form.instance.executor_user = last_act.executor_user
         return super(ActionCreateView, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super(ActionCreateView, self).get_context_data(**kwargs)
         context["order"] = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
+        outsource_group = self.request.user.groups.filter(name='outsource').values_list('name', flat=True)
+        context["outsource"] = True if outsource_group else False
         if not self.request.user.is_superuser:
-            if self.request.user.groups.filter(name='outsource').values_list('name', flat=True):
-                print(self.request.user.groups.filter(name='outsource').values_list('name', flat=True))
+            if outsource_group:
                 context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name__in=["Архивный", "Передан клиенту"])
             else:
                 context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name="Архивный")
@@ -448,11 +466,13 @@ class OrderArchiveView(ListView):
 
 @login_required
 def ajax_add_service(request, order_id):
+    try:
+        order = DocOrderHeader.objects.get(pk=order_id)
+        if order.last_status() == "Архивный" and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
     if request.method == "POST":
-        try:
-            order = DocOrderHeader.objects.get(pk=order_id)
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound()
         service_form = ServiceForm(request.POST)
         if service_form.is_valid():
             obj_service = service_form.save(commit=False)
@@ -476,20 +496,23 @@ def ajax_add_service(request, order_id):
 @login_required
 @ensure_csrf_cookie
 def service(request):
+    try:
+        order_id = request.GET.get("order_id") if request.GET else request.POST.get("order_id")
+        order = DocOrderHeader.objects.get(pk=order_id)
+        if order.last_status() == "Архивный" and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
     if request.method == "POST":
-        ordrer_id = request.POST["order_id"]
         service = DocOrderServiceContent.objects.get(pk=request.POST["service_id"])
-        order = DocOrderHeader.objects.get(pk=request.POST["order_id"])
         if service in order.docorderservicecontent_set.all():
             service.delete()
             data = {"service": "#service{}".format(request.POST["service_id"])}
             return JsonResponse(data)
     else:
-        order_id = request.GET["order_id"]
         service = DocOrderServiceContent.objects.get(pk=request.GET["service_id"])
-        order = DocOrderHeader.objects.get(pk=request.GET["order_id"])
         if service in order.docorderservicecontent_set.all():
-            data = {"order_id": request.GET["order_id"], "service_id": request.GET["service_id"],
+            data = {"order_id": order_id, "service_id": request.GET["service_id"],
                     "csrf_token": get_token(request)}
             return JsonResponse(data)
     return redirect("repair:order_detail", order_id=order_id)
@@ -497,11 +520,13 @@ def service(request):
 
 @login_required
 def ajax_add_spare(request, order_id):
+    try:
+        order = DocOrderHeader.objects.get(pk=order_id)
+        if order.last_status() == "Архивный" and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
     if request.method == "POST":
-        try:
-            order = DocOrderHeader.objects.get(pk=order_id)
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound()
         spare_form = SpareForm(request.POST)
         if spare_form.is_valid():
             obj_spare = spare_form.save(commit=False)
@@ -526,20 +551,23 @@ def ajax_add_spare(request, order_id):
 @login_required
 @ensure_csrf_cookie
 def spare(request):
+    try:
+        order_id = request.GET.get("order_id") if request.GET else request.POST.get("order_id")
+        order = DocOrderHeader.objects.get(pk=order_id)
+        if order.last_status() == "Архивный" and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
     if request.method == "POST":
-        ordrer_id = request.POST["order_id"]
         spare = DocOrderSparesContent.objects.get(pk=request.POST["spare_id"])
-        order = DocOrderHeader.objects.get(pk=request.POST["order_id"])
         if spare in order.docordersparescontent_set.all():
             spare.delete()
             data = {"spare": "#spare{}".format(request.POST["spare_id"])}
             return JsonResponse(data)
     else:
-        order_id = request.GET["order_id"]
         spare = DocOrderSparesContent.objects.get(pk=request.GET["spare_id"])
-        order = DocOrderHeader.objects.get(pk=request.GET["order_id"])
         if spare in order.docordersparescontent_set.all():
-            data = {"order_id": request.GET["order_id"], "spare_id": request.GET["spare_id"],
+            data = {"order_id": order_id, "spare_id": request.GET["spare_id"],
                     "csrf_token": get_token(request)}
             return JsonResponse(data)
     return redirect("repair:order_detail", order_id=order_id)

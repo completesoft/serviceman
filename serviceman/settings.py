@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'repair.middleware.SessionExpiry',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -131,4 +132,8 @@ LOGOUT_URL = '/logout/'
 LOGIN_REDIRECT_URL = '/repair/'
 
 #session
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+if DEBUG:
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# the session will expire after "SESSION_EXPIRY' seconds of inactivity
+else:
+    SESSION_EXPIRY = 300

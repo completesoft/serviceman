@@ -44,6 +44,13 @@ class DocOrderHeader (models.Model):
     def last_status(self):
         acts = self.docorderaction_set.all().latest()
         return acts.status.status_name
+    last_status.short_description = 'Статус заказа'
+
+    def client_corp(self):
+        return self.client.client_corp
+    client_corp.short_description = "Корп. клиент"
+    client_corp.boolean = True
+
 
 
 class DirStatus (models.Model):
@@ -61,8 +68,8 @@ class DirStatus (models.Model):
 
     class Meta():
         db_table = 'dir_status'
-        verbose_name = "Справочник состояний"
-        verbose_name_plural = "Справочник состояний"
+        verbose_name = "Справочник состояний (fixturizable+Group)"
+        verbose_name_plural = "Справочник состояний (fixturizable+Group)"
 
     def __str__(self):
         return "{}".format(self.status_name)
@@ -76,7 +83,7 @@ class DocOrderAction(models.Model):
     executor_user = models.ForeignKey(User,verbose_name="Исполнитель заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
     setting_user = models.ForeignKey(User,verbose_name="Установил статус заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
     status = models.ForeignKey(DirStatus, verbose_name="Статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
-    action_comment = models.TextField("Комментарий операции", max_length=100, null=True, blank=True)
+    action_comment = models.TextField("Комментарий операции", max_length=100, default="", null=True, blank=True)
 
     class Meta():
         db_table = 'doc_order_action'
