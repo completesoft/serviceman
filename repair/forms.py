@@ -49,9 +49,10 @@ class ActionForm(forms.ModelForm):
         model = DocOrderAction
         fields = ["manager_user", "executor_user", "status", "action_comment"]
 
-    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all())
-    manager_user = MyModelChoiceField(queryset= User.objects.exclude(groups__name="outsource"), label="Руководитель заказа", required=True)
-    executor_user = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True)
+    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all(), widget=forms.Select(attrs={'class':'form-control'}))
+    manager_user = MyModelChoiceField(queryset= User.objects.exclude(groups__name="outsource"), label="Руководитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    executor_user = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
 
 
 class ActionFormOut(forms.ModelForm):

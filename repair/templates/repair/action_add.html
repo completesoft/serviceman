@@ -40,11 +40,14 @@
 
 
 {% block table_main %}
-<form action="" method="post" autocomplete="off">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" class="btn btn-info" id="sub_button" value="Отправить"/>
-</form>
+<div class="col-md-3">
+  <form action="" method="post" autocomplete="off">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <input type="submit" class="btn btn-info" id="sub_button" value="Отправить"/>
+  </form>
+</div>
+
 
 
 {% endblock %}
