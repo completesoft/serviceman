@@ -60,8 +60,8 @@ class ActionFormOut(forms.ModelForm):
         model = DocOrderAction
         fields = ["status", "action_comment"]
 
-    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all())
-    action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.Textarea(attrs={'class': 'form-control'}))
+    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all(), widget=forms.Select(attrs={'class':'form-control'}))
+    action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
 
 class SpareForm(forms.ModelForm):
     class Meta:
