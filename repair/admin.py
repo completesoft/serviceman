@@ -1,9 +1,8 @@
 from django.contrib.auth.models import Group
 from django.contrib import admin
-from .models import DocOrderHeader, DocOrderAction, DocOrderServiceContent, DocOrderSparesContent, DirStatus, Clients, ClientsDep
+from .models import ( DocOrderHeader, DocOrderAction, DocOrderServiceContent,
+                     DocOrderSparesContent, DirStatus, Clients, ClientsDep, Reward )
 from django.core import serializers
-from . import fixtures
-from django.contrib import messages
 import os
 
 
@@ -12,9 +11,7 @@ class DirStatusAdmin(admin.ModelAdmin):
 
     def make_fixtures(self, request, queryset):
         format = "json"
-        print("Model name", queryset.model.__name__)
         fixture_file = os.path.dirname(__file__) + "\\fixtures\\"
-        print(fixture_file)
         JSONSerializer = serializers.get_serializer(format)
         json_serializer = JSONSerializer()
         file_name = fixture_file + queryset.model.__name__+"."+format
@@ -43,3 +40,4 @@ admin.site.register(DocOrderSparesContent)
 admin.site.register(DirStatus, DirStatusAdmin)
 admin.site.register(Clients)
 admin.site.register(ClientsDep)
+admin.site.register(Reward)

@@ -1,5 +1,5 @@
 from django.utils.deprecation import MiddlewareMixin
-from serviceman import settings
+from django.conf import settings
 
 class SessionExpiry(MiddlewareMixin):
     """ Set the session expiry according to settings """

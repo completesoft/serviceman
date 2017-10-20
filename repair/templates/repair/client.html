@@ -11,6 +11,16 @@
 {% endblock %}
 
 {% block sub_header_progress_bar %}
+    {% if messages %}
+      {% for message in messages %}
+        <p>
+          <div class="alert alert alert-success alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            {{ message }}
+          </div>
+        </p>
+      {% endfor %}
+    {% endif %}
   <h2 class="sub-header">Клиенты</h2>
 {% endblock %}
 

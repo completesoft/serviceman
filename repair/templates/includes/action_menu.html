@@ -1,26 +1,30 @@
 <h4 class="list-group-item-heading">Действия:</h4>
 <ul class="nav nav-sidebar">
-    {% for menu_item in menu_set %}
-        {% if not outsource %}
-            {% if menu_item == '1' %}
-                <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Новый заказ</a></li>
-            {% elif menu_item == '2' %}
-                <li><a href="{% url 'repair:clients_add' %}"><span class="glyphicon glyphicon-plus"></span> Новый клиент</a></li>
-            {% elif menu_item == '3' %}
-                <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
-            {% elif menu_item == '4' %}
-                <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
-            {% elif menu_item == '5' %}
-                <li><a href="{% url 'repair:spares_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Использованные запчасти</a></li>
-            {% elif menu_item == '6' %}
-                <li><a href="{% url 'repair:client_edit' client_id=client.id %}"><span class="glyphicon glyphicon-plus"></span> Редактировать клиента</a></li>
-            {% endif %}
-        {% else %}
-            {% if menu_item == '4' %}
-                <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
-            {% elif menu_item == '3' %}
-                <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
-            {% endif %}
+    {% if not outsource %}
+        {% if '1' in menu_set %}
+            <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Новый заказ</a></li>
         {% endif %}
-    {% endfor %}
+        {% if '2' in menu_set %}
+            <li><a href="{% url 'repair:clients_add' %}"><span class="glyphicon glyphicon-plus"></span> Новый клиент</a></li>
+        {% endif %}
+        {% if '3' in menu_set %}
+            <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
+        {% endif %}
+        {% if '4' in menu_set %}
+            <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
+        {% endif %}
+        {% if '5' in menu_set %}
+            <li><a href="{% url 'repair:spares_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Использованные запчасти</a></li>
+        {% endif %}
+        {% if '6' in menu_set %}
+            <li><a href="{% url 'repair:client_edit' client_id=client.id %}"><span class="glyphicon glyphicon-plus"></span> Редактировать клиента</a></li>
+        {% endif %}
+    {% else %}
+        {% if '4' in menu_set %}
+            <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
+        {% endif %}
+        {% if '3' in menu_set %}
+            <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
+        {% endif %}
+    {% endif %}
 </ul>

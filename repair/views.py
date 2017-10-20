@@ -7,15 +7,15 @@ from django.contrib.auth.views import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import deprecate_current_app
 from django.views.decorators.cache import never_cache
-from .models import DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent, DocOrderSparesContent, Clients, \
-    ClientsDep
-from django.views.generic.edit import CreateView, UpdateView
+from .models import (DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent,
+                     DocOrderSparesContent, Clients, ClientsDep, Reward)
+from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.core.urlresolvers import reverse
-from .forms import OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, ServiceForm, ClientForm, ClientDepForm, ClientEditForm
+from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, ServiceForm,
+                     ClientForm, ClientDepForm, ClientEditForm, RewardForm)
 from django.utils.decorators import method_decorator
-from django.forms import formset_factory, modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
 from serviceman.settings import LOGIN_URL
 from django.contrib import messages
@@ -26,6 +26,9 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.core.paginator import Paginator, InvalidPage
 from django.middleware.csrf import get_token
 from django.db.models import Q
+import logging
+
+logger = logging.getLogger('user.activity')
 
 @login_required
 def index(request):
@@ -55,7 +58,7 @@ def index(request):
             # except InvalidPage:
             #     orders = paginator.page(1)
             return render(request, 'repair/index.html', {"orders": orders, "user": request.user, "outsource": True})
-    redirect(LOGIN_URL)
+    return redirect(LOGIN_URL)
 
 
 @login_required
@@ -89,7 +92,6 @@ class OrderCreateView(CreateView):
     template_name = "repair/order_add.html"
 
     def get(self, request, *args, **kwargs):
-        # self.initial["client_dep"] = ClientsDep.objects.none()
         return super(OrderCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -121,6 +123,8 @@ class OrderCreateView(CreateView):
                                     executor_user=User.objects.get(pk=self.request.POST["executor"]),
                                     status=DirStatus.objects.get(status_name="Новый"))
         ord_action.save()
+        msg = "*{}* ДОБАВИЛ заказ -{}-{}-{}-".format(self.request.user.get_full_name(), instance.order_barcode, instance.client.client_name, instance.device_name)
+        logger.info(msg)
         messages.add_message(self.request, messages.SUCCESS, "Новый заказ добавлен!!!")
         return resp
 
@@ -193,6 +197,10 @@ class ActionCreateView(CreateView):
             last_act = DocOrderHeader.objects.get(pk=self.kwargs["order_id"]).last_action()
             form.instance.manager_user = last_act.manager_user
             form.instance.executor_user = last_act.executor_user
+        msg = "*{}* ИЗМЕНИЛ статус заказа \"{}\"-->\"{}\". Заказ -{}-{}-{}-".format(
+            self.request.user.get_full_name(), form.instance.doc_order.last_status(), form.instance.status,
+            form.instance.doc_order.order_barcode, form.instance.doc_order.client.client_name, form.instance.doc_order.device_name)
+        logger.info(msg)
         return super(ActionCreateView, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -216,49 +224,6 @@ class ActionCreateView(CreateView):
         if order.last_status() == "Архивный" and not request.user.is_superuser:
             return redirect("repair:order_detail", order_id=kwargs["order_id"])
         return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
-
-
-@login_required
-def service_add(request, order_id):
-    user = request.user
-    if user.is_active:
-        order = DocOrderHeader.objects.get(pk=order_id)
-        outsource_group = True if user.groups.filter(name='outsource').values_list('name', flat=True) else False
-        service_prefix = 'service'
-        ServiceFormSet = inlineformset_factory(DocOrderHeader, DocOrderServiceContent, form=ServiceForm, extra=1)
-        if request.method == 'POST':
-            service_formset = ServiceFormSet(request.POST, prefix=service_prefix, instance=order)
-            if service_formset.is_valid():
-                service_formset.save()
-                return redirect("repair:order_detail", order_id=order_id)
-        # non POST method
-        else:
-            service_formset = ServiceFormSet(instance=order, prefix=service_prefix)
-        return render(request, 'repair/service_add.html',
-                      {'service_formset': service_formset, 'order': order, "outsource": outsource_group})
-    else:
-        return redirect(LOGIN_URL)
-
-
-@login_required
-def spares_add(request, order_id):
-    user = request.user
-    order = DocOrderHeader.objects.get(pk=order_id)
-    outsource_group = True if user.groups.filter(name='outsource').values_list('name', flat=True) else False
-    if user.is_active and not outsource_group:
-        order = DocOrderHeader.objects.get(pk=order_id)
-        spare_prefix = 'spare'
-        SpareFormSet = inlineformset_factory(DocOrderHeader, DocOrderSparesContent, form=SpareForm, extra=1)
-        if request.method == 'POST':
-            spare_formset = SpareFormSet(request.POST, prefix=spare_prefix, instance=order)
-            if spare_formset.is_valid():
-                spare_formset.save()
-                return redirect("repair:order_detail", order_id=order_id)
-        else:
-            spare_formset = SpareFormSet(instance=order, prefix=spare_prefix)
-        return render(request, 'repair/spares_add.html', {'spare_formset': spare_formset, 'order': order})
-    else:
-        return redirect(LOGIN_URL)
 
 
 class ClientListView(ListView):
@@ -307,7 +272,9 @@ class ClientCreateView(CreateView):
                         continue
                     client_dep = ClientsDep(client=instance, client_dep_name=dep)
                     client_dep.save()
-        # messages.add_message(self.request, messages.SUCCESS, "Новый клиент добавлен!!!")
+        msg = "*{}* ДОБАВИЛ клиента {}".format(self.request.user.get_full_name(), instance.client_name)
+        logger.info(msg)
+        messages.add_message(self.request, messages.SUCCESS, "Новый клиент добавлен!!!")
         return resp
 
     @method_decorator(login_required)
@@ -363,7 +330,8 @@ class ClientEditView(UpdateView):
                     continue
                 client_dep = ClientsDep(client=instance, client_dep_name=dep)
                 client_dep.save()
-        # messages.add_message(self.request, messages.SUCCESS, "Новый клиент добавлен!!!")
+        msg = "*{}* РЕДАКТИРОВАЛ клиента {}".format(self.request.user.get_full_name(), instance.client_name)
+        logger.info(msg)
         return resp
 
     def get_context_data(self, **kwargs):
@@ -398,6 +366,8 @@ def handlePopAdd(request, addForm, field):
                             continue
                         client_dep = ClientsDep(client=newObject, client_dep_name=dep)
                         client_dep.save()
+                msg = "*{}* ДОБАВИЛ клиента {}".format(request.user.get_full_name(), newObject.client_name)
+                logger.info(msg)
                 return HttpResponse(
                     '<script type="text/javascript">opener.dismissAddAnotherPopup(window, "%s", "%s");</script>' % \
                     (escape(newObject._get_pk_val()), escape(newObject)))
@@ -418,6 +388,7 @@ def popupClientView(request):
         return redirect(LOGIN_URL)
 
 
+#send department list if change a client (through ajax)
 @login_required
 def dep_update(request, **kwargs):
     user = request.user
@@ -470,6 +441,8 @@ def ajax_add_service(request, order_id):
         order = DocOrderHeader.objects.get(pk=order_id)
         if order.last_status() == "Архивный" and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
+        if order.last_status() != "В работе":
+            raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
     if request.method == "POST":
@@ -484,6 +457,8 @@ def ajax_add_service(request, order_id):
                                     context={'service_form': new_service_form, 'order_id': order.id}, request=request)
             tr = render_to_string('repair/ajax/ajax_add_service_tr.html',
                                   context={'order_id': order.id, "service": obj_service}, request=request)
+            msg = "*{}* ДОБАВИЛ работу по заказу. Заказ -{}-{}-{}-".format(request.user.get_full_name(), order.order_barcode, order.client.client_name, order.device_name)
+            logger.info(msg)
         else:
             form = render_to_string('repair/ajax/ajax_add_service_form.html',
                                     context={'service_form': service_form, 'order_id': order.id}, request=request)
@@ -493,6 +468,7 @@ def ajax_add_service(request, order_id):
     return HttpResponseNotFound()
 
 
+# del service through ajax
 @login_required
 @ensure_csrf_cookie
 def service(request):
@@ -508,6 +484,10 @@ def service(request):
         if service in order.docorderservicecontent_set.all():
             service.delete()
             data = {"service": "#service{}".format(request.POST["service_id"])}
+            msg = "*{}* УДАЛИЛ работу по заказу. Заказ -{}-{}-{}-".format(request.user.get_full_name(),
+                                                                           order.order_barcode,
+                                                                           order.client.client_name, order.device_name)
+            logger.info(msg)
             return JsonResponse(data)
     else:
         service = DocOrderServiceContent.objects.get(pk=request.GET["service_id"])
@@ -524,6 +504,8 @@ def ajax_add_spare(request, order_id):
         order = DocOrderHeader.objects.get(pk=order_id)
         if order.last_status() == "Архивный" and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
+        if order.last_status() != "В работе":
+            raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
     if request.method == "POST":
@@ -539,6 +521,10 @@ def ajax_add_spare(request, order_id):
                                     context={'spare_form': new_spare_form, 'order_id': order.id}, request=request)
             tr = render_to_string('repair/ajax/ajax_add_spare_tr.html',
                                   context={'order_id': order.id, "spare": obj_spare}, request=request)
+            msg = "*{}* ДОБАВИЛ запчасть по заказу. Заказ -{}-{}-{}-".format(request.user.get_full_name(),
+                                                                           order.order_barcode,
+                                                                           order.client.client_name, order.device_name)
+            logger.info(msg)
         else:
             form = render_to_string('repair/ajax/ajax_add_spare_form.html',
                                     context={'spare_form': spare_form, 'order_id': order.id}, request=request)
@@ -548,6 +534,7 @@ def ajax_add_spare(request, order_id):
     return HttpResponseNotFound()
 
 
+# del spare through ajax
 @login_required
 @ensure_csrf_cookie
 def spare(request):
@@ -563,6 +550,11 @@ def spare(request):
         if spare in order.docordersparescontent_set.all():
             spare.delete()
             data = {"spare": "#spare{}".format(request.POST["spare_id"])}
+            msg = "*{}* УДАЛИЛ запчасть по заказу. Заказ -{}-{}-{}-".format(request.user.get_full_name(),
+                                                                             order.order_barcode,
+                                                                             order.client.client_name,
+                                                                             order.device_name)
+            logger.info(msg)
             return JsonResponse(data)
     else:
         spare = DocOrderSparesContent.objects.get(pk=request.GET["spare_id"])
@@ -590,6 +582,8 @@ def password_change(request,
         form = password_change_form(user=request.user, data=request.POST)
         if form.is_valid():
             form.save()
+            msg = "*{}* СМЕНИЛ ПАРОЛЬ".format(request.user.get_full_name())
+            logger.info(msg)
             # Updating the password logs out all other sessions for the user
             # except the current one.
             update_session_auth_hash(request, form.user)
@@ -604,3 +598,59 @@ def password_change(request,
         context.update(extra_context)
 
     return TemplateResponse(request, template_name, context)
+
+
+# Assessment-view and Reward-view\change(through ajax)
+class ServiceRewardAssessment(ListView):
+    template_name = "repair/assessment.html"
+    model = DocOrderServiceContent
+    context_object_name = "services"
+
+    def get_context_data(self, **kwargs):
+        context = super(ServiceRewardAssessment, self).get_context_data(**kwargs)
+        reward_queryset = Reward.objects.all()
+        reward_form = RewardForm()
+        context['rewards'] = reward_queryset
+        context['reward_form'] = reward_form
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if request.is_ajax():
+            act = request.POST.get("action")
+            if act == "add":
+                reward_form = RewardForm(request.POST)
+                if reward_form.is_valid():
+                    obj_reward = reward_form.save()
+                    new_reward_form = RewardForm()
+                    form = render_to_string('repair/ajax/ajax_add_reward_form.html',
+                                            context={'reward_form': new_reward_form}, request=request)
+                    tr = render_to_string('repair/ajax/ajax_add_reward_tr.html',
+                                          context={"reward": obj_reward}, request=request)
+                else:
+                    form = render_to_string('repair/ajax/ajax_add_reward_form.html',
+                                            context={'reward_form': reward_form}, request=request)
+                    tr = "error"
+                data = {"form": form, "tr": tr}
+                return JsonResponse(data)
+            if act == "delete":
+                try:
+                    obj_reward = Reward.objects.get(pk=request.POST.get("reward_id"))
+                except ObjectDoesNotExist as msg:
+                    return HttpResponseNotFound(msg)
+                obj_reward.delete()
+                data = {"reward_id": request.POST.get("reward_id")}
+                return JsonResponse(data)
+        else:
+            return HttpResponseNotFound()
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_active:
+            if request.user.is_superuser:
+                return super(ServiceRewardAssessment, self).dispatch(request, *args, **kwargs)
+            else:
+                return redirect(reverse("repair:index"))
+        else:
+            return redirect(LOGIN_URL)
+

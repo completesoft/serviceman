@@ -196,7 +196,11 @@
 
                     <tr>
                       <td colspan="5" ></td>
+                      {% if order.last_status != "В работе" %}
+                      <td><button type="button" class="btn btn-success disabled" title="Статус заказа должен быть &quotВ работе&quot"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                      {% else %}
                       <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_spare_add" id="super_spare_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                      {% endif %}
                     </tr>
                   </tbody>
 
@@ -240,9 +244,11 @@
 
                   <tr>
                     <td colspan="5" ></td>
-                    <td>
-                      <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_service_add" id="super_service_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button>
-                    </td>
+                    {% if order.last_status != "В работе" %}
+                      <td><button type="button" class="btn btn-success disabled" title="Статус заказа должен быть &quotВ работе&quot"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                    {% else %}
+                      <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_service_add" id="super_service_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                    {% endif %}
                   </tr>
 
 
@@ -255,6 +261,7 @@
         </div>
     </div>
 
+{% if order.last_status == "В работе" %}
 <!-- modAl for Spare add -->
 <div id="modal_spare_add" class="modal fade" role="dialog">
   <div class="modal-dialog">
@@ -293,8 +300,6 @@
   </div>
 </div>
 
-
-
 <!-- modAl for Service add -->
 <div id="modal_service_add" class="modal fade" role="dialog">
   <div class="modal-dialog">
@@ -332,6 +337,7 @@
 
   </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block script_block %}

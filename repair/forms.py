@@ -1,5 +1,5 @@
 from django import forms
-from repair.models import DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent, DirStatus, Clients, ClientsDep
+from repair.models import DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent, DirStatus, Clients, ClientsDep, Reward
 from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
@@ -32,7 +32,6 @@ class OrderHeaderForm (forms.ModelForm):
         client = cleaned_data.get("client")
         client_position = cleaned_data.get("client_position")
         client_dep = cleaned_data.get("client_dep")
-        # obj_client = Clients.objects.get(pk=client)
 
         if client.client_corp and not client_dep:
             msg = "У корпоративного клиента не указано отделение"
@@ -97,3 +96,13 @@ class ClientEditForm(forms.ModelForm):
     class Meta:
         model = Clients
         fields = ["client_contact"]
+
+
+class RewardForm(forms.ModelForm):
+    class Meta:
+        model = Reward
+        fields = ["serviceman", "amount"]
+
+    serviceman = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"), label="Мастер", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    amount = forms.DecimalField(label="Сумма", max_digits=6, decimal_places=2, required=True)
+

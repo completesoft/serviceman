@@ -103,7 +103,7 @@ class DocOrderServiceContent(models.Model):
     service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
     service_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
     cost = models.PositiveIntegerField("Стоимость 1 шт", default=0, null=True, blank=False)
-    setting_user = models.ForeignKey(User, verbose_name="Установил статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Добавил выполненую работу", on_delete=models.SET_NULL, null=True, blank=False)
 
     class Meta():
         db_table = 'doc_order_service_content'
@@ -137,7 +137,7 @@ class ClientsDep(models.Model):
         verbose_name_plural = "Подразделения клиентов"
 
     def __str__(self):
-        return "{}".format(self.client_dep_name)
+        return "{} - {}".format(self.client.client_name, self.client_dep_name)
 
 
 class Images(models.Model):
@@ -152,4 +152,17 @@ class Images(models.Model):
         verbose_name_plural = "Фотографии устройства"
 
 
+class Reward(models.Model):
 
+    add_datetime = models.DateTimeField("Дата записи", auto_now_add=True)
+    serviceman = models.ForeignKey(User, verbose_name="Мастер", on_delete=models.PROTECT, null=False, blank=False)
+    amount = models.DecimalField(verbose_name="Сумма", max_digits=6, decimal_places=2, default=0, null=False, blank=False)
+
+    class Meta():
+        db_table = 'reward'
+        verbose_name = 'Выплаты'
+        verbose_name_plural = 'Выплаты'
+
+
+    def __str__(self):
+        return "{} получатель \"{}\"".format(self.add_datetime, self.serviceman)

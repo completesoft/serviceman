@@ -1,0 +1,126 @@
+{% extends "repair/base.html" %}
+{% load staticfiles %}
+
+{% block top_menu %}
+  {% include "includes/top_menu.html" %}
+{% endblock %}
+
+
+{% block sidebar_action %}
+    {% include "includes/action_menu.html" with menu_set="12" %}
+{% endblock %}
+
+
+{% block table_main %}
+    <div class="row">
+      <div class="col-md-8">
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Начисления</h3>
+          </div>
+          <div class="panel-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="assessment_table">
+                  <thead>
+                    <th>Дата</th>
+                    <th>Мастер</th>
+                    <th>Штрихкод заказа</th>
+                    <th>Устройство</th>
+                    <th>Наименование работ</th>
+                    <th>Стоимость</th>
+                  </thead>
+
+                  <tbody>
+                  {% for service in services %}
+                    <tr>
+                        <td>{{ service.add_datetime|date:"d.m.Y" }}</td>
+                        <td>{{ service.setting_user.get_full_name }}</td>
+                        <td><a href="{% url 'repair:order_detail' order_id=service.order.id %}">{{ service.order.order_barcode }}</a></td>
+                        <td>{{ service.order.device_name }}</td>
+                        <td>{{ service.service_name }}</td>
+                        <td>{{ service.cost }}</td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Выплаты</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="reward_table">
+                  <thead>
+                    <th>Дата</th>
+                    <th>Мастер</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                  </thead>
+
+                  <tbody>
+                  {% for reward in rewards %}
+                    <tr>
+                        <td>{{ reward.add_datetime|date:"d.m.Y" }}</td>
+                        <td>{{ reward.serviceman.get_full_name }}</td>
+                        <td>{{ reward.amount }}</td>
+                        <td><button type="button" class="btn btn-danger btn-sm delete"  url="{% url 'repair:assessment' %}" id="reward{{ reward.id }}" value="{{ reward.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+                <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#modal_reward_add" id="super_reward_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- modAl for Reward add -->
+<div id="modal_reward_add" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Добавить выплату</h4>
+      </div>
+
+          <div class="modal-body" id="reward_panel">
+            <form action="{% url 'repair:assessment' %}" method="POST" id="reward_form" autocomplete="off">
+                {% csrf_token %}
+              <div class="form-group">
+                <label for="{{ reward_form.serviceman.id_for_label }}">Мастер: {{ reward_form.serviceman.errors }}</label>
+                {{ reward_form.serviceman }}
+              </div>
+              <div class="form-group">
+                <label for="{{ reward_form.amount.id_for_label }}">Сумма выплаты: {{ reward_form.amount.errors }}</label>
+                {{ reward_form.amount }}
+              </div>
+            </form>
+          </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="add_reward_button">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script_block %}
+<link href="{% static 'repair/css/jquery.dynatable.css' %}" rel="stylesheet">
+<script type="text/javascript" src="{% static 'repair/js/assessment.js' %}"></script>
+<script type="text/javascript" src="{% static 'repair/js/jquery.dynatable.js' %}"></script>
+{% endblock %}

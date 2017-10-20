@@ -132,8 +132,31 @@ LOGOUT_URL = '/logout/'
 LOGIN_REDIRECT_URL = '/repair/'
 
 #session
-if DEBUG:
-    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # the session will expire after "SESSION_EXPIRY' seconds of inactivity
-else:
-    SESSION_EXPIRY = 300
+SESSION_EXPIRY = 60*5
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'myformatter': {
+            'format': '[%(asctime)s] - %(levelname)s - %(message)s \n',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/mylog.log',
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 1,
+            'formatter': 'myformatter',
+        },
+    },
+    'loggers': {
+        'user.activity': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+    },
+}

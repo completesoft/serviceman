@@ -1,0 +1,11 @@
+<form action="{% url 'repair:assessment' %}" method="POST" id="reward_form" autocomplete="off">
+  {% csrf_token %}
+<div class="form-group">
+  <label for="{{ reward_form.serviceman.id_for_label }}">Мастер: {{ reward_form.serviceman.errors }}</label>
+  {{ reward_form.serviceman }}
+</div>
+<div class="form-group">
+  <label for="{{ reward_form.amount.id_for_label }}">Сумма выплаты: {{ reward_form.amount.errors }}</label>
+  {{ reward_form.amount }}
+</div>
+</form>
