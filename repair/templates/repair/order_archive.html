@@ -18,7 +18,7 @@
         <th><span class="glyphicon glyphicon-barcode"></span></th>
         <th>Дата приемки</th>
         <th>Статус</th>
-        <th>Клиент</th>
+        {% if not outsource %}<th>Клиент</th>{% endif %}
         <th>Устройство</th>
         <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
@@ -32,7 +32,7 @@
         {% with order.last_status as last_act %}
           <td>{% include "includes/order_status.html" %}</td>
         {% endwith %}
-        <td>{{ order.client.client_name }}</td>
+        {% if not outsource %}<td>{{ order.client.client_name }}</td>{% endif %}
         <td>{{ order.device_name }}</td>
         <td>{{ order.device_serial }}</td>
         <td class="hidden-xs">{{ order.device_defect }}</td>
