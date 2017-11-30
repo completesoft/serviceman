@@ -82,7 +82,11 @@ DATABASES = {
         'USER': 'docent',
         'PASSWORD': 'B13#mwrrBBbxERFZMqF',
         'HOST': 'localhost',
-        'PORT': '3306'
+        'PORT': '3306',
+        'TEST': {
+            'NAME': 'test',
+            'COLLATION': 'utf8_general_ci',
+        },
     }
 }
 

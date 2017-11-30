@@ -111,3 +111,13 @@ body {
   display: inline-block;
   border-radius: 50%;
 }
+
+/*
+ * For assessment.html tables
+ */
+
+tfoot input {
+        width: 100%;
+        padding: 3px;
+        box-sizing: border-box;
+}

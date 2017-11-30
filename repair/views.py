@@ -17,7 +17,8 @@ from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, Servi
                      ClientForm, ClientDepForm, ClientEditForm, RewardForm)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
-from serviceman.settings import LOGIN_URL
+# from serviceman.settings import LOGIN_URL
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import FieldError, ValidationError, ObjectDoesNotExist
 from django.utils.html import escape
@@ -29,6 +30,7 @@ from django.db.models import Q
 import logging
 
 logger = logging.getLogger('user.activity')
+LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
 
 @login_required
 def index(request):
@@ -515,7 +517,6 @@ def ajax_add_spare(request, order_id):
             obj_spare.order = order
             obj_spare.setting_user = request.user
             obj_spare.save()
-            print(obj_spare.spares_qty)
             new_spare_form = SpareForm()
             form = render_to_string('repair/ajax/ajax_add_spare_form.html',
                                     context={'spare_form': new_spare_form, 'order_id': order.id}, request=request)

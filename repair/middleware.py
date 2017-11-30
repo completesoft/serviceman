@@ -1,6 +1,7 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 
+
 class SessionExpiry(MiddlewareMixin):
     """ Set the session expiry according to settings """
     def process_request(self, request):

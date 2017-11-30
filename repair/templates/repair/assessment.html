@@ -31,7 +31,14 @@
                     <th>Наименование работ</th>
                     <th>Стоимость</th>
                   </thead>
-
+                    <tfoot>
+                    <th><input type="text" placeholder="Search"/></th>
+                    <th><input type="text" placeholder="Search"/></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                  </tfoot>
                   <tbody>
                   {% for service in services %}
                     <tr>
@@ -120,7 +127,7 @@
 {% endblock %}
 
 {% block script_block %}
-<link href="{% static 'repair/css/jquery.dynatable.css' %}" rel="stylesheet">
+<link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
 <script type="text/javascript" src="{% static 'repair/js/assessment.js' %}"></script>
-<script type="text/javascript" src="{% static 'repair/js/jquery.dynatable.js' %}"></script>
+<script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>
 {% endblock %}
