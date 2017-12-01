@@ -115,9 +115,12 @@ body {
 /*
  * For assessment.html tables
  */
+tfoot {
+    display: table-header-group;
+}
 
 tfoot input {
-        width: 100%;
-        padding: 3px;
-        box-sizing: border-box;
+    width: 100%;
+    padding: 3px;
+    box-sizing: border-box;
 }

@@ -29,14 +29,16 @@
                     <th>Штрихкод заказа</th>
                     <th>Устройство</th>
                     <th>Наименование работ</th>
+                    <th>Статус заказа</th>
                     <th>Стоимость</th>
                   </thead>
-                    <tfoot>
+                  <tfoot>
                     <th><input type="text" placeholder="Search"/></th>
                     <th><input type="text" placeholder="Search"/></th>
                     <th></th>
                     <th></th>
                     <th></th>
+                    <th><input type="text" placeholder="Search"/></th>
                     <th></th>
                   </tfoot>
                   <tbody>
@@ -47,6 +49,9 @@
                         <td><a href="{% url 'repair:order_detail' order_id=service.order.id %}">{{ service.order.order_barcode }}</a></td>
                         <td>{{ service.order.device_name }}</td>
                         <td>{{ service.service_name }}</td>
+                      {% with service.order.last_status as last_act %}
+                        <td>{% include "includes/order_status.html" %}</td>
+                      {% endwith %}
                         <td>{{ service.cost }}</td>
                     </tr>
                   {% endfor %}
