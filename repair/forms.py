@@ -101,8 +101,9 @@ class ClientEditForm(forms.ModelForm):
 class RewardForm(forms.ModelForm):
     class Meta:
         model = Reward
-        fields = ["serviceman", "amount"]
+        fields = ["serviceman", "amount", 'add_datetime']
 
     serviceman = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"), label="Мастер", required=True, widget=forms.Select(attrs={'class':'form-control'}))
     amount = forms.DecimalField(label="Сумма", max_digits=6, decimal_places=2, required=True)
+
 

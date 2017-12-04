@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from datetime import datetime
 
 
 
@@ -154,7 +154,7 @@ class Images(models.Model):
 
 class Reward(models.Model):
 
-    add_datetime = models.DateTimeField("Дата записи", auto_now_add=True)
+    add_datetime = models.DateField("Дата записи", blank=True, default=datetime.now, null=False)
     serviceman = models.ForeignKey(User, verbose_name="Мастер", on_delete=models.PROTECT, null=False, blank=False)
     amount = models.DecimalField(verbose_name="Сумма", max_digits=6, decimal_places=2, default=0, null=False, blank=False)
 

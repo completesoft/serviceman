@@ -1,6 +1,10 @@
 <form action="{% url 'repair:assessment' %}" method="POST" id="reward_form" autocomplete="off">
   {% csrf_token %}
 <div class="form-group">
+  <label for="{{ reward_form.add_datetime.id_for_label }}">Дата выплаты: {{ reward_form.add_datetime.errors }}</label>
+  {{ reward_form.add_datetime }}
+</div>
+<div class="form-group">
   <label for="{{ reward_form.serviceman.id_for_label }}">Мастер: {{ reward_form.serviceman.errors }}</label>
   {{ reward_form.serviceman }}
 </div>

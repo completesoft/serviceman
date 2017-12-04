@@ -1,6 +1,6 @@
 {% if reward %}
 <tr>
-  <td>{{ reward.add_datetime|date:"d.m.Y H:i" }}</td>
+  <td>{{ reward.add_datetime|date:"d.m.Y" }}</td>
   <td>{{ reward.serviceman.get_full_name }}</td>
   <td>{{ reward.amount }}</td>
   <td><button type="button" class="btn btn-danger btn-sm delete"  url="{% url 'repair:assessment' %}" id="reward{{ reward.id }}" value="{{ reward.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
