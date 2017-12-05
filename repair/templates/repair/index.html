@@ -42,7 +42,7 @@
 
 {% block table_main %}
   <div class="table-responsive">
-    <table class="table table-hover table-striped tablesorter" id="table">
+    <table class="table table-hover table-striped" id="table">
       <thead>
         <th><span class="glyphicon glyphicon-barcode"></span></th>
         <th>Дата приемки</th>
@@ -55,6 +55,16 @@
         <th class="hidden-xs">Заявленная неисправность</th>
         <th>Мастер</th>
       </thead>
+      <tfoot>
+        <th></th>
+        <th><input type="text" placeholder="Search"/></th>
+        <th><input type="text" placeholder="Search"/></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th><input type="text" placeholder="Search"/></th>
+      </tfoot>
 
       {% for order in orders %}
       <tr>
@@ -106,6 +116,7 @@
 -->
 
 {% block script_block %}
-  <script src="{% static 'repair/js/jquery.tablesorter.js' %}"></script>
-  <script src="{% static 'repair/js/tab_sort.js' %}"></script>
+  <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+  <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}"></script>
+  <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>
 {% endblock %}
