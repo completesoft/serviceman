@@ -124,3 +124,8 @@ tfoot input {
     padding: 3px;
     box-sizing: border-box;
 }
+
+tr.expired {
+    color: red;
+    font-weight: bold;
+}

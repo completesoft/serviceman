@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group
 from django.contrib import admin
 from .models import ( DocOrderHeader, DocOrderAction, DocOrderServiceContent,
-                     DocOrderSparesContent, DirStatus, Clients, ClientsDep, Reward )
+                     DocOrderSparesContent, DirStatus, Clients, ClientsDep, Reward)
 from django.core import serializers
 import os
 

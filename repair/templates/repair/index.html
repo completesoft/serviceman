@@ -51,7 +51,6 @@
         <th>Клиент</th>
         {% endif %}
         <th>Устройство</th>
-        <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
         <th>Мастер</th>
       </thead>
@@ -64,12 +63,11 @@
         {% endif %}
         <th></th>
         <th></th>
-        <th></th>
         <th><input type="text" placeholder="Search"/></th>
       </tfoot>
 
       {% for order in orders %}
-      <tr>
+      <tr {%if order.status_expired %} class="expired"{% endif %}>
         <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
           {% with order.last_status as last_act %}
@@ -79,7 +77,6 @@
             <td>{{ order.client.client_name }}</td>
           {% endif %}
         <td>{{ order.device_name }}</td>
-        <td>{{ order.device_serial }}</td>
         <td class="hidden-xs">{{ order.device_defect }}</td>
         <td>{{ order.last_action.executor_user.get_full_name }}</td>
       </tr>

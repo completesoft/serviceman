@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import datetime
-
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 
 class Clients(models.Model):
@@ -51,6 +51,14 @@ class DocOrderHeader (models.Model):
     client_corp.short_description = "Корп. клиент"
     client_corp.boolean = True
 
+    def status_expired(self):
+        acts = self.docorderaction_set.all().latest()
+        delta = acts.status.expiry_time
+        if not delta:
+            return False
+        last_time = acts.action_datetime + timedelta(hours=delta)
+        return timezone.now() > last_time
+    status_expired.boolean = True
 
 
 class DirStatus (models.Model):
@@ -65,6 +73,7 @@ class DirStatus (models.Model):
     # )
 
     status_name = models.CharField("Состояние", max_length=100, null=False, blank=False)
+    expiry_time = models.PositiveIntegerField('Допустимая продолжительность статуса', help_text='в часах', default=0)
 
     class Meta():
         db_table = 'dir_status'

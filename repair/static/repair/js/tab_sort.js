@@ -1,5 +1,16 @@
 $(document).ready(function(){
    var table = $('#table').DataTable({
+        "stateSave": true,
+        "stateDuration": 0,
+        "fnInitComplete": function(oSettings, json) {
+                var cols = oSettings.aoPreSearchCols;
+                for (var i = 0; i < cols.length; i++) {
+                    var value = cols[i].sSearch;
+                    if (value.length > 0) {
+                        $("tfoot input")[i].value = value;
+                    }
+                }
+        },
         "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "ВСЕ"] ],
         'pageLength': 25,
         "columnDefs": [
