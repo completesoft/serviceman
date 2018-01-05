@@ -1,5 +1,6 @@
 from django import forms
-from repair.models import DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent, DirStatus, Clients, ClientsDep, Reward
+from repair.models import (DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent,
+                           DirStatus, Clients, ClientsDep, Reward, Storage)
 from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
@@ -26,6 +27,7 @@ class OrderHeaderForm (forms.ModelForm):
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
     order_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
+    storage = forms.ModelChoiceField(label="Склад", queryset=Storage.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
 
     def clean(self):
         cleaned_data = super(OrderHeaderForm, self).clean()
@@ -46,21 +48,24 @@ class OrderHeaderForm (forms.ModelForm):
 class ActionForm(forms.ModelForm):
     class Meta:
         model = DocOrderAction
-        fields = ["manager_user", "executor_user", "status", "action_comment"]
+        fields = ['manager_user', 'executor_user', 'status', 'storage', 'action_comment']
 
     status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all(), widget=forms.Select(attrs={'class':'form-control'}))
     manager_user = MyModelChoiceField(queryset= User.objects.exclude(groups__name="outsource"), label="Руководитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
     executor_user = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    storage = forms.ModelChoiceField(label="Склад", queryset=Storage.objects.all(), required=True, widget=forms.Select(attrs={'class': 'form-control'}))
     action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
 
 
 class ActionFormOut(forms.ModelForm):
     class Meta:
         model = DocOrderAction
-        fields = ["status", "action_comment"]
+        fields = ["status", 'storage', "action_comment"]
 
     status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=DirStatus.objects.all(), widget=forms.Select(attrs={'class':'form-control'}))
+    storage = forms.ModelChoiceField(label="Склад", queryset=Storage.objects.all(), required=True, widget=forms.Select(attrs={'class': 'form-control'}))
     action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
+
 
 class SpareForm(forms.ModelForm):
     class Meta:

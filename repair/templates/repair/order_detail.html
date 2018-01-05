@@ -33,22 +33,26 @@
                 <h3 class="panel-title">Данные заказа</h3>
             </div>
             <div class="panel-body">
-                <div class="col-sm-3 col-md-4">
+                <div class="col-sm-3 col-md-3">
                     <p>Дата оформления:</p>
                     <p>{{ order.order_datetime|date:"d.m.Y" }}</p>
                 </div>
-                <div class="col-sm-3 col-md-4">
+                <div class="col-sm-3 col-md-3">
                     <p>Кем оформлен:</p>
                     <p>{{ order_action.0.setting_user.get_full_name }}</p>
 
                 </div>
-                <div class="col-sm-3 col-md-4">
-                    <p>Текущий статус</p>
+                <div class="col-sm-3 col-md-3">
+                    <p>Текущий статус:</p>
                     <p>
                     {% with order.last_status as last_act %}
                         {% include "includes/order_status.html" %}
                     {% endwith %}
                     </p>
+                </div>
+                <div class="col-sm-3 col-md-3">
+                    <p>Текущий склад:</p>
+                    <p>{{ order.last_action.storage }}</p>
                 </div>
             </div>
         </div>
@@ -142,6 +146,7 @@
                     <th>Руководитель заказа</th>
                     <th>Исполнитель заказа</th>
                     <th>Установил статус</th>
+                    <th>Склад</th>
                   </thead>
 
                   {% for act in order_action %}
@@ -152,6 +157,7 @@
                     <td>{{ act.manager_user.get_full_name }}</td>
                     <td>{{ act.executor_user.get_full_name }}</td>
                     <td>{{ act.setting_user.get_full_name }}</td>
+                    <td>{{ act.storage }}</td>
                   </tr>
                   {% empty %}
                   <tr>НЕТ ЗАПИСЕЙ</tr>

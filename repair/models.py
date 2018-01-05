@@ -9,7 +9,7 @@ class Clients(models.Model):
     client_contact = models.CharField("Контакты клиента", max_length=100, default='', null=False, blank=False)
     client_corp = models.BooleanField("Корпоративность клиента", null=False, blank=False, default=False)
 
-    class Meta():
+    class Meta:
         db_table = 'clients'
         verbose_name = "Клиент"
         verbose_name_plural = "Клиенты"
@@ -29,7 +29,7 @@ class DocOrderHeader (models.Model):
     order_comment = models.CharField("Комментарий", max_length=255, null=True, blank=True)
 
 
-    class Meta():
+    class Meta:
         db_table = 'doc_order_header'
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
@@ -61,7 +61,7 @@ class DocOrderHeader (models.Model):
     status_expired.boolean = True
 
 
-class DirStatus (models.Model):
+class DirStatus(models.Model):
 
     # status_set = (
     #     ('Новый', 'Новый'),
@@ -75,13 +75,25 @@ class DirStatus (models.Model):
     status_name = models.CharField("Состояние", max_length=100, null=False, blank=False)
     expiry_time = models.PositiveIntegerField('Допустимая продолжительность статуса', help_text='в часах', default=0)
 
-    class Meta():
+    class Meta:
         db_table = 'dir_status'
         verbose_name = "Справочник состояний (fixturizable+Group)"
         verbose_name_plural = "Справочник состояний (fixturizable+Group)"
 
     def __str__(self):
         return "{}".format(self.status_name)
+
+
+class Storage(models.Model):
+
+    title = models.CharField('Название склада', max_length=30, null=False, blank=False)
+
+    class Meta:
+        verbose_name = "Справочник СКЛАДОВ"
+        verbose_name_plural = "Справочник СКЛАДОВ"
+
+    def __str__(self):
+        return "{}".format(self.title)
 
 
 class DocOrderAction(models.Model):
@@ -93,8 +105,9 @@ class DocOrderAction(models.Model):
     setting_user = models.ForeignKey(User,verbose_name="Установил статус заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
     status = models.ForeignKey(DirStatus, verbose_name="Статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
     action_comment = models.TextField("Комментарий операции", max_length=100, default="", null=True, blank=True)
+    storage = models.ForeignKey(Storage, verbose_name='Склад', on_delete=models.SET_NULL, null=True, blank=False)
 
-    class Meta():
+    class Meta:
         db_table = 'doc_order_action'
         verbose_name = "Состояние заказа"
         verbose_name_plural = "Состояние заказа"
@@ -114,7 +127,7 @@ class DocOrderServiceContent(models.Model):
     cost = models.PositiveIntegerField("Стоимость 1 шт", default=0, null=True, blank=False)
     setting_user = models.ForeignKey(User, verbose_name="Добавил выполненую работу", on_delete=models.SET_NULL, null=True, blank=False)
 
-    class Meta():
+    class Meta:
         db_table = 'doc_order_service_content'
         verbose_name = "Выполненные работы"
         verbose_name_plural = "Выполненные работы"
@@ -140,7 +153,7 @@ class ClientsDep(models.Model):
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
     client_dep_name = models.CharField("Подразделение клиента", max_length=100, default="", null=False, blank=False)
 
-    class Meta():
+    class Meta:
         db_table = 'clients_dep'
         verbose_name = "Подразделения клиента"
         verbose_name_plural = "Подразделения клиентов"
@@ -155,7 +168,7 @@ class Images(models.Model):
     doc_order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE)
     image_comment = models.CharField("Комментарий", max_length=255, default="", null=True, blank=True)
 
-    class Meta():
+    class Meta:
         db_table = 'images'
         verbose_name = "Фотография устройства"
         verbose_name_plural = "Фотографии устройства"
@@ -167,7 +180,7 @@ class Reward(models.Model):
     serviceman = models.ForeignKey(User, verbose_name="Мастер", on_delete=models.PROTECT, null=False, blank=False)
     amount = models.DecimalField(verbose_name="Сумма", max_digits=6, decimal_places=2, default=0, null=False, blank=False)
 
-    class Meta():
+    class Meta:
         db_table = 'reward'
         verbose_name = 'Выплаты'
         verbose_name_plural = 'Выплаты'

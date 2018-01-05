@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import deprecate_current_app
 from django.views.decorators.cache import never_cache
 from .models import (DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent,
-                     DocOrderSparesContent, Clients, ClientsDep, Reward)
+                     DocOrderSparesContent, Clients, ClientsDep, Reward, Storage)
 from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
@@ -69,17 +69,6 @@ def my_order(request):
     outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
     if user.is_active:
         if not outsource_group:
-            # try:
-            #     page_num = request.GET["page"]
-            # except KeyError:
-            #     page_num = 1
-            # orders_set = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
-            # paginator = Paginator(orders_set, 15)
-            # try:
-            #     orders = paginator.page(page_num)
-            # except InvalidPage:
-            #     orders = paginator.page(1)
-            # raw_orders = DocOrderHeader.objects.filter(docorderaction__manager_user=user).order_by('-id').distinct()
             raw_orders = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user)|Q(docorderaction__executor_user=user)).order_by('-id').distinct()
             orders = [obj for obj in raw_orders if obj.last_status() != "Архивный"]
             return render(request, 'repair/my_order.html', {"orders": orders, "user": request.user})
@@ -121,9 +110,12 @@ class OrderCreateView(CreateView):
     def form_valid(self, form):
         resp = super(OrderCreateView, self).form_valid(form)
         instance = self.object
-        ord_action = DocOrderAction(doc_order=instance, manager_user=self.request.user, setting_user=self.request.user,
+        ord_action = DocOrderAction(doc_order=instance,
+                                    manager_user=self.request.user,
+                                    setting_user=self.request.user,
                                     executor_user=User.objects.get(pk=self.request.POST["executor"]),
-                                    status=DirStatus.objects.get(status_name="Новый"))
+                                    status=DirStatus.objects.get(status_name="Новый"),
+                                    storage=Storage.object.get(pk=self.request.POST["storage"]))
         ord_action.save()
         msg = "*{}* ДОБАВИЛ заказ -{}-{}-{}-".format(self.request.user.get_full_name(), instance.order_barcode, instance.client.client_name, instance.device_name)
         logger.info(msg)
@@ -178,6 +170,7 @@ class ActionCreateView(CreateView):
             self.form_class = ActionForm
         order = DocOrderHeader.objects.get(pk=kwargs["order_id"])
         self.initial["manager_user"] = order.last_action().manager_user
+        self.initial["storage"] = order.last_action().storage
         return super(ActionCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
