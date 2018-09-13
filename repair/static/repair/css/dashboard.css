@@ -4,17 +4,34 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
-  padding-top: 50px;
+  padding-top: 70px;
 }
+
+@media (max-width: 860px) {
+    body{
+        padding-top: 115px;
+    }
+}
+
+@media (max-width: 768px) {
+    body{
+        padding-top: 65px;
+    }
+}
+
+.detail-mg-top{
+    margin-top: 25px;
+}
+
 
 
 /*
  * Global add-ons
  */
 
-.sub-header {
+.sub-header, .divider_bottom {
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 3px solid #eee;
 }
 
 /*
@@ -24,6 +41,10 @@ body {
 .navbar-fixed-top {
   border: 0;
 }
+
+
+
+
 
 /*
  * Sidebar
@@ -41,6 +62,7 @@ body {
     background-color: #f5f5f5;
     border-right: 1px solid #eee;
 }
+/*
 @media (min-width: 768px) {
   .sidebar {
     position: fixed;
@@ -51,11 +73,12 @@ body {
     display: block;
     padding: 20px;
     overflow-x: hidden;
-    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+    overflow-y: auto;
     background-color: #f5f5f5;
     border-right: 1px solid #eee;
   }
 }
+*/
 
 /* Sidebar navigation */
 .nav-sidebar {
@@ -73,6 +96,20 @@ body {
   color: #fff;
   background-color: #428bca;
 }
+
+
+#navbar-action{
+    border-top-color: #dc0d16;
+    border-top-width: 2px;
+    border-top-style: double;
+}
+
+.action-menu-header > a.navbar-brand{
+    color: #dc0d16;
+    font-size: 20px;
+    margin-left: 25px !important;
+}
+
 
 
 /*
@@ -128,4 +165,32 @@ tfoot input {
 tr.expired {
     color: red;
     font-weight: bold;
+}
+
+div.filter-gr {
+    border: 2px solid #3f89ce;
+    border-radius: 5px;
+    padding-top: 5px;
+    padding-bottom: 10px;
+}
+
+button.mg-top-15 {
+    margin-top: 10px;
+}
+
+p.bold {
+    font-weight: bold;
+}
+
+a span.badge:hover {
+  background-color: #3986c2;
+}
+
+a span.badge{
+    border-radius: .25em;
+}
+
+.input-group[class~="pd-15"]{
+    padding-right: 15px;
+    padding-left: 15px;
 }

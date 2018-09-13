@@ -1,15 +1,17 @@
 from django.conf.urls import url
 from . import views
 from .views import (OrderCreateView, OrderDetailView, ActionCreateView, ClientListView, ClientCreateView,
-                    ClientDetailView, ClientEditView, OrderArchiveView, ServiceRewardAssessment)
+                    ClientDetailView, ClientEditView, OrderArchiveView, ServiceRewardAssessment, CartridgeOrderListView,
+                    CartridgeListView, CartridgeOrderCreateView, cartridge_update, CartridgeCreateView, CartridgeOrderDetailView,
+                    CartridgeActionCreateView, MaintenanceOrderCreateView, MaintenanceOrderListView, MaintenanceOrderDetailView,
+                    MaintenanceActionCreateView, CartridgeOrderArchiveView, DocOrderHeaderListView)
 
 
 app_name = 'repair'
 
 urlpatterns = [
-    url(r'^$', views.index, name="index"),
-    url(r'^myord/$', views.my_order, name="my_order"),
-    url(r'^myord/order_add$', OrderCreateView.as_view(), name="order_add"),
+    url(r'^$', DocOrderHeaderListView.as_view(), name="index"),
+    url(r'^myord/order_add/$', OrderCreateView.as_view(), name="order_add"),
     url(r'^myord/(?P<order_id>\d+)/$', OrderDetailView.as_view(), name="order_detail"),
     url(r'^myord/(?P<order_id>\d+)/action_add/$', ActionCreateView.as_view(), name="action_add"),
     url(r'^clients/$', ClientListView.as_view(), name="clients"),
@@ -25,4 +27,16 @@ urlpatterns = [
     url(r'^ajax-add-spare/(?P<order_id>\d+)/$', views.ajax_add_spare, name="ajax_add_spare"),
     url(r'^spare/$', views.spare, name="spare"),
     url(r'^assessment/$', ServiceRewardAssessment.as_view(), name="assessment"),
+    url(r'^cartord_add/$', CartridgeOrderCreateView.as_view(), name="cartridge_order_add"),
+    url(r'^cartord/$', CartridgeOrderListView.as_view(), name="cartridge_orders"),
+    url(r'^cartridges/$', CartridgeListView.as_view(), name="cartridges"),
+    url(r'^cartridge/(?P<order_id>\d+)/$', CartridgeOrderDetailView.as_view(), name="cartridge_order_detail"),
+    url(r'^cartridge/(?P<order_id>\d+)/action_add$', CartridgeActionCreateView.as_view(), name="cartridge_action_add"),
+    url(r'^cartridge/create$', CartridgeCreateView.as_view(), name="cartridge_create"),
+    url(r'^cartridge_update/$', cartridge_update, name="cartridge_update"),
+    url(r'^cartridge-order-archive/$', CartridgeOrderArchiveView.as_view(), name="cartridge_order_archive"),
+    url(r'^maintenance/order_add$', MaintenanceOrderCreateView.as_view(), name='maintenance_order_add'),
+    url(r'^maintenance/order_list$', MaintenanceOrderListView.as_view(), name='maintenance_order_list'),
+    url(r'^maintenance/(?P<order_id>\d+)/$', MaintenanceOrderDetailView.as_view(), name="maintenance_detail"),
+    url(r'^maintenance/(?P<order_id>\d+)/action_add$', MaintenanceActionCreateView.as_view(), name="maintenance_action_add"),
 ]

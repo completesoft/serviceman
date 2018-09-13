@@ -1,7 +1,5 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
-{% load repair_tags %}
-
 
 {% block top_menu %}
   {% include "includes/top_menu.html" %}
@@ -26,47 +24,22 @@
       </p>
     {% endfor %}
   {% endif %}
-    <h2 class="sub-header">Ремонты - текущие заказы</h2>
+    <h2 class="sub-header">Заказы: работы</h2>
 
 {% endblock %}
 
 
 {% block table_main %}
-{% load bootstrap3 %}
-<div class="col-md-12">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Фильтр заказов</h3>
-      </div>
-      <div class="panel-body">
-        <form class="form" action="" method="get" autocomplete="off" id="filter_form">
-            {% bootstrap_form filter.form %}
-              {% buttons %}
-                <button type="submit" class="btn btn-primary">
-                  {% bootstrap_icon "search" %} Фильтровать
-                </button>
-                <button id="get_all" type="button" class="btn btn-info" value="all">
-                   {% bootstrap_icon "th" %} Показать все записи
-                </button>
-              {% endbuttons %}
-        </form>
-      </div>
-    </div>
-</div>
-
-
-<div class="col-md-12">
   <div class="table-responsive">
     <table class="table table-hover table-striped" id="table">
       <thead>
-        <th><span class="glyphicon glyphicon-barcode"></span></th>
+        <th><span class="glyphicon glyphicon-tasks"></span> ID</th>
         <th>Дата приемки</th>
         <th>Статус</th>
         {% if not outsource %}
         <th>Клиент</th>
         {% endif %}
-        <th>Устройство</th>
-        <th class="hidden-xs">Заявленная неисправность</th>
+        <th>Список работ</th>
         <th>Мастер</th>
       </thead>
       <tfoot>
@@ -77,13 +50,12 @@
         <th><input type="text" placeholder="Search"/></th>
         {% endif %}
         <th></th>
-        <th></th>
         <th><input type="text" placeholder="Search"/></th>
       </tfoot>
 
-      {% for order in object_list %}
+      {% for order in orders %}
       <tr {%if order.status_expired %} class="expired"{% endif %}>
-        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
+        <td><a href="{% url 'repair:maintenance_detail' order_id=order.id %}"> <span class="badge">{{ order.id }}</span></a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
           {% with order.last_status as last_act %}
             <td>{% include "includes/order_status.html" %}</td>
@@ -91,14 +63,12 @@
           {%if not outsource %}
             <td>{{ order.client.client_name }}</td>
           {% endif %}
-        <td>{{ order.device_name }}</td>
-        <td class="hidden-xs">{{ order.device_defect }}</td>
+        <td>{{ order.list_of_jobs }}</td>
         <td>{{ order.last_action.executor_user.get_full_name }}</td>
       </tr>
       {% endfor %}
     </table>
   </div>
-</div>
 {% endblock %}
 
 

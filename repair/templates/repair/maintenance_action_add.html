@@ -5,19 +5,42 @@
   {% include "includes/top_menu.html" %}
 {% endblock %}
 
-
 {% block sidebar_action %}
-  {% include "includes/action_menu.html" with menu_set="1" %}
+  {% include "includes/action_menu.html" with menu_set="7" %}
 {% endblock %}
 
 
 {% block sub_header_progress_bar %}
-  <h2 class="sub-header">Новый заказ - Ремонт</h2>
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Текущие данные заказа</h3>
+        </div>
+        <div class="panel-body">
+            <div class="col-sm-3 col-md-3">
+                ID: <span class="badge">{{ order.id }}</span>
+            </div>
+            <div class="col-sm-3 col-md-3">
+                Последнее изменение: {{ order.last_action.action_datetime|date:"d.m.Y" }}
+            </div>
+            <div class="col-sm-3 col-md-3">
+                Текущий статус:
+                {% with order.last_status as last_act %}
+                    {% include "includes/order_status.html" %}
+                {% endwith %}
+            </div>
+            <div class="col-sm-3 col-md-3">
+                Текущий исполнитель: {{ order.last_action.executor_user.get_full_name }}
+            </div>
+        </div>
+    </div>
+  <h2 class="sub-header">Новый статус заказа:</h2>
 {% endblock %}
 
 
+
+
 {% block table_main %}
-  <form class="form-horizontal" action="" method="post" autocomplete="off">
+<form class="form-horizontal" action="" method="post" autocomplete="off">
     {% csrf_token %}
     {% for field in form %}
       <div class="form-group">
@@ -48,10 +71,7 @@
     </div>
 
   </form>
-{% endblock %}
 
-{% block script_block %}
-<script src="{% static 'repair/js/action.js' %}"></script>
-<script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
-<script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+
+
 {% endblock %}

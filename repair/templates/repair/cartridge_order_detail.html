@@ -1,0 +1,171 @@
+{% extends "repair/base.html" %}
+{% load staticfiles %}
+
+{% block top_menu %}
+  {% include "includes/top_menu.html" %}
+{% endblock %}
+
+
+{% block sidebar_action %}
+    {% include "includes/action_menu.html" with menu_set="8" %}
+{% endblock %}
+
+{% block sub_header_progress_bar %}
+    <h2 class="sub-header">Картриджи - Детали заказа</h2>
+{% endblock %}
+
+
+{% block table_main %}
+    <div class="row detail-mg-top">
+      <div class="col-md-6">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Заказ Картридж</h3>
+            </div>
+            <div class="panel-body">
+              <div class="col-sm-3 col-md-3">
+               <p class="bold">ID: <span class="badge">{{ order.id }}</span></p>
+              </div>
+              <div class="col-sm-9 col-md-9">
+                  <div class="btn-toolbar" role="toolbar" aria-labelledby="CNFNECF">
+                      <p><strong>Быстрая установка статуса:</strong></p>
+                  {% for form in action_formset %}
+                    <form class="form-horizontal" id="{{ forloop.counter }}" action="" method="post" autocomplete="off">
+                       {% csrf_token %}
+                        {{ form }}
+                    </form>
+                  {% endfor %}
+
+                  {% for form in action_formset %}
+                      <div class="btn-group" role="group" aria-label="...">
+                          {% include "includes/order_status_int_button.html" with last_act=form.status.value form_id=forloop.counter %}
+                      </div>
+                  {% endfor %}
+                  </div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">Данные заказа</h3>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-4 col-md-4">
+                    <p class="bold">Дата оформления:</p>
+                    <p>{{ order.order_datetime|date:"d.m.Y" }}</p>
+                </div>
+                <div class="col-sm-4 col-md-4">
+                    <p class="bold">Кем оформлен:</p>
+                    <p>{{ order_action.0.setting_user.get_full_name }}</p>
+
+                </div>
+                <div class="col-sm-4 col-md-4">
+                    <p class="bold">Текущий статус:</p>
+                    <p>
+                    {% with order.last_status as last_act %}
+                        {% include "includes/order_status.html" %}
+                    {% endwith %}
+                    </p>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {% if not outsource %}
+
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Заказчик</h3>
+          </div>
+          <div class="panel-body">
+              <div class="col-md-4">
+                    <p class="bold">Наименование:</p>
+                    <p>{{ order.cartridge.client }}</p>
+              </div>
+              <div class="col-md-4">
+                    <p class="bold">Размещение:</p>
+                    <p>{{ order.client_position }}</p>
+              </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Заказанные работы</h3>
+          </div>
+          <div class="panel-body">
+                <p>{{ order.defect }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <h3 class="panel-title">Выполненные работы</h3>
+          </div>
+          <div class="panel-body">
+            {% for act in order_action %}
+              <p>
+                  {{ act.action_content }}
+              </p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!--Status section-->
+    <div class="row">
+        <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">История</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th>Выполненные работы</th>
+                    <th>Руководитель заказа</th>
+                    <th>Исполнитель заказа</th>
+                    <th>Установил статус</th>
+                  </thead>
+
+                  {% for act in order_action %}
+                  <tr>
+                    <td>{{ act.action_datetime|date:"d.m.Y H:i" }}</td>
+                    <td>{% include "includes/order_status.html" with last_act=act.status.get_status_name_display %} </td>
+                    <td>{{ act.action_content }}</td>
+                    <td>{{ act.manager_user.get_full_name }}</td>
+                    <td>{{ act.executor_user.get_full_name }}</td>
+                    <td>{{ act.setting_user.get_full_name }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>НЕТ ЗАПИСЕЙ</tr>
+                  {% endfor %}
+                </table>
+            </div>
+          </div>
+        </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block script_block %}
+<script type="text/javascript" src="{% static 'repair/js/action.js' %}"></script>
+{% endblock %}

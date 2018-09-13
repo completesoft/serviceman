@@ -8,13 +8,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import deprecate_current_app
 from django.views.decorators.cache import never_cache
 from .models import (DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent,
-                     DocOrderSparesContent, Clients, ClientsDep, Reward, Storage)
+                     DocOrderSparesContent, Clients, ClientsDep, Reward, Storage, CartridgeOrder, CartridgeActionStatus,
+                     Cartridge, CartridgeAction, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus)
 from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.core.urlresolvers import reverse
+from django.views.generic.base import RedirectView
+from django.core.urlresolvers import reverse, reverse_lazy
 from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, ServiceForm,
-                     ClientForm, ClientDepForm, ClientEditForm, RewardForm)
+                     ClientForm, ClientDepForm, ClientEditForm, RewardForm, CartridgeOrderForm ,
+                     CartridgeFilterOrderForm, CartridgeRegularActionForm, CartridgeSuperActionForm,
+                     MaintenanceOrderForm, MaintenanceRegularActionForm,
+                     MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
 # from serviceman.settings import LOGIN_URL
@@ -27,54 +32,46 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.core.paginator import Paginator, InvalidPage
 from django.middleware.csrf import get_token
 from django.db.models import Q
+from django.contrib.auth.decorators import user_passes_test
+from .helpers import outsource_group_check
 import logging
+from .filters import DocOrderHeaderFilter, CartridgeOrderFilter
+from django_filters.views import FilterView
+from django.utils.timezone import now
+
 
 logger = logging.getLogger('user.activity')
 LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
 
-@login_required
-def index(request):
-    user = request.user
-    outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-    if user.is_active:
-        # try:
-        #     page_num = request.GET["page"]
-        # except KeyError:
-        #     page_num = 1
-        if not outsource_group:
-            # paginator = Paginator(DocOrderHeader.objects.all(), 15)
-            # try:
-            #     orders = paginator.page(page_num)
-            # except InvalidPage:
-            #     orders = paginator.page(1)
-            raw_orders = DocOrderHeader.objects.all()
-            orders = [obj for obj in raw_orders if obj.last_status() != "Архивный"]
-            return render(request, 'repair/index.html', {"orders": orders, "user": request.user, "outsource": False})
-        else:
-            # for "outsource" group
-            raw_orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).distinct()
-            orders = [obj for obj in raw_orders if obj.last_status()!="Архивный"]
-            # paginator = Paginator(orders_set, 15)
-            # try:
-            #     orders = paginator.page(page_num)
-            # except InvalidPage:
-            #     orders = paginator.page(1)
-            return render(request, 'repair/index.html', {"orders": orders, "user": request.user, "outsource": True})
-    return redirect(LOGIN_URL)
 
+class DocOrderHeaderListView(FilterView):
+    filterset_class = DocOrderHeaderFilter
+    template_name = 'repair/index.html'
+    context_object_name = "filter"
+    outsource = True
 
-@login_required
-def my_order(request):
-    user = request.user
-    outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-    if user.is_active:
-        if not outsource_group:
-            raw_orders = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user)|Q(docorderaction__executor_user=user)).order_by('-id').distinct()
-            orders = [obj for obj in raw_orders if obj.last_status() != "Архивный"]
-            return render(request, 'repair/my_order.html', {"orders": orders, "user": request.user})
+    def get_queryset(self):
+        user = self.request.user
+        if self.outsource:
+            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).exclude(docorderaction__status__status_name="Архивный").distinct()
         else:
-            return redirect(reverse("repair:index"))
-    return redirect(LOGIN_URL)
+            orders = DocOrderHeader.objects.exclude(docorderaction__status__status_name="Архивный").distinct()
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(DocOrderHeaderListView, self).get_context_data(**kwargs)
+        context["outsource"] = self.outsource
+        if self.request.GET.get('all'):
+            context['object_list'] = self.get_queryset()
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active:
+            return super(DocOrderHeaderListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
 
 
 class OrderCreateView(CreateView):
@@ -86,7 +83,7 @@ class OrderCreateView(CreateView):
         return super(OrderCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.success_url = reverse("repair:my_order")
+        self.success_url = reverse("repair:index")
         return super(OrderCreateView, self).post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -94,14 +91,12 @@ class OrderCreateView(CreateView):
         context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
         if context["form"]['client'].data:
             context["form"].fields['client_dep'].queryset = ClientsDep.objects.filter(client=context["form"]['client'].data)
-        else:
-            context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
+        outsource_group = user.groups.filter(name='outsource').exists()
         if user.is_active and (user.is_superuser or not outsource_group):
             return super(OrderCreateView, self).dispatch(request, *args, **kwargs)
         else:
@@ -115,7 +110,7 @@ class OrderCreateView(CreateView):
                                     setting_user=self.request.user,
                                     executor_user=User.objects.get(pk=self.request.POST["executor"]),
                                     status=DirStatus.objects.get(status_name="Новый"),
-                                    storage=Storage.object.get(pk=self.request.POST["storage"]))
+                                    storage=Storage.objects.get(pk=self.request.POST["storage"]))
         ord_action.save()
         msg = "*{}* ДОБАВИЛ заказ -{}-{}-{}-".format(self.request.user.get_full_name(), instance.order_barcode, instance.client.client_name, instance.device_name)
         logger.info(msg)
@@ -138,18 +133,14 @@ class OrderDetailView(DetailView):
         context["service_form"] = service_form
         spare_form = SpareForm()
         context["spare_form"] = spare_form
-        user = self.request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        context["outsource"] = True if outsource_group else False
+        context["outsource"] = self.request.user.groups.filter(name='outsource').exists()
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_active:
             order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
-            outsource_group = True if request.user.groups.filter(name='outsource').values_list('name',
-                                                                                               flat=True) else False
-            if outsource_group:
+            if request.user.groups.filter(name='outsource').exists():
                 act = DocOrderAction.objects.filter(doc_order=order).filter(executor_user=request.user)
                 if not act:
                     return redirect("repair:my_order")
@@ -163,8 +154,7 @@ class ActionCreateView(CreateView):
     template_name = "repair/action_add.html"
 
     def get(self, request, *args, **kwargs):
-        outsource_group = request.user.groups.filter(name='outsource').values_list('name', flat=True)
-        if outsource_group:
+        if request.user.groups.filter(name='outsource').exists():
             self.form_class = ActionFormOut
         else:
             self.form_class = ActionForm
@@ -174,9 +164,8 @@ class ActionCreateView(CreateView):
         return super(ActionCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.success_url = reverse("repair:my_order")
-        outsource_group = request.user.groups.filter(name='outsource').values_list('name', flat=True)
-        if outsource_group:
+        self.success_url = reverse("repair:index")
+        if request.user.groups.filter(name='outsource').exists():
             self.form_class = ActionFormOut
         else:
             self.form_class = ActionForm
@@ -187,8 +176,7 @@ class ActionCreateView(CreateView):
     def form_valid(self, form):
         form.instance.doc_order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
         form.instance.setting_user = self.request.user
-        outsource_group = self.request.user.groups.filter(name='outsource').values_list('name', flat=True)
-        if outsource_group:
+        if self.request.user.groups.filter(name='outsource').exists():
             last_act = DocOrderHeader.objects.get(pk=self.kwargs["order_id"]).last_action()
             form.instance.manager_user = last_act.manager_user
             form.instance.executor_user = last_act.executor_user
@@ -201,10 +189,9 @@ class ActionCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super(ActionCreateView, self).get_context_data(**kwargs)
         context["order"] = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
-        outsource_group = self.request.user.groups.filter(name='outsource').values_list('name', flat=True)
-        context["outsource"] = True if outsource_group else False
+        context["outsource"] = self.request.user.groups.filter(name='outsource').exists()
         if not self.request.user.is_superuser:
-            if outsource_group:
+            if context["outsource"]:
                 context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name__in=["Архивный", "Передан клиенту"])
             else:
                 context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name="Архивный")
@@ -212,7 +199,7 @@ class ActionCreateView(CreateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        outsource_group = True if request.user.groups.filter(name='outsource').values_list('name', flat=True) else False
+        # outsource_group = request.user.groups.filter(name='outsource').exists()
         if not request.user.is_active:
             return redirect(LOGIN_URL)
         order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
@@ -227,16 +214,11 @@ class ClientListView(ListView):
     ordering = "client_name"
     context_object_name = "clients"
 
-    # paginate_by = 15
-
-    # def get_queryset(self):
-    #     return Clients.objects.all().order_by("client_name")
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if user.is_active and not outsource_group:
+        if user.is_active and not user.groups.filter(name='outsource').exists():
             return super(ClientListView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -275,8 +257,7 @@ class ClientCreateView(CreateView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if user.is_active and not outsource_group:
+        if user.is_active and not user.groups.filter(name='outsource').exists():
             return super(ClientCreateView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -297,8 +278,7 @@ class ClientDetailView(DetailView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if user.is_active and not outsource_group:
+        if user.is_active and not user.groups.filter(name='outsource').exists():
             return super(ClientDetailView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -338,8 +318,7 @@ class ClientEditView(UpdateView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if user.is_active and not outsource_group:
+        if user.is_active and not user.groups.filter(name='outsource').exists():
             return super(ClientEditView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -373,11 +352,9 @@ def handlePopAdd(request, addForm, field):
 
 
 @login_required
-@csrf_exempt
 def popupClientView(request):
     user = request.user
-    outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-    if user.is_active and not outsource_group:
+    if user.is_active and not user.groups.filter(name='outsource').exists():
         return handlePopAdd(request, ClientForm, 'client')
     else:
         return redirect(LOGIN_URL)
@@ -387,8 +364,7 @@ def popupClientView(request):
 @login_required
 def dep_update(request, **kwargs):
     user = request.user
-    outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-    if user.is_active and not outsource_group:
+    if user.is_active and not user.groups.filter(name='outsource').exists():
         department_set = [{"id": "", "client_dep_name": "Не выбрано"}]
         if request.method == "POST" and request.is_ajax():
             departments = list(
@@ -401,33 +377,32 @@ def dep_update(request, **kwargs):
         return redirect(LOGIN_URL)
 
 
-class OrderArchiveView(ListView):
+class OrderArchiveView(FilterView):
+    filterset_class = DocOrderHeaderFilter
     template_name = "repair/order_archive.html"
-    context_object_name = "orders"
+    context_object_name = "filter"
 
     def get_queryset(self):
         user = self.request.user
-        outsource_group = user.groups.filter(name='outsource').values_list('name', flat=True)
-        if outsource_group:
-            raw_orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).order_by('-id').distinct()
+        if user.groups.filter(name='outsource').exists():
+            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).filter(docorderaction__status__status_name="Архивный").order_by('-id').distinct()
         else:
-            raw_orders = DocOrderHeader.objects.all()
-        orders = [obj for obj in raw_orders if obj.last_status() == "Архивный"]
+            orders = DocOrderHeader.objects.filter(docorderaction__status__status_name="Архивный").distinct()
         return orders
 
     def get_context_data(self, **kwargs):
         context = super(OrderArchiveView, self).get_context_data(**kwargs)
-        outsource_group = self.request.user.groups.filter(name='outsource').values_list('name', flat=True)
-        context["outsource"] = True if outsource_group else False
+        if self.request.GET.get('all'):
+            context['object_list'] = self.get_queryset()
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        user = request.user
-        if user.is_active:
+        if request.user.is_active:
             return super(OrderArchiveView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
+
 
 
 @login_required
@@ -648,3 +623,387 @@ class ServiceRewardAssessment(ListView):
         else:
             return redirect(LOGIN_URL)
 
+
+class CartridgeOrderListView(FilterView):
+    filterset_class = CartridgeOrderFilter
+    template_name = "repair/cartridge_orders.html"
+    ordering = ["-order_datetime"]
+    outsource = True
+
+    def get_queryset(self):
+        orders = CartridgeOrder.objects.exclude(cartridgeaction__status__status_name=6).order_by('-id').distinct()
+        if self.outsource:
+            user = self.request.user
+            orders = orders.filter(cartridgeaction__executor_user=user)
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(CartridgeOrderListView, self).get_context_data(**kwargs)
+        context["outsource"] = self.outsource
+        if self.request.GET.get('all'):
+            context['object_list'] = self.get_queryset()
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        self.outsource = user.groups.filter(name='outsource').exists()
+        if user.is_active:
+            return super(CartridgeOrderListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class CartridgeListView(ListView):
+    template_name = "repair/cartridges.html"
+    model = Cartridge
+    ordering = "add_datetime"
+    context_object_name = "cartridges"
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = request.user.groups.filter(name='outsource').exists()
+        if user.is_active and not outsource_group:
+            return super(CartridgeListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class CartridgeCreateView(CreateView):
+    form_class = CartridgeCreateForm
+    model = Cartridge
+    template_name = 'repair/cartridge_create.html'
+    success_url = reverse_lazy('repair:cartridges')
+
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = request.user.groups.filter(name='outsource').exists()
+        if user.is_active and not outsource_group:
+            return super(CartridgeCreateView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class CartridgeOrderCreateView(CreateView):
+    form_class = CartridgeOrderForm
+    model = CartridgeOrder
+    template_name = "repair/cartridge_order_add.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(CartridgeOrderCreateView, self).get_context_data(**kwargs)
+        context['form'].fields['cartridge'].queryset = Cartridge.objects.none()
+        context['filter_form'] = CartridgeFilterOrderForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.success_url = reverse('repair:cartridge_orders')
+        return super(CartridgeOrderCreateView, self).post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        resp = super(CartridgeOrderCreateView, self).form_valid(form)
+        instance = self.object
+        ord_action = CartridgeAction(order=instance,
+                                    manager_user=self.request.user,
+                                    setting_user=self.request.user,
+                                    executor_user=User.objects.get(pk=self.request.POST["executor"]),
+                                    status=CartridgeActionStatus.objects.get(status_name=0),
+                                    action_content='Заказ принят')
+        ord_action.save()
+        msg = "*{}* ДОБАВИЛ заказ КАРТРИДЖ -{}-{}-".format(self.request.user.get_full_name(), instance.id, instance.cartridge.client.client_name)
+        logger.info(msg)
+        messages.add_message(self.request, messages.SUCCESS, "Новый заказ на КАРТРИДЖ добавлен!!!")
+        return resp
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = request.user.groups.filter(name='outsource').exists()
+        if user.is_active and not outsource_group:
+            return super(CartridgeOrderCreateView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class CartridgeOrderDetailView(DetailView):
+    template_name = "repair/cartridge_order_detail.html"
+    model = CartridgeOrder
+    context_object_name = "order"
+    pk_url_kwarg = "order_id"
+    outsource = True
+    status_map = {0:[1,],
+                  1:[3,],
+                  3:[1, 5,],
+                  5:[1, 6,],
+                  }
+
+    def get_action_formset(self):
+        status = self.object.last_action().status.status_name
+        form_set = []
+        if self.status_map.get(status):
+            form_set = [CartridgeActionExpressForm(status_set=self.status_map[status], initial={'status':CartridgeActionStatus.objects.get(status_name=st)}) for st in self.status_map[status]]
+        return form_set
+
+
+    def get_context_data(self, **kwargs):
+        context = super(CartridgeOrderDetailView, self).get_context_data(**kwargs)
+        context['order_action'] = CartridgeAction.objects.filter(order=self.object).order_by("action_datetime")
+        context['outsource'] = self.outsource
+        context['action_formset'] = self.get_action_formset()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        order = self.get_object()
+        action = order.last_action()
+        if self.status_map.get(action.status.status_name):
+            form_action = CartridgeActionExpressForm(request.POST, status_set = self.status_map[action.status.status_name])
+            if form_action.is_valid():
+                new_action = form_action.save(commit=False)
+                new_action.order = order
+                new_action.manager_user = action.manager_user
+                new_action.executor_user = action.executor_user
+                new_action.setting_user = request.user
+                new_action.action_content = 'Быстрая установка статуса'
+                new_action.save()
+        return super(CartridgeOrderDetailView, self).get(request, *args, **kwargs)
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_active:
+            order = CartridgeOrder.objects.get(pk=self.kwargs["order_id"])
+            self.outsource = request.user.groups.filter(name='outsource').exists()
+            if self.outsource:
+                act = CartridgeAction.objects.filter(order=order).filter(executor_user=request.user).values_list('action_datetime', flat=True)
+                if not act:
+                    return redirect("repair:cartridge_orders")
+            return super(CartridgeOrderDetailView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+# Update through ajax
+@login_required
+def cartridge_update(request, **kwargs):
+    if not request.is_ajax():
+        return redirect(LOGIN_URL)
+    user = request.user
+    outsource_group = request.user.groups.filter(name='outsource').exists()
+    cartridge_preset = {'cartridge': [{'id': '', 'model': '--------', 'serial_number': '--------', 'client__client_name': '--------'}], 'redirect': ''}
+    if user.is_active and not outsource_group:
+        filter_form = CartridgeFilterOrderForm(request.POST)
+        if filter_form.is_valid():
+            cartridge_set = Cartridge.objects.filter(serial_number__contains=filter_form.cleaned_data['serial_number'])
+            if filter_form.cleaned_data['client']:
+                cartridge_set = cartridge_set.filter(client=filter_form.cleaned_data['client'])
+            if cartridge_set:
+                cartridge_preset['cartridge'].extend(cartridge_set.values('id', 'model','serial_number', 'client__client_name'))
+    else:
+        cartridge_preset['redirect'] = reverse('login')
+    return JsonResponse(cartridge_preset, safe=False)
+
+
+
+class CartridgeActionCreateView(CreateView):
+
+    model = CartridgeAction
+    template_name = 'repair/cartridge_action_add.html'
+
+    def get(self, request, *args, **kwargs):
+        if self.outsource_group:
+            self.form_class = CartridgeRegularActionForm
+        else:
+            self.form_class = CartridgeSuperActionForm
+        last_action = self.order.cartridgeaction_set.latest()
+        self.initial['manager_user'] = last_action.manager_user
+        self.initial['executor_user'] = last_action.executor_user
+        self.initial['status'] = last_action.status
+        return super(CartridgeActionCreateView, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(CartridgeActionCreateView, self).get_context_data(**kwargs)
+        context['current_action'] = CartridgeAction.objects.filter(order__id=self.kwargs['order_id']).latest()
+        context['order'] = CartridgeOrder.objects.get(pk=self.kwargs['order_id'])
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if self.outsource_group:
+            self.form_class = CartridgeRegularActionForm
+        else:
+            self.form_class = CartridgeSuperActionForm
+        self.success_url = reverse("repair:cartridge_order_detail", kwargs={'order_id': self.kwargs['order_id']})
+        return super(CartridgeActionCreateView, self).post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.order_id = self.kwargs['order_id']
+        return super(CartridgeActionCreateView, self).form_valid(form)
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource_group = request.user.groups.filter(name='outsource').exists()
+        if not request.user.is_active:
+            return redirect(LOGIN_URL)
+        self.order = CartridgeOrder.objects.get(pk=self.kwargs["order_id"])
+        if self.order.last_status() == "Архивный" and not request.user.is_superuser:
+            return redirect("repair:cartridge_order_detail", order_id=kwargs["order_id"])
+        return super(CartridgeActionCreateView, self).dispatch(request, *args, **kwargs)
+
+
+
+class CartridgeOrderArchiveView(FilterView):
+    filterset_class = CartridgeOrderFilter
+    template_name = "repair/cartridge_order_archive.html"
+    outsource = True
+
+    def get_queryset(self):
+        user = self.request.user
+        orders = CartridgeOrder.objects.filter(cartridgeaction__status__status_name=6).order_by('-id').distinct()
+        if self.outsource:
+            orders = orders.filter(cartridgeaction__executor_user=user)
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(CartridgeOrderArchiveView, self).get_context_data(**kwargs)
+        context['outsource'] = self.outsource
+        if self.request.GET.get('all'):
+            context['object_list'] = self.get_queryset()
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active:
+            return super(CartridgeOrderArchiveView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+
+class MaintenanceOrderCreateView(CreateView):
+    form_class = MaintenanceOrderForm
+    model = MaintenanceOrder
+    template_name = "repair/maintenance_order_add.html"
+
+    def post(self, request, *args, **kwargs):
+        self.success_url = reverse("repair:maintenance_order_list")
+        return super(MaintenanceOrderCreateView, self).post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(MaintenanceOrderCreateView, self).get_context_data(**kwargs)
+        context["form"].fields['client_dep'].queryset = ClientsDep.objects.none()
+        if context["form"]['client'].data:
+            context["form"].fields['client_dep'].queryset = ClientsDep.objects.filter(client=context["form"]['client'].data)
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = request.user.groups.filter(name='outsource').exists()
+        if user.is_active and (user.is_superuser or not outsource_group):
+            return super(MaintenanceOrderCreateView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+    def form_valid(self, form):
+        resp = super(MaintenanceOrderCreateView, self).form_valid(form)
+        instance = self.object
+        ord_action = MaintenanceAction(order=instance,
+                                    manager_user=self.request.user,
+                                    setting_user=self.request.user,
+                                    executor_user=User.objects.get(pk=self.request.POST["executor"]),
+                                    status=MaintenanceActionStatus.objects.get(status_name=0))
+        ord_action.save()
+        msg = "*{}* ДОБАВИЛ заказ РАБОТЫ -{}-{}-".format(self.request.user.get_full_name(), instance.id, instance.client.client_name)
+        logger.info(msg)
+        messages.add_message(self.request, messages.SUCCESS, "Новый заказ РАБОТЫ добавлен!!!")
+        return resp
+
+
+class MaintenanceOrderListView(ListView):
+    template_name = "repair/maintenance_order_list.html"
+    model = MaintenanceOrder
+    ordering = "order_datetime"
+    context_object_name = "orders"
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        outsource_group = request.user.groups.filter(name='outsource').exists()
+        if user.is_active and not outsource_group:
+            return super(MaintenanceOrderListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class MaintenanceOrderDetailView(DetailView):
+    template_name = "repair/maintenance_detail.html"
+    model = MaintenanceOrder
+    context_object_name = "order"
+    pk_url_kwarg = "order_id"
+
+    def get_context_data(self, **kwargs):
+        context = super(MaintenanceOrderDetailView, self).get_context_data(**kwargs)
+        context["order_action"] = MaintenanceAction.objects.filter(order=self.object).order_by("action_datetime")
+        context["outsource"] = self.outsource_group
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_active:
+            order = MaintenanceOrder.objects.get(pk=self.kwargs["order_id"])
+            self.outsource_group = request.user.groups.filter(name='outsource').exists()
+            if self.outsource_group:
+                act = MaintenanceAction.objects.filter(order=order).filter(executor_user=request.user).values_list('action_datetime', flat=True)
+                if not act:
+                    return redirect("repair:maintenance_order_list")
+            return super(MaintenanceOrderDetailView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class MaintenanceActionCreateView(CreateView):
+    # form_class = MaintenanceRegularActionForm
+    model = MaintenanceAction
+    template_name = 'repair/maintenance_action_add.html'
+
+    def get(self, request, *args, **kwargs):
+        if self.outsource_group:
+            self.form_class = MaintenanceRegularActionForm
+        else:
+            self.form_class = MaintenanceSuperActionForm
+        # last_action = MaintenanceOrder.objects.get(pk=kwargs["order_id"]).maintenanceaction_set.latest()
+        last_action = self.order.maintenanceaction_set.latest()
+        self.initial['manager_user'] = last_action.manager_user
+        self.initial['executor_user'] = last_action.executor_user
+        self.initial['status'] = last_action.status
+        return super(MaintenanceActionCreateView, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(MaintenanceActionCreateView, self).get_context_data(**kwargs)
+        context['current_action'] = MaintenanceAction.objects.filter(order__id=self.kwargs['order_id']).latest()
+        context['order'] = MaintenanceOrder.objects.get(pk=self.kwargs['order_id'])
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if self.outsource_group:
+            self.form_class = MaintenanceRegularActionForm
+        else:
+            self.form_class = MaintenanceSuperActionForm
+        self.success_url = reverse("repair:maintenance_detail", kwargs={'order_id': self.kwargs['order_id']})
+        return super(MaintenanceActionCreateView, self).post(request, *args, **kwargs)
+
+
+    def form_valid(self, form):
+        form.instance.order_id = self.kwargs['order_id']
+        return super(MaintenanceActionCreateView, self).form_valid(form)
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource_group = request.user.groups.filter(name='outsource').exists()
+        if not request.user.is_active:
+            return redirect(LOGIN_URL)
+        self.order = MaintenanceOrder.objects.get(pk=self.kwargs["order_id"])
+        if self.order.last_status() == "Архивный" and not request.user.is_superuser:
+            return redirect("repair:maintenance_detail", order_id=kwargs["order_id"])
+        return super(MaintenanceActionCreateView, self).dispatch(request, *args, **kwargs)

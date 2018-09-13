@@ -1,4 +1,4 @@
-"""peZaharov URL Configuration
+"""
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.10/topics/http/urls/
@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from django.contrib.auth.views import login, logout_then_login
-
+from django.conf import settings
 
 urlpatterns = [
     url(r'^login/', login, {'template_name': 'login_form.html'}, name="login"),
@@ -24,3 +24,9 @@ urlpatterns = [
     url(r'^repair/', include('repair.urls')),
     url(r'^admin/', admin.site.urls),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

@@ -12,11 +12,12 @@
 
 
 {% block sub_header_progress_bar %}
-  <h2 class="sub-header">Новый заказ - Ремонт</h2>
+  <h2 class="sub-header">Добавить новый картридж</h2>
 {% endblock %}
 
 
 {% block table_main %}
+
   <form class="form-horizontal" action="" method="post" autocomplete="off">
     {% csrf_token %}
     {% for field in form %}
@@ -24,19 +25,7 @@
 
         <label class="col-md-3 control-label">{{ field.label }}:</label>
         <div class="col-md-5">
-          {% if field.name in "client" %}
-          <div class="input-group">
-
-          {{field}}
-            <span class="input-group-addon">
-              <a href="{% url 'repair:popup_client_add' %}" class="add-another" id="add_id_{{ field.name }}"  onclick="return showAddAnotherPopup(this);" title="Добавить нового клиента">
-                <i class="glyphicon glyphicon-plus text-success"></i>
-              </a>
-            </span>
-          </div>
-          {% else %}
           {{ field }}{{ field.errors }}
-          {% endif %}
         </div>
       </div>
 
@@ -51,7 +40,7 @@
 {% endblock %}
 
 {% block script_block %}
-<script src="{% static 'repair/js/action.js' %}"></script>
+<script src="{% static 'repair/js/cartridge_order.js' %}"></script>
 <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
 <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
 {% endblock %}

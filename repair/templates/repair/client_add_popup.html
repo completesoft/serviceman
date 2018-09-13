@@ -9,6 +9,7 @@
 
 {% block table_main %}
   <form class="form-horizontal" action="{% url 'repair:popup_client_add' %}" method="post" autocomplete="off">
+    {% csrf_token %}
     {% for field in form %}
       <div class="form-group">
       <label class="col-xs-4 control-label">{{ field.label }}:</label>
@@ -21,7 +22,7 @@
       <h4>Добавляем отделения клиента:</h4>
     </div>
     <input id="add_dep" type="button" class="btn btn-success hidden" value="Добавить отделение"/>
-    <p><input type="submit" value="Добавить клиента"/> | <a href="javascript:window.close()">Cancel</a></p>
+    <p><input class="btn btn-primary btn-md" type="submit" value="Добавить клиента"/> | <a class="btn btn-default btn-md" href="javascript:window.close()">Cancel</a></p>
   </form>
 {% endblock %}
 

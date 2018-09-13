@@ -6,7 +6,7 @@ from ..urls import urlpatterns
 from django.conf.urls import RegexURLPattern
 import re
 
-# Create your tests here.
+
 
 class LoginTestCase(TestCase):
     fixtures = ['User', 'Group','test_data']
@@ -54,21 +54,3 @@ class LoginTestCase(TestCase):
         response = self.client.get(reverse('repair:index'))
         self.assertEqual(str(response.context['user']), self.users['admin']['username'])
         self.assertEqual(response.status_code, 200)
-
-
-    # def test_
-
-
-
-    # def test_logged_user(self):
-    #     name='New'
-    #     password = '12345'
-    #     data = {'username':name, 'password': password}
-    #     new_user = User.objects.create_user(**data)
-    #     new_user.data = data
-    #     login = self.client.login(**data)
-    #     for url in urlpatterns:
-    #         print('TYPE url', type(url))
-    #         print('The URL', url)
-    #         resp = self.client.get(reverse('repair:'+url.name, kwargs={'order_id': 1}))
-    #         self.assertEqual(str(resp.context['user']), name)

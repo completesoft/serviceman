@@ -1,4 +1,6 @@
+(function($) {
 $(document).ready(function(){
+
    var table = $('#table').DataTable({
         "stateSave": true,
         "stateDuration": 0,
@@ -10,6 +12,19 @@ $(document).ready(function(){
                         $("tfoot input")[i].value = value;
                     }
                 }
+        },
+        "language": {
+            "infoEmpty": "Показано с 0 по 0 из 0 записей",
+            "lengthMenu": "Показать _MENU_ строк",
+            "zeroRecords": "Нет данных удовлетворяющих условиям поиска",
+            "search": "Поиск:",
+            "info": "Показано с _START_ по _END_ из _TOTAL_ записей",
+            "paginate": {
+                "first":      "Первую",
+                "last":       "Последняя",
+                "next":       "Следующая",
+                "previous":   "Предыдущая"
+            },
         },
         "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "ВСЕ"] ],
         'pageLength': 25,
@@ -33,4 +48,16 @@ $(document).ready(function(){
             }
         });
    });
+
+
+    $("#get_all").click(function(){
+        console.log('In DA CLUB');
+        addParam();
+   });
 });
+
+function addParam(){
+    window.location.search = '?all=Bingo';
+}
+
+})(jQuery);

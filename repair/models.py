@@ -13,11 +13,13 @@ class Clients(models.Model):
         db_table = 'clients'
         verbose_name = "Клиент"
         verbose_name_plural = "Клиенты"
+        ordering = ['client_name']
 
     def __str__(self):
         return '{}'.format(self.client_name)
 
-class DocOrderHeader (models.Model):
+
+class DocOrderHeader(models.Model):
     order_barcode = models.CharField("Штрихкод", max_length=100, default='', unique=True, null=False, blank=False)
     order_datetime = models.DateTimeField("Дата", auto_now_add=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
@@ -27,7 +29,6 @@ class DocOrderHeader (models.Model):
     device_defect = models.CharField("Заявленная неисправность", default='', max_length=155, null=False, blank=False)
     device_serial = models.CharField("Серийный номер устройства", default='', max_length=100, null=False, blank=False)
     order_comment = models.CharField("Комментарий", max_length=255, null=True, blank=True)
-
 
     class Meta:
         db_table = 'doc_order_header'
@@ -52,12 +53,21 @@ class DocOrderHeader (models.Model):
     client_corp.boolean = True
 
     def status_expired(self):
-        acts = self.docorderaction_set.all().latest()
-        delta = acts.status.expiry_time
-        if not delta:
+
+        # acts = self.docorderaction_set.all().latest()
+        acts = self.docorderaction_set.latest()
+        if not acts.status.expiry_time:
             return False
-        last_time = acts.action_datetime + timedelta(hours=delta)
-        return timezone.now() > last_time
+
+        to_date = acts.action_datetime + timedelta(hours=acts.status.expiry_time)
+        last_date = acts.action_datetime + timedelta(hours=acts.status.expiry_time)
+
+        for x in range((to_date - acts.action_datetime).days + 1):
+            if (to_date + timedelta(days=x)).weekday() in [5, 6]:
+                last_date += timedelta(days=1)
+                if last_date.weekday() in [5, 6]:
+                    last_date += timedelta(days=1)
+        return timezone.now() > last_date
     status_expired.boolean = True
 
 
@@ -157,6 +167,7 @@ class ClientsDep(models.Model):
         db_table = 'clients_dep'
         verbose_name = "Подразделения клиента"
         verbose_name_plural = "Подразделения клиентов"
+        ordering = ['client_dep_name']
 
     def __str__(self):
         return "{} - {}".format(self.client.client_name, self.client_dep_name)
@@ -188,3 +199,207 @@ class Reward(models.Model):
 
     def __str__(self):
         return "{} получатель \"{}\"".format(self.add_datetime, self.serviceman)
+
+
+class Cartridge(models.Model):
+
+    add_datetime = models.DateTimeField("Дата регистрации в базе", auto_now_add=True)
+    model = models.CharField('Модель', max_length=100, null=False, blank=False)
+    serial_number = models.CharField('Модель', max_length=100, null=False, blank=False)
+    client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_DEFAULT, default='None', null=False, blank=False)
+
+
+    class Meta:
+        db_table = 'cartridge'
+        verbose_name = 'Картриджи'
+        verbose_name_plural = 'Картриджи'
+
+    def __str__(self):
+        return 'Model:{} S.n.-{}'.format(self.model, self.serial_number)
+
+
+class CartridgeActionStatus(models.Model):
+    NEW = 0
+    IN_WORK = 1
+    WAITING = 2
+    COMPLETED = 3
+    EXPIRED = 4
+    TO_CLIENT = 5
+    ARCHIVE = 6
+
+    status_set = (
+        (NEW, 'Новый'),
+        (IN_WORK, 'В работе'),
+        (WAITING, 'Ожидание'),
+        (COMPLETED, 'Выполнен'),
+        (EXPIRED, 'Просрочен'),
+        (TO_CLIENT, 'Передан клиенту'),
+        (ARCHIVE, 'Архивный')
+    )
+
+    status_name = models.PositiveIntegerField("Состояние", choices=status_set, unique=True, null=False, blank=False, default=0)
+    expiry_time = models.PositiveIntegerField('Допустимая продолжительность статуса', help_text='в часах', default=0)
+
+    class Meta:
+        db_table = 'cartridge_action_status'
+        verbose_name = "Справочник состояний КАРТРИДЖИ"
+        verbose_name_plural = "Справочник состояний КАРТРИДЖИ"
+
+    def __str__(self):
+        return "{}".format(self.get_status_name_display())
+
+
+
+class CartridgeOrder(models.Model):
+
+    order_datetime = models.DateTimeField("Дата заказа", auto_now_add=True)
+    cartridge = models.ForeignKey(Cartridge, verbose_name='Картридж', on_delete=models.CASCADE, null=False, blank=False)
+    defect = models.CharField("Заявленная неисправность", default='', max_length=255, null=False, blank=False)
+    client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=False)
+
+    class Meta:
+        db_table = 'cartridge_order'
+        verbose_name = "Картриджи - заказы"
+        verbose_name_plural = "Картриджи - заказы"
+
+    def __str__(self):
+        return "{} {}".format(self.order_datetime, self.cartridge)
+
+    def last_action(self):
+        acts = self.cartridgeaction_set.all().latest()
+        return acts
+
+    def last_status(self):
+        return self.cartridgeaction_set.all().latest().status.get_status_name_display()
+    last_status.short_description = 'Статус заказа'
+
+    def status_expired(self):
+        acts = self.cartridgeaction_set.all().latest()
+        if not acts.status.expiry_time:
+            return False
+
+        to_date = acts.action_datetime + timedelta(hours=acts.status.expiry_time)
+        last_date = acts.action_datetime + timedelta(hours=acts.status.expiry_time)
+
+        for x in range((to_date - acts.action_datetime).days + 1):
+            if (to_date + timedelta(days=x)).weekday() in [5, 6]:
+                last_date += timedelta(days=1)
+                if last_date.weekday() in [5, 6]:
+                    last_date += timedelta(days=1)
+        return timezone.now() > last_date
+    status_expired.boolean = True
+
+
+
+class CartridgeAction(models.Model):
+
+    order = models.ForeignKey(CartridgeOrder, on_delete=models.CASCADE, null=True, blank=False)
+    action_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
+    manager_user = models.ForeignKey(User, verbose_name="Руководитель заказа", on_delete=models.SET_NULL, null=True, blank=False)
+    executor_user = models.ForeignKey(User,verbose_name="Исполнитель заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
+    setting_user = models.ForeignKey(User,verbose_name="Установил статус заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
+    status = models.ForeignKey(CartridgeActionStatus, verbose_name="Статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
+    action_content = models.TextField("Манипуляции с картриджем", max_length=100, default="", null=True, blank=True)
+
+    class Meta:
+        db_table = 'cartridge_action'
+        verbose_name = "Картриджи - выполненные работы"
+        verbose_name_plural = "Картриджи - выполненные работы"
+        get_latest_by = "action_datetime"
+
+
+class MaintenanceOrder(models.Model):
+    order_datetime = models.DateTimeField("Дата", auto_now_add=True)
+    client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
+    client_dep = models.ForeignKey('ClientsDep', verbose_name="Отделение клиента", null=True, blank=True)
+    client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=False)
+    list_of_jobs = models.CharField("Список работ", default='', max_length=250, null=False, blank=False)
+    order_comment = models.CharField("Комментарий", max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'maintenance_order'
+        verbose_name = "Работы - заказы"
+        verbose_name_plural = "Работы - заказы"
+
+    def __str__(self):
+        return "{} ИД заказа {}".format(self.order_datetime, self.id)
+
+    def last_action(self):
+        return self.maintenanceaction_set.all().latest()
+
+    def last_status(self):
+        # acts = self.cartridgeaction_set.all().latest()
+        return self.maintenanceaction_set.all().latest().status.get_status_name_display()
+        # return acts.status.status_name
+    last_status.short_description = 'Статус заказа'
+
+    def status_expired(self):
+        acts = self.maintenanceaction_set.all().latest()
+        if not acts.status.expiry_time:
+            return False
+        to_date = acts.action_datetime + timedelta(hours=acts.status.expiry_time)
+        last_date = acts.action_datetime + timedelta(hours=acts.status.expiry_time)
+        for x in range((to_date - acts.action_datetime).days + 1):
+            if (to_date + timedelta(days=x)).weekday() in [5, 6]:
+                last_date += timedelta(days=1)
+                if last_date.weekday() in [5, 6]:
+                    last_date += timedelta(days=1)
+        return timezone.now() > last_date
+    status_expired.boolean = True
+
+
+
+
+class MaintenanceActionStatus(models.Model):
+    NEW = 0
+    IN_WORK = 1
+    WAITING = 2
+    COMPLETED = 3
+    EXPIRED = 4
+    TO_CLIENT = 5
+    ARCHIVE = 6
+
+    status_set = (
+             (NEW, 'Новый'),
+             (IN_WORK, 'В работе'),
+             (WAITING, 'Ожидание'),
+             (COMPLETED, 'Выполнен'),
+             (EXPIRED, 'Просрочен'),
+             (TO_CLIENT, 'Передан клиенту'),
+             (ARCHIVE, 'Архивный')
+         )
+
+    status_name = models.PositiveIntegerField("Состояние", choices=status_set, unique=True, null=False, blank=False, default=0)
+    expiry_time = models.PositiveIntegerField('Допустимая продолжительность статуса', help_text='в часах', default=0)
+
+    class Meta:
+        db_table = 'maintenance_action_status'
+        verbose_name = 'Работы - СПРАВОЧНИК статусов'
+        verbose_name_plural = 'Работы - СПРАВОЧНИК статусов'
+
+    def __str__(self):
+        return "{}".format(self.get_status_name_display())
+
+
+
+class MaintenanceAction(models.Model):
+    order = models.ForeignKey(MaintenanceOrder, on_delete=models.CASCADE, null=False, blank=False)
+    action_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
+    manager_user = models.ForeignKey(User, verbose_name="Руководитель заказа", on_delete=models.SET_NULL, null=True,
+                                     blank=False)
+    executor_user = models.ForeignKey(User, verbose_name="Исполнитель заказа", related_name='+',
+                                      on_delete=models.SET_NULL, null=True, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Установил статус заказа", related_name='+',
+                                     on_delete=models.SET_NULL, null=True, blank=False)
+    status = models.ForeignKey(MaintenanceActionStatus, verbose_name="Статус заказа", on_delete=models.CASCADE,
+                               null=False, blank=False)
+    action_content = models.TextField("Выполненные работы", max_length=100, default="Заказ принят", null=True, blank=True)
+
+    class Meta:
+        db_table = 'maintenance_action'
+        verbose_name = "Работы - выполненные работы"
+        verbose_name_plural = "Работы - выполненные работы"
+        get_latest_by = "action_datetime"
+
+    def __str__(self):
+        return "ID заказа:{}".format(self.order.id)

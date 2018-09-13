@@ -1,15 +1,49 @@
 {% if outsource %}
-    <li><a href="{% url 'repair:index' %}"></span>Обзор</a></li>
-    {% if user.is_superuser %}
-    <li><a href="{% url 'repair:assessment' %}"></span>Начисления</a></li>
-    {% endif %}
-    <li><a href="{% url 'repair:order_archive' %}"></span>Архив</a></li>
+    <li><a href="{% url 'repair:index' %}"></span>Ремонты</a></li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Картриджи <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'repair:cartridge_orders' %}">Картриджи - текущие заказы </a></li>
+          </ul>
+    </li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Архив <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'repair:order_archive' %}"></span>Ремонты</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'repair:cartridge_order_archive' %}">Картриджи</a></li>
+          </ul>
+    </li>
 {% else %}
-    <li><a href="{% url 'repair:index' %}"></span>Обзор</a></li>
-    <li><a href="{% url 'repair:my_order' %}"></span>Мои заказы</a></li>
+    <li><a href="{% url 'repair:index' %}"></span>Ремонты</a></li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Работы <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'repair:maintenance_order_add' %}">Работы - новый заказ</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'repair:maintenance_order_list' %}">Работы - текущие заказы</a></li>
+          </ul>
+    </li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Картриджи <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'repair:cartridge_order_add' %}">Картридж - новый заказ</a></li>
+            <li><a href="{% url 'repair:cartridge_orders' %}">Картриджи - текущие заказы </a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'repair:cartridges' %}">Справочник картриджи</a></li>
+            <li><a href="{% url 'repair:cartridge_create' %}">Новый картридж</a></li>
+          </ul>
+    </li>
     <li><a href="{% url 'repair:clients' %}"></span>Клиенты</a></li>
     {% if user.is_superuser %}
     <li><a href="{% url 'repair:assessment' %}"></span>Начисления</a></li>
     {% endif %}
-    <li><a href="{% url 'repair:order_archive' %}"></span>Архив</a></li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Архив <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'repair:order_archive' %}"></span>Ремонты</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'repair:cartridge_order_archive' %}">Картриджи</a></li>
+          </ul>
+    </li>
 {% endif %}

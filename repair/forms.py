@@ -1,6 +1,7 @@
 from django import forms
-from repair.models import (DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent,
-                           DirStatus, Clients, ClientsDep, Reward, Storage)
+from .models import (DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent,
+                           DirStatus, Clients, ClientsDep, Reward, Storage, CartridgeOrder, Cartridge, CartridgeAction,
+                     CartridgeActionStatus, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus)
 from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
@@ -23,7 +24,7 @@ class OrderHeaderForm (forms.ModelForm):
     device_defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
     device_serial = forms.CharField(required=True, label="Серийный номер устройства", widget=forms.TextInput(attrs={'class':'form-control'}))
     order_comment = forms.CharField(max_length=255, label="Комментарий", widget=forms.Textarea, required=False)
-    client_dep = forms.ModelChoiceField(label="Отделение клиента", initial=ClientsDep.objects.none(), queryset=ClientsDep.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
+    client_dep = forms.ModelChoiceField(label="Отделение клиента", queryset=ClientsDep.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control'}))
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
     order_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
@@ -112,3 +113,130 @@ class RewardForm(forms.ModelForm):
     amount = forms.DecimalField(label="Сумма", max_digits=6, decimal_places=2, required=True)
 
 
+class CartridgeRegularActionForm(forms.ModelForm):
+    class Meta:
+        model = CartridgeAction
+        fields = ['status', 'action_content']
+
+    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=CartridgeActionStatus.objects.exclude(status_name__in=[5, 6]), widget=forms.Select(attrs={'class':'form-control'}))
+    action_content = forms.CharField(label="Выполненные работы", required=True, widget=forms.Textarea(attrs={'class': 'form-control'}))
+
+
+class CartridgeSuperActionForm(CartridgeRegularActionForm):
+    class Meta:
+        model = CartridgeAction
+        fields = ['manager_user', 'executor_user', 'status', 'action_content']
+
+    manager_user = MyModelChoiceField(queryset= User.objects.exclude(groups__name="outsource"),
+                                      label="Руководитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    executor_user = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"),
+                                       label="Исполнитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    status = forms.ModelChoiceField(label="Статус заказа", required=True,
+                                    queryset=CartridgeActionStatus.objects.all(),
+                                    widget=forms.Select(attrs={'class': 'form-control'}))
+
+class CartridgeActionExpressForm(forms.ModelForm):
+    class Meta:
+        model = CartridgeAction
+        fields = ['status']
+
+    status = forms.ModelChoiceField(required=True, queryset=CartridgeActionStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        status_set = kwargs.pop('status_set', None)
+        super(CartridgeActionExpressForm, self).__init__(*args, **kwargs)
+
+        if status_set:
+            self.fields['status'].queryset = CartridgeActionStatus.objects.filter(status_name__in=status_set)
+
+
+class CartridgeCreateForm(forms.ModelForm):
+    class Meta:
+        model = Cartridge
+        fields = ['client', 'model', 'serial_number']
+
+    client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True,
+                                    widget=forms.Select(attrs={'class': 'form-control'}))
+    model = forms.CharField(label='Модель', required=True, max_length=100,
+                                    widget=forms.TextInput(attrs={'class': 'form-control'}))
+    serial_number = forms.CharField(label='Серийный номер', required=True, max_length=100,
+                                    widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+
+class CartridgeOrderForm (forms.ModelForm):
+    class Meta:
+        model = CartridgeOrder
+        fields = ["cartridge", "defect", "client_position"]
+
+    cartridge = forms.ModelChoiceField(label="Картридж", queryset=Cartridge.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
+    executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
+    client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+
+class CartridgeFilterOrderForm (forms.Form):
+    class Meta:
+        model = Cartridge
+        fields = ['serial_number', 'client']
+
+    serial_number = forms.CharField(label='Серийный номер', required=False,  max_length=100,
+                                    widget=forms.TextInput(attrs={'class': 'form-control'}))
+    client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=False,
+                                    widget=forms.Select(attrs={'class': 'form-control'}))
+
+
+class MaintenanceOrderForm(forms.ModelForm):
+    class Meta:
+        model = MaintenanceOrder
+        fields = ['client', 'client_dep', 'client_position', 'list_of_jobs', 'order_comment']
+
+    client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True,
+                                    widget=forms.Select(attrs={'class': 'form-control'}))
+    client_dep = forms.ModelChoiceField(label="Отделение клиента", queryset=ClientsDep.objects.all(), required=False,
+                                        widget=forms.Select(attrs={'class': 'form-control'}))
+    client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False,
+                                      widget=forms.TextInput(attrs={'class': 'form-control'}))
+    #TODO set queryset.filter(group__name='maybe Maintainers')
+    executor = MyModelChoiceField(label="Исполнитель заказа", queryset=User.objects.all(),
+                                  required=True, empty_label="Выберите исполнителя",
+                                  widget=forms.Select(attrs={'class': 'form-control'}))
+    list_of_jobs = forms.CharField(max_length=255, required=True, label="Список работ",
+                                    widget=forms.Textarea(attrs={'class': 'form-control'}))
+    order_comment = forms.CharField(max_length=255, required=False, label="Комментарий",
+                                    widget=forms.Textarea(attrs={'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super(MaintenanceOrderForm, self).clean()
+        client = cleaned_data.get("client")
+        client_position = cleaned_data.get("client_position")
+        client_dep = cleaned_data.get("client_dep")
+
+        if client.client_corp and not client_dep:
+            msg = "У корпоративного клиента не указано отделение"
+            self.add_error('client_dep', msg)
+        if client.client_corp and not client_position:
+            msg = "Обязательно укажите размещение у клиента"
+            self.add_error('client_position', msg)
+
+
+class MaintenanceRegularActionForm(forms.ModelForm):
+    class Meta:
+        model = MaintenanceAction
+        fields = ['status', 'action_content']
+
+    status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=MaintenanceActionStatus.objects.exclude(status_name__in=[4,5]), widget=forms.Select(attrs={'class':'form-control'}))
+    action_content = forms.CharField(label="Выполненные работы", required=True, widget=forms.Textarea(attrs={'class': 'form-control'}))
+
+
+class MaintenanceSuperActionForm(MaintenanceRegularActionForm):
+    class Meta:
+        model = MaintenanceAction
+        fields = ['manager_user', 'executor_user', 'status', 'action_content']
+
+    manager_user = MyModelChoiceField(queryset= User.objects.exclude(groups__name="outsource"),
+                                      label="Руководитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    executor_user = MyModelChoiceField(queryset= User.objects.filter(groups__name="serviceman"),
+                                       label="Исполнитель заказа", required=True, widget=forms.Select(attrs={'class':'form-control'}))
+    status = forms.ModelChoiceField(label="Статус заказа", required=True,
+                                    queryset=MaintenanceActionStatus.objects.all(),
+                                    widget=forms.Select(attrs={'class': 'form-control'}))

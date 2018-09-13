@@ -1,7 +1,5 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
-{% load repair_tags %}
-
 
 {% block top_menu %}
   {% include "includes/top_menu.html" %}
@@ -9,25 +7,11 @@
 
 
 {% block sidebar_action %}
-{% if not outsource %}
-  {% include "includes/action_menu.html" with menu_set="1" %}
-{% endif %}
 {% endblock %}
 
 
 {% block sub_header_progress_bar %}
-  {% if messages %}
-    {% for message in messages %}
-      <p>
-        <div class="alert alert alert-success alert-dismissable">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          {{ message }}
-        </div>
-      </p>
-    {% endfor %}
-  {% endif %}
-    <h2 class="sub-header">Ремонты - текущие заказы</h2>
-
+    <h2 class="sub-header">Картриджи - Архивные заказы</h2>
 {% endblock %}
 
 
@@ -57,15 +41,14 @@
 
 <div class="col-md-12">
   <div class="table-responsive">
-    <table class="table table-hover table-striped" id="table">
+    <table class="table table-hover table-striped tablesorter" id="table">
       <thead>
-        <th><span class="glyphicon glyphicon-barcode"></span></th>
+        <th><span class="glyphicon glyphicon-barcode"></span> ID</th>
         <th>Дата приемки</th>
         <th>Статус</th>
-        {% if not outsource %}
-        <th>Клиент</th>
-        {% endif %}
-        <th>Устройство</th>
+        {% if not outsource %}<th>Клиент</th>{% endif %}
+        <th>Модель</th>
+        <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
         <th>Мастер</th>
       </thead>
@@ -78,21 +61,21 @@
         {% endif %}
         <th></th>
         <th></th>
+        <th class="hidden-xs"></th>
         <th><input type="text" placeholder="Search"/></th>
       </tfoot>
 
       {% for order in object_list %}
-      <tr {%if order.status_expired %} class="expired"{% endif %}>
-        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
+      <tr>
+        <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}">{{ order.id }}</a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-          {% with order.last_status as last_act %}
-            <td>{% include "includes/order_status.html" %}</td>
-          {% endwith %}
-          {%if not outsource %}
-            <td>{{ order.client.client_name }}</td>
-          {% endif %}
-        <td>{{ order.device_name }}</td>
-        <td class="hidden-xs">{{ order.device_defect }}</td>
+        {% with order.last_status as last_act %}
+          <td>{% include "includes/order_status.html" %}</td>
+        {% endwith %}
+        {% if not outsource %}<td>{{ order.cartridge.client.client_name }}</td>{% endif %}
+        <td>{{ order.cartridge.model }}</td>
+        <td>{{ order.cartridge.serial_number }}</td>
+        <td class="hidden-xs">{{ order.defect }}</td>
         <td>{{ order.last_action.executor_user.get_full_name }}</td>
       </tr>
       {% endfor %}

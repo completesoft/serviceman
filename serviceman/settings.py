@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
+    'bootstrap3',
 ]
 
 MIDDLEWARE = [
@@ -78,7 +80,7 @@ WSGI_APPLICATION = 'serviceman.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'serviceman',
+        'NAME': 'service_deploy',
         'USER': 'docent',
         'PASSWORD': 'B13#mwrrBBbxERFZMqF',
         'HOST': 'localhost',

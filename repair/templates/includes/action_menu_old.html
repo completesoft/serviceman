@@ -1,12 +1,14 @@
-{% if not outsource %}
+<h4 class="list-group-item-heading">Действия:</h4>
+<ul class="nav nav-sidebar">
+    {% if not outsource %}
         {% if '1' in menu_set %}
-            <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span>Ремонт - новый заказ</a></li>
+            <li><a href="{% url 'repair:order_add' %}"><span class="glyphicon glyphicon-plus"></span> Новый заказ</a></li>
         {% endif %}
         {% if '2' in menu_set %}
             <li><a href="{% url 'repair:clients_add' %}"><span class="glyphicon glyphicon-plus"></span> Новый клиент</a></li>
         {% endif %}
         {% if '3' in menu_set %}
-            <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span>Ремонт - изменить статус</a></li>
+            <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
         {% endif %}
         {% if '4' in menu_set %}
             <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
@@ -26,9 +28,6 @@
         {% if '9' in menu_set %}
             <li><a href="{% url 'repair:cartridge_order_add' %}"><span class="glyphicon glyphicon-plus"></span> Картридж - новый заказ</a></li>
         {% endif %}
-        {% if 'a' in menu_set %}
-            <li><a href="{% url 'repair:maintenance_order_add' %}"><span class="glyphicon glyphicon-plus"></span> Работы - новый заказ</a></li>
-        {% endif %}
     {% else %}
         {% if '4' in menu_set %}
             <li><a href="{% url 'repair:service_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Выполненные работы</a></li>
@@ -36,4 +35,5 @@
         {% if '3' in menu_set %}
             <li><a href="{% url 'repair:action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Изменить статус</a></li>
         {% endif %}
-{% endif %}
+    {% endif %}
+</ul>
