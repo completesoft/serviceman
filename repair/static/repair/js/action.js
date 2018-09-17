@@ -2,6 +2,84 @@
 
 $(document).ready(function(){
 
+        $("#baseq").click(function(){
+
+        var result_text = ''
+        var barcode = $("#barcode").text()
+
+        console.log($("#barcode").text())
+
+
+        $.ajax
+        ({
+          type: "GET",
+          url: "http://192.168.168.110/cs-base/odata/standard.odata/Document_РеализацияТоваровУслуг?$format=json&$filter=substringof('"+barcode+"',Комментарий) eq true",
+          dataType: 'json',
+
+            headers: {
+                    'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')
+                },
+
+
+          success: function (data){
+
+
+
+            $.each( data.value, function( i, item ) {
+                result_text = result_text + '\n' + "Реализация " + item.Date +"_"+ item.Number +" : " + item.СуммаДокумента
+                // alert(result_text)
+
+            });
+
+            alert(result_text)
+
+          }
+
+
+        });
+
+    });
+
+
+    $("#baseq2").click(function(){
+
+        var result_text = ''
+        var barcode = $("#barcode").text()
+
+        console.log($("#barcode").text())
+
+
+        $.ajax
+        ({
+          type: "GET",
+          url: "http://192.168.168.110/cs-base/odata/standard.odata/Document_ПоступлениеТоваровУслуг?$format=json&$filter=substringof('"+barcode+"',Комментарий) eq true",
+          dataType: 'json',
+
+            headers: {
+                    'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')
+                },
+
+
+          success: function (data){
+
+
+
+            $.each( data.value, function( i, item ) {
+                result_text = result_text + '\n' + "Поступление " + item.Date +"_"+ item.Number +" : " + item.СуммаДокумента
+                // alert(result_text)
+
+            });
+
+            alert(result_text)
+
+          }
+
+
+        });
+
+    });
+
+
     $("#add_spare").click(function() {
             addBlock("#spare_block", "#spare_div", "#id_spare-TOTAL_FORMS", "#id_spare-INITIAL_FORMS");
     });
