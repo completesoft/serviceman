@@ -2,6 +2,9 @@ import django_filters
 from .models import DocOrderHeader, CartridgeOrder, CartridgeActionStatus, Clients, MaintenanceOrder
 from django.utils.timezone import is_aware, now
 from datetime import timedelta
+from django.contrib.admin.widgets import AdminDateWidget
+from django.forms import HiddenInput, ModelChoiceField, CharField, IntegerField, DateField
+from django.forms import Form
 
 
 def clients(request):
@@ -11,12 +14,13 @@ def clients(request):
 
 
 class DocOrderHeaderFilter(django_filters.FilterSet):
-    order_datetime = django_filters.DateRangeFilter(field_name='order_datetime', label='Период')
+    date_from = django_filters.DateFilter(field_name='order_datetime', lookup_expr='date__gte', widget=HiddenInput)
+    date_to = django_filters.DateFilter(field_name='order_datetime', lookup_expr='date__lte', widget=HiddenInput)
     client = django_filters.ModelChoiceFilter(field_name='client', queryset=clients, label='Клиент')
 
     class Meta:
         model = DocOrderHeader
-        fields = ['order_datetime','client']
+        fields = ['client']
 
     def filter_queryset(self, queryset):
         if self.form.is_valid() and any(self.form.cleaned_data.values()):

@@ -6,6 +6,13 @@ from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
 
+
+
+
+class DateRangeWidgetForm(forms.Form):
+    period = forms.CharField(label='Период', required=False)
+
+
 # for user model
 class MyModelChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):

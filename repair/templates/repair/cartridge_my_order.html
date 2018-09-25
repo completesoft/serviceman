@@ -7,7 +7,7 @@
 
 
 {% block sidebar_action %}
-  {% include "includes/action_menu.html" with menu_set="1" %}
+  {% include "includes/action_menu.html" with menu_set="9" %}
 {% endblock %}
 
 
@@ -24,25 +24,27 @@
         </p>
       {% endfor %}
     {% endif %}
-  <h2 class="sub-header">Мои заказы - Ремонты</h2>
+  <h2 class="sub-header">Мои заказы - Картриджи</h2>
   {% else %}
-  <h2 class="sub-header">Мои заказы - Ремонты"</h2>
+  <h2 class="sub-header">Мои заказы - Картриджи"</h2>
   {% endif %}
 
 {% endblock %}
 
 
 {% block table_main %}
+<div class="col-md-12">
   <div class="table-responsive">
     <table class="table table-hover table-striped" id="table">
       <thead>
-        <th><span class="glyphicon glyphicon-barcode"></span></th>
+        <th><span class="glyphicon glyphicon-barcode"> ID</span></th>
         <th>Дата приемки</th>
         <th>Статус</th>
         {% if not outsource %}
         <th>Клиент</th>
         {% endif %}
-        <th>Устройство</th>
+        <th>Модель</th>
+        <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
         <th>Мастер</th>
       </thead>
@@ -50,34 +52,34 @@
         <th><input type="text" placeholder="Search"/></th>
         <th><input type="text" placeholder="Search"/></th>
         <th><input type="text" placeholder="Search"/></th>
+        {% if not outsource %}
         <th><input type="text" placeholder="Search"/></th>
+        {% endif %}
+        <th></th>
         <th></th>
         <th></th>
         <th><input type="text" placeholder="Search"/></th>
       </tfoot>
 
-      <tbody>
-        {% for order in orders %}
-        <tr {%if order.status_expired %} class="expired"{% endif %}>
-          <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
-          <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-            {% with order.last_status as last_act %}
-              <td>{% include "includes/order_status.html" %}</td>
-            {% endwith %}
-          {% if not outsource %}
-          <td>{{ order.client.client_name }}</td>
+      {% for order in orders %}
+      <tr {%if order.status_expired %} class="expired"{% endif %}>
+        <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}">{{ order.id }}</a></td>
+        <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
+          {% with order.last_status as last_act %}
+            <td>{% include "includes/order_status.html" %}</td>
+          {% endwith %}
+          {%if not outsource %}
+            <td>{{ order.cartridge.client.client_name }}</td>
           {% endif %}
-          <td>{{ order.device_name }}</td>
-          <td class="hidden-xs">{{ order.device_defect }}</td>
-          <td>{{ order.last_action.executor_user.get_full_name }}</td>
-
-        </tr>
-        {% empty %}
-        <tr>НЕТ ЗАКАЗОВ</tr>
-        {% endfor %}
-      </tbody>
+        <td>{{ order.cartridge.model }}</td>
+        <td>{{ order.cartridge.serial_number }}</td>
+        <td class="hidden-xs">{{ order.defect }}</td>
+        <td>{{ order.last_action.executor_user.get_full_name }}</td>
+      </tr>
+      {% endfor %}
     </table>
   </div>
+</div>
 {% endblock %}
 
 

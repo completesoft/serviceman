@@ -18,7 +18,7 @@ from django.core.urlresolvers import reverse, reverse_lazy
 from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, ServiceForm,
                      ClientForm, ClientDepForm, ClientEditForm, RewardForm, CartridgeOrderForm ,
                      CartridgeFilterOrderForm, CartridgeRegularActionForm, CartridgeSuperActionForm,
-                     MaintenanceOrderForm, MaintenanceRegularActionForm,
+                     MaintenanceOrderForm, MaintenanceRegularActionForm, DateRangeWidgetForm,
                      MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
@@ -38,7 +38,7 @@ import logging
 from .filters import DocOrderHeaderFilter, CartridgeOrderFilter
 from django_filters.views import FilterView
 from django.utils.timezone import now
-
+from django.forms import CharField
 
 logger = logging.getLogger('user.activity')
 LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
@@ -47,8 +47,14 @@ LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
 class DocOrderHeaderListView(FilterView):
     filterset_class = DocOrderHeaderFilter
     template_name = 'repair/index.html'
-    context_object_name = "filter"
+    context_object_name = "object_list"
     outsource = True
+    daterange_widget_form = DateRangeWidgetForm
+
+    def get(self, request, *args, **kwargs):
+        resp = super(DocOrderHeaderListView, self).get(request, *args, **kwargs)
+        print('Form Error', self.filterset.form.errors)
+        return resp
 
     def get_queryset(self):
         user = self.request.user
@@ -60,6 +66,7 @@ class DocOrderHeaderListView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(DocOrderHeaderListView, self).get_context_data(**kwargs)
+        context['daterange_widget_form'] = self.daterange_widget_form()
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
@@ -70,6 +77,32 @@ class DocOrderHeaderListView(FilterView):
         self.outsource = request.user.groups.filter(name='outsource').exists()
         if request.user.is_active:
             return super(DocOrderHeaderListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+
+class MyOrderListView(ListView):
+    template_name = "repair/my_order.html"
+    model = DocOrderHeader
+    ordering = "-id"
+    context_object_name = "orders"
+
+    def get_queryset(self):
+        user = self.request.user
+        orders = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user)|Q(docorderaction__executor_user=user)).exclude(docorderaction__status__status_name="Архивный").distinct()
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(MyOrderListView, self).get_context_data(**kwargs)
+        context["outsource"] = self.outsource
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active:
+            return super(MyOrderListView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
 
@@ -650,6 +683,31 @@ class CartridgeOrderListView(FilterView):
         self.outsource = user.groups.filter(name='outsource').exists()
         if user.is_active:
             return super(CartridgeOrderListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class CartridgeMyOrderListView(ListView):
+    template_name = "repair/cartridge_my_order.html"
+    model = CartridgeOrder
+    ordering = "-id"
+    context_object_name = "orders"
+
+    def get_queryset(self):
+        user = self.request.user
+        orders = CartridgeOrder.objects.filter(Q(cartridgeaction__manager_user=user)|Q(cartridgeaction__executor_user=user)).exclude(cartridgeaction__status__status_name=CartridgeActionStatus.ARCHIVE).distinct()
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(CartridgeMyOrderListView, self).get_context_data(**kwargs)
+        context["outsource"] = self.outsource
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active:
+            return super(CartridgeMyOrderListView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
 

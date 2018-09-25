@@ -2,6 +2,13 @@
 {% load staticfiles %}
 {% load repair_tags %}
 
+{% block other_css %}
+<script type="text/javascript" src="{% static 'repair/js/moment.min.js' %}" defer></script>
+<script type="text/javascript" src="{% static 'repair/js/daterangepicker.js' %}" defer></script>
+<link rel="stylesheet" type="text/css" href="{% static 'repair/css/daterangepicker.css'%}">
+{% endblock %}
+
+
 
 {% block top_menu %}
   {% include "includes/top_menu.html" %}
@@ -40,7 +47,8 @@
       </div>
       <div class="panel-body">
         <form class="form" action="" method="get" autocomplete="off" id="filter_form">
-            {% bootstrap_form filter.form %}
+            {%bootstrap_field daterange_widget_form.period placeholder='----------'%}
+            {% bootstrap_form filter.form bound_css_class=''%}
               {% buttons %}
                 <button type="submit" class="btn btn-primary">
                   {% bootstrap_icon "search" %} Фильтровать
@@ -104,6 +112,6 @@
 
 {% block script_block %}
   <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-  <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}"></script>
-  <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}" defer></script>
+  <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}" defer></script>
 {% endblock %}

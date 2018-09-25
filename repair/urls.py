@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from . import views
-from .views import (OrderCreateView, OrderDetailView, ActionCreateView, ClientListView, ClientCreateView,
-                    ClientDetailView, ClientEditView, OrderArchiveView, ServiceRewardAssessment, CartridgeOrderListView,
+from .views import (OrderCreateView, MyOrderListView, OrderDetailView, ActionCreateView, ClientListView, ClientCreateView,
+                    ClientDetailView, ClientEditView, OrderArchiveView, ServiceRewardAssessment, CartridgeOrderListView, CartridgeMyOrderListView,
                     CartridgeListView, CartridgeOrderCreateView, cartridge_update, CartridgeCreateView, CartridgeOrderDetailView,
                     CartridgeActionCreateView, MaintenanceOrderCreateView, MaintenanceOrderListView, MaintenanceOrderDetailView,
                     MaintenanceActionCreateView, CartridgeOrderArchiveView, DocOrderHeaderListView)
@@ -11,6 +11,7 @@ app_name = 'repair'
 
 urlpatterns = [
     url(r'^$', DocOrderHeaderListView.as_view(), name="index"),
+    url(r'^myord/$', MyOrderListView.as_view(), name="order_my"),
     url(r'^myord/order_add/$', OrderCreateView.as_view(), name="order_add"),
     url(r'^myord/(?P<order_id>\d+)/$', OrderDetailView.as_view(), name="order_detail"),
     url(r'^myord/(?P<order_id>\d+)/action_add/$', ActionCreateView.as_view(), name="action_add"),
@@ -29,6 +30,7 @@ urlpatterns = [
     url(r'^assessment/$', ServiceRewardAssessment.as_view(), name="assessment"),
     url(r'^cartord_add/$', CartridgeOrderCreateView.as_view(), name="cartridge_order_add"),
     url(r'^cartord/$', CartridgeOrderListView.as_view(), name="cartridge_orders"),
+    url(r'^mycartord/$', CartridgeMyOrderListView.as_view(), name="cartridge_my_orders"),
     url(r'^cartridges/$', CartridgeListView.as_view(), name="cartridges"),
     url(r'^cartridge/(?P<order_id>\d+)/$', CartridgeOrderDetailView.as_view(), name="cartridge_order_detail"),
     url(r'^cartridge/(?P<order_id>\d+)/action_add$', CartridgeActionCreateView.as_view(), name="cartridge_action_add"),
