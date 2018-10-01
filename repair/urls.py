@@ -4,7 +4,8 @@ from .views import (OrderCreateView, MyOrderListView, OrderDetailView, ActionCre
                     ClientDetailView, ClientEditView, OrderArchiveView, ServiceRewardAssessment, CartridgeOrderListView, CartridgeMyOrderListView,
                     CartridgeListView, CartridgeOrderCreateView, cartridge_update, CartridgeCreateView, CartridgeOrderDetailView,
                     CartridgeActionCreateView, MaintenanceOrderCreateView, MaintenanceOrderListView, MaintenanceOrderDetailView,
-                    MaintenanceActionCreateView, CartridgeOrderArchiveView, DocOrderHeaderListView)
+                    MaintenanceActionCreateView, CartridgeOrderArchiveView, DocOrderHeaderListView, cartridge_add_spare,
+                    cartridge_del_spare, cartridge_add_service, cartridge_del_service)
 
 
 app_name = 'repair'
@@ -36,6 +37,10 @@ urlpatterns = [
     url(r'^cartridge/(?P<order_id>\d+)/action_add$', CartridgeActionCreateView.as_view(), name="cartridge_action_add"),
     url(r'^cartridge/create$', CartridgeCreateView.as_view(), name="cartridge_create"),
     url(r'^cartridge_update/$', cartridge_update, name="cartridge_update"),
+    url(r'^cartridge-add-spare/(?P<order_id>\d+)/$', cartridge_add_spare, name="cartridge_add_spare"),
+    url(r'^cartridge-del-spare/$', cartridge_del_spare, name="cartridge_del_spare"),
+    url(r'^cartridge-add-service/(?P<order_id>\d+)/$', cartridge_add_service, name="cartridge_add_service"),
+    url(r'^cartridge-del-service/$', cartridge_del_service, name="cartridge_del_service"),
     url(r'^cartridge-order-archive/$', CartridgeOrderArchiveView.as_view(), name="cartridge_order_archive"),
     url(r'^maintenance/order_add$', MaintenanceOrderCreateView.as_view(), name='maintenance_order_add'),
     url(r'^maintenance/order_list$', MaintenanceOrderListView.as_view(), name='maintenance_order_list'),

@@ -1,0 +1,5 @@
+{% load bootstrap3 %}
+<form action="{% url 'repair:cartridge_add_spare' order_id=order_id %}" method="POST" id="spare_form" autocomplete="off">
+    {% csrf_token %}
+    {% bootstrap_form spare_form %}
+</form>

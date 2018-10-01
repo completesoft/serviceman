@@ -7,9 +7,6 @@ $(document).ready(function(){
         var result_text = ''
         var barcode = $("#barcode").text()
 
-        console.log($("#barcode").text())
-
-
         $.ajax
         ({
           type: "GET",
@@ -20,34 +17,18 @@ $(document).ready(function(){
                     'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')
                 },
 
-
           success: function (data){
-
-
-
             $.each( data.value, function( i, item ) {
                 result_text = result_text + '\n' + "Реализация " + item.Date +"_"+ item.Number +" : " + item.СуммаДокумента
-                // alert(result_text)
-
             });
-
             alert(result_text)
-
           }
-
-
         });
-
     });
 
-
     $("#baseq2").click(function(){
-
         var result_text = ''
         var barcode = $("#barcode").text()
-
-        console.log($("#barcode").text())
-
 
         $.ajax
         ({
@@ -59,24 +40,13 @@ $(document).ready(function(){
                     'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')
                 },
 
-
           success: function (data){
-
-
-
             $.each( data.value, function( i, item ) {
                 result_text = result_text + '\n' + "Поступление " + item.Date +"_"+ item.Number +" : " + item.СуммаДокумента
-                // alert(result_text)
-
             });
-
             alert(result_text)
-
           }
-
-
         });
-
     });
 
 

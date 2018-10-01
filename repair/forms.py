@@ -1,7 +1,8 @@
 from django import forms
 from .models import (DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent,
                            DirStatus, Clients, ClientsDep, Reward, Storage, CartridgeOrder, Cartridge, CartridgeAction,
-                     CartridgeActionStatus, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus)
+                     CartridgeActionStatus, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus, CartridgeOrderServiceContent,
+                     CartridgeOrderSparesContent)
 from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
@@ -203,7 +204,6 @@ class MaintenanceOrderForm(forms.ModelForm):
                                         widget=forms.Select(attrs={'class': 'form-control'}))
     client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False,
                                       widget=forms.TextInput(attrs={'class': 'form-control'}))
-    #TODO set queryset.filter(group__name='maybe Maintainers')
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset=User.objects.all(),
                                   required=True, empty_label="Выберите исполнителя",
                                   widget=forms.Select(attrs={'class': 'form-control'}))
@@ -247,3 +247,22 @@ class MaintenanceSuperActionForm(MaintenanceRegularActionForm):
     status = forms.ModelChoiceField(label="Статус заказа", required=True,
                                     queryset=MaintenanceActionStatus.objects.all(),
                                     widget=forms.Select(attrs={'class': 'form-control'}))
+
+
+class CartridgeSpareForm(forms.ModelForm):
+    class Meta:
+        model = CartridgeOrderSparesContent
+        fields = ["spare_name", "spare_serial", "spares_qty"]
+
+    spare_name = forms.CharField(label='Наименование запчасти', required=True, widget=forms.Textarea(attrs={'class':'form-control', 'cols': '30', 'rows': '4'}))
+    spare_serial = forms.CharField(label='Серийный номер запчасти', required=True, max_length=100, widget=forms.TextInput(attrs={'class':'form-control'}))
+    spares_qty = forms.IntegerField(label='Кол-во', required=True, min_value=1, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+
+class CartridgeServiceForm(forms.ModelForm):
+    class Meta:
+        model = CartridgeOrderServiceContent
+        fields = ["service_name", "service_qty", "cost"]
+
+    service_name = forms.CharField(label="Наименование работ", required=True, widget=forms.Textarea(attrs={'class':'form-control', 'cols': '30', 'rows': '4'}))
+    service_qty = forms.IntegerField(label="Кол-во", required=True, min_value=1, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    cost = forms.IntegerField(label="Стоимость 1 шт", required=True, min_value=0, widget=forms.NumberInput(attrs={'class': 'form-control'}))

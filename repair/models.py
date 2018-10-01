@@ -303,9 +303,37 @@ class CartridgeAction(models.Model):
 
     class Meta:
         db_table = 'cartridge_action'
+        verbose_name = "Картриджи - статусы заказов"
+        verbose_name_plural = "Картриджи - статусы заказов"
+        get_latest_by = "action_datetime"
+
+
+class CartridgeOrderServiceContent(models.Model):
+
+    add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
+    order = models.ForeignKey(CartridgeOrder, on_delete=models.CASCADE, null=False, blank=False)
+    service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
+    service_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
+    cost = models.PositiveIntegerField("Стоимость 1 шт", default=0, null=True, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Добавил выполненую работу", on_delete=models.SET_NULL, null=True, blank=False)
+
+    class Meta:
         verbose_name = "Картриджи - выполненные работы"
         verbose_name_plural = "Картриджи - выполненные работы"
-        get_latest_by = "action_datetime"
+
+
+class CartridgeOrderSparesContent (models.Model):
+
+    add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
+    order = models.ForeignKey(CartridgeOrder, on_delete=models.CASCADE, null=False, blank=False)
+    spare_name = models.CharField("Наименование запчасти", max_length=255, default="", null=False, blank=False)
+    spare_serial = models.CharField("Серийный № запчасти", max_length=100, default="", null=False, blank=False)
+    spares_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Установил статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
+
+    class Meta():
+        verbose_name = "Картриджи - использованые запчасти"
+        verbose_name_plural = "Картриджи - использованые запчасти"
 
 
 class MaintenanceOrder(models.Model):
@@ -403,3 +431,31 @@ class MaintenanceAction(models.Model):
 
     def __str__(self):
         return "ID заказа:{}".format(self.order.id)
+
+
+class MaintenanceOrderServiceContent(models.Model):
+
+    add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
+    order = models.ForeignKey(MaintenanceOrder, on_delete=models.CASCADE, null=False, blank=False)
+    service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
+    service_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
+    cost = models.PositiveIntegerField("Стоимость 1 шт", default=0, null=True, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Добавил выполненую работу", on_delete=models.SET_NULL, null=True, blank=False)
+
+    class Meta:
+        verbose_name = "Работы - выполненные работы"
+        verbose_name_plural = "Работы - выполненные работы"
+
+
+class MaintenanceOrderSparesContent(models.Model):
+
+    add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
+    order = models.ForeignKey(MaintenanceOrder, on_delete=models.CASCADE, null=False, blank=False)
+    spare_name = models.CharField("Наименование запчасти", max_length=255, default="", null=False, blank=False)
+    spare_serial = models.CharField("Серийный № запчасти", max_length=100, default="", null=False, blank=False)
+    spares_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
+    setting_user = models.ForeignKey(User, verbose_name="Установил статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
+
+    class Meta():
+        verbose_name = "Работы - использованые запчасти"
+        verbose_name_plural = "Работы - использованые запчасти"

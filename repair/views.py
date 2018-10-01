@@ -9,7 +9,8 @@ from django.contrib.auth.views import deprecate_current_app
 from django.views.decorators.cache import never_cache
 from .models import (DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent,
                      DocOrderSparesContent, Clients, ClientsDep, Reward, Storage, CartridgeOrder, CartridgeActionStatus,
-                     Cartridge, CartridgeAction, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus)
+                     Cartridge, CartridgeAction, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus, CartridgeOrderSparesContent,
+                     CartridgeOrderServiceContent)
 from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
@@ -19,7 +20,8 @@ from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, Servi
                      ClientForm, ClientDepForm, ClientEditForm, RewardForm, CartridgeOrderForm ,
                      CartridgeFilterOrderForm, CartridgeRegularActionForm, CartridgeSuperActionForm,
                      MaintenanceOrderForm, MaintenanceRegularActionForm, DateRangeWidgetForm,
-                     MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm)
+                     MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm, CartridgeServiceForm,
+                     CartridgeSpareForm)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
 # from serviceman.settings import LOGIN_URL
@@ -53,7 +55,6 @@ class DocOrderHeaderListView(FilterView):
 
     def get(self, request, *args, **kwargs):
         resp = super(DocOrderHeaderListView, self).get(request, *args, **kwargs)
-        print('Form Error', self.filterset.form.errors)
         return resp
 
     def get_queryset(self):
@@ -810,6 +811,10 @@ class CartridgeOrderDetailView(DetailView):
         context['order_action'] = CartridgeAction.objects.filter(order=self.object).order_by("action_datetime")
         context['outsource'] = self.outsource
         context['action_formset'] = self.get_action_formset()
+        context['spare_form'] = CartridgeSpareForm()
+        context['service_form'] = CartridgeServiceForm()
+        context['spares'] = CartridgeOrderSparesContent.objects.filter(order=self.object)
+        context['services'] = CartridgeOrderServiceContent.objects.filter(order=self.object)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -839,6 +844,120 @@ class CartridgeOrderDetailView(DetailView):
             return super(CartridgeOrderDetailView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
+
+
+@login_required
+def cartridge_add_spare(request, order_id):
+    try:
+        order = CartridgeOrder.objects.get(pk=order_id)
+        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+        if order.last_status() != 'В работе':
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
+    if request.method == "POST" and request.is_ajax():
+        spare_form = CartridgeSpareForm(request.POST)
+        if spare_form.is_valid():
+            obj_spare = spare_form.save(commit=False)
+            obj_spare.order = order
+            obj_spare.setting_user = request.user
+            obj_spare.save()
+            new_spare_form = CartridgeSpareForm()
+            form = render_to_string('repair/ajax/cartridge_add_spare_form.html',
+                                    context={'spare_form': new_spare_form, 'order_id': order_id}, request=request)
+            tr = render_to_string('repair/ajax/cartridge_add_spare_tr.html',
+                                  context={'order_id': order_id, "spare": obj_spare}, request=request)
+            msg = "*{}* ДОБАВИЛ запчасть по заказу КАРТРИДЖ. Заказ -{}-{}-{}-".format(request.user.get_full_name(),
+                                                                           order.id,
+                                                                           order.cartridge.client.client_name, order.cartridge.model)
+            logger.info(msg)
+        else:
+            form = render_to_string('repair/ajax/cartridge_add_spare_form.html',
+                                    context={'spare_form': spare_form, 'order_id': order.id}, request=request)
+            tr = "error"
+        data = {"form": form, "tr": tr}
+        return JsonResponse(data)
+    return HttpResponseNotFound()
+
+
+@login_required
+def cartridge_del_spare(request):
+    data = {"error": 1}
+    if request.method == "POST" and request.is_ajax():
+        try:
+            order = CartridgeOrder.objects.get(pk=request.POST.get("order_id"))
+            spare = CartridgeOrderSparesContent.objects.get(pk=request.POST["spare_id"])
+            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+                raise ObjectDoesNotExist("Access denied")
+        except ObjectDoesNotExist as msg:
+            data = {'error': msg}
+            return JsonResponse(data)
+        if spare in order.cartridgeordersparescontent_set.all():
+            spare.delete()
+            data = {"error": 0}
+            msg = "*{}* УДАЛИЛ запчасть по заказу КАРТРИДЖ. Заказ -{}-{}-{}-".format(request.user.get_full_name(), order.id,
+                                                                                     order.cartridge.client.client_name, order.cartridge.model)
+            logger.info(msg)
+        return JsonResponse(data)
+    return redirect("repair:order_detail", order_id=request.POST.get("order_id"))
+
+
+@login_required
+def cartridge_add_service(request, order_id):
+    try:
+        order = CartridgeOrder.objects.get(pk=order_id)
+        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+        if order.last_status() != 'В работе':
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
+    if request.method == "POST" and request.is_ajax():
+        service_form = CartridgeServiceForm(request.POST)
+        if service_form.is_valid():
+            obj_service = service_form.save(commit=False)
+            obj_service.order = order
+            obj_service.setting_user = request.user
+            obj_service.save()
+            new_service_form = CartridgeServiceForm()
+            form = render_to_string('repair/ajax/cartridge_add_service_form.html',
+                                    context={'service_form': new_service_form, 'order_id': order_id}, request=request)
+            tr = render_to_string('repair/ajax/cartridge_add_service_tr.html',
+                                  context={'order_id': order_id, "service": obj_service}, request=request)
+            msg = "*{}* ДОБАВИЛ работы по заказу КАРТРИДЖ. Заказ -{}-{}-{}-".format(request.user.get_full_name(),
+                                                                           order.id,
+                                                                           order.cartridge.client.client_name, order.cartridge.model)
+            logger.info(msg)
+        else:
+            form = render_to_string('repair/ajax/cartridge_add_service_form.html',
+                                    context={'service_form': service_form, 'order_id': order.id}, request=request)
+            tr = "error"
+        data = {"form": form, "tr": tr}
+        return JsonResponse(data)
+    return HttpResponseNotFound()
+
+
+@login_required
+def cartridge_del_service(request):
+    data = {"error": 1}
+    if request.method == "POST" and request.is_ajax():
+        try:
+            order = CartridgeOrder.objects.get(pk=request.POST.get("order_id"))
+            service = CartridgeOrderServiceContent.objects.get(pk=request.POST["service_id"])
+            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+                raise ObjectDoesNotExist("Access denied")
+        except ObjectDoesNotExist as msg:
+            data = {'error': msg}
+            return JsonResponse(data)
+        if service in order.cartridgeorderservicecontent_set.all():
+            service.delete()
+            data = {"error": 0}
+            msg = "*{}* УДАЛИЛ работы по заказу КАРТРИДЖ. Заказ -{}-{}-{}-".format(request.user.get_full_name(), order.id,
+                                                                                     order.cartridge.client.client_name, order.cartridge.model)
+            logger.info(msg)
+        return JsonResponse(data)
+    return redirect("repair:cartridge_order_detail", order_id=request.POST.get("order_id"))
 
 
 # Update through ajax

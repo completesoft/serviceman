@@ -1,0 +1,10 @@
+{% if spare %}
+<tr>
+    <td>{{ spare.add_datetime|date:"d.m.Y H:i" }}</td>
+      <td>{{ spare.spare_name }}</td>
+      <td>{{ spare.spare_serial }}</td>
+      <td>{{ spare.spares_qty }}</td>
+      <td>{{ spare.setting_user.get_full_name }}</td>
+      <td><button type="button" class="btn btn-danger delete"  url="{% url 'repair:cartridge_del_spare' %}" order="{{ order_id }}" value="{{ spare.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+</tr>
+{% endif %}

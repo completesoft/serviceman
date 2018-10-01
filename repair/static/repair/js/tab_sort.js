@@ -101,9 +101,6 @@ $(document).ready(function(){
     },
     "opens": "left"
    });
-//    document.getElementById('id_date_from').value = dateP.data('daterangepicker').startDate.get().format('DD.MM.YYYY');
-//    document.getElementById('id_date_to').value = dateP.data('daterangepicker').endDate.get().format('DD.MM.YYYY');
-   console.log(dateP.data('daterangepicker').endDate.get().format('DD.MM.YYYY'));
 
    dateRangeInit(document.getElementById('id_date_from'), document.getElementById('id_date_to'), dateP);
 
@@ -115,7 +112,7 @@ $(document).ready(function(){
    });
 
    dateP.on('cancel.daterangepicker', function(ev, picker) {
-      $(this).val('----------');
+      $(this).val('');
       document.getElementById('id_date_from').value = '';
       document.getElementById('id_date_to').value = '';
    });
@@ -127,10 +124,10 @@ function addParam(){
 }
 
 function dateRangeInit(date_from, date_to, picker){
-    if(date_from && date_to){
-        picker.data('daterangepicker').setStartDate(date_from.value);
-        picker.data('daterangepicker').setEndDate(date_to.value);
-        picker.value = date_from.value + ' - ' + date_to.value;
+    if(date_from.value && date_to.value){
+        picker.data('daterangepicker').setStartDate(moment(date_from.value, 'DD.MM.YYYY'));
+        picker.data('daterangepicker').setEndDate(moment(date_to.value, 'DD.MM.YYYY'));
+        $(picker).val(date_from.value + ' - ' + date_to.value);
     }
 }
 

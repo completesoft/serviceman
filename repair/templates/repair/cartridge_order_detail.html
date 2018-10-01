@@ -164,8 +164,166 @@
         </div>
     </div>
 
+<!--Spares section-->
+    <div class="row">
+        <div class="col-md-12">
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">Использованные запчасти</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="spare_table">
+                  <thead>
+                    <th>Дата</th>
+                    <th>Наименование запчасти</th>
+                    <th>Серийный № запчасти</th>
+                    <th>Кол-во</th>
+                    <th>Исполнитель</th>
+                    <th>Действия</th>
+                  </thead>
+
+                  <tbody>
+                    {% for spare in spares %}
+                    <tr>
+                      <td>{{ spare.add_datetime|date:"d.m.Y H:i" }}</td>
+                      <td>{{ spare.spare_name }}</td>
+                      <td>{{ spare.spare_serial }}</td>
+                      <td>{{ spare.spares_qty }}</td>
+                      <td>{{ spare.setting_user.get_full_name }}</td>
+                      <td><button type="button" class="btn btn-danger delete"  url="{% url 'repair:cartridge_del_spare' %}" order="{{ order.id }}" value="{{ spare.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+                    </tr>
+                    {% endfor %}
+
+                    <tr>
+                      <td colspan="5" ></td>
+                      {% if order.last_status != "В работе" %}
+                      <td><button type="button" class="btn btn-success disabled" title="Статус заказа должен быть &quotВ работе&quot"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                      {% else %}
+                      <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_spare_add" id="super_spare_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                      {% endif %}
+                    </tr>
+                  </tbody>
+
+                </table>
+            </div>
+          </div>
+        </div>
+        </div>
+    </div>
+
+<!--Service section-->
+     <div class="row">
+         <div class="col-md-12">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Выполненные работы</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="service_table">
+                  <thead>
+                    <th>Дата</th>
+                    <th>Наименование работ</th>
+                    <th>Кол-во</th>
+                    <th>Стоимость 1 шт</th>
+                    <th>Исполнитель</th>
+                    <th>Действия</th>
+                  </thead>
+
+                <tbody>
+                  {% for service in services %}
+                  <tr>
+                    <td>{{ service.add_datetime|date:"d.m.Y H:i" }}</td>
+                    <td>{{ service.service_name }}</td>
+                    <td>{{ service.service_qty }}</td>
+                    <td>{{ service.cost }}</td>
+                    <td>{{ service.setting_user.get_full_name }}</td>
+                    <td><button type="button" class="btn btn-danger delete" url="{% url 'repair:cartridge_del_service' %}" order="{{ order.id }}" value="{{ service.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+                  </tr>
+                  {% endfor %}
+
+                  <tr>
+                    <td colspan="5" ></td>
+                    {% if order.last_status != "В работе" %}
+                      <td><button type="button" class="btn btn-success disabled" title="Статус заказа должен быть &quotВ работе&quot"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                    {% else %}
+                      <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_service_add" id="super_service_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
+                    {% endif %}
+                  </tr>
+
+
+
+                </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+        </div>
+    </div>
+
+{% if order.last_status == "В работе" %}
+    {% load bootstrap3 %}
+<!-- modAl for Spare add -->
+<div id="modal_spare_add" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Добавить запчасти по заказу</h4>
+      </div>
+
+          <div class="modal-body" id="spare_panel">
+              <form action="{% url 'repair:cartridge_add_spare' order_id=order.id %}" method="POST" id="spare_form" autocomplete="off">
+            {% csrf_token %}
+                {% bootstrap_form spare_form %}
+            </form>
+          </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="add_spare_button">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- modAl for Service add -->
+<div id="modal_service_add" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Добавить работу по заказу</h4>
+      </div>
+
+          <div class="modal-body" id="service_panel">
+              <form action="{% url 'repair:cartridge_add_service' order_id=order.id %}" method="POST" id="service_form" autocomplete="off">
+            {% csrf_token %}
+                {% bootstrap_form service_form %}
+            </form>
+          </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="add_service_button">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+
+
+
 {% endblock %}
 
 {% block script_block %}
-<script type="text/javascript" src="{% static 'repair/js/action.js' %}"></script>
+<script type="text/javascript" src="{% static 'repair/js/spare_service_action.js' %}"></script>
 {% endblock %}
