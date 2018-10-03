@@ -127,7 +127,7 @@ class CartridgeRegularActionForm(forms.ModelForm):
         fields = ['status', 'action_content']
 
     status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=CartridgeActionStatus.objects.exclude(status_name__in=[5, 6]), widget=forms.Select(attrs={'class':'form-control'}))
-    action_content = forms.CharField(label="Выполненные работы", required=True, widget=forms.Textarea(attrs={'class': 'form-control'}))
+    action_content = forms.CharField(label="Комментарии", required=True, widget=forms.Textarea(attrs={'class': 'form-control'}))
 
 
 class CartridgeSuperActionForm(CartridgeRegularActionForm):

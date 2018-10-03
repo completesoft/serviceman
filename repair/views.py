@@ -37,7 +37,7 @@ from django.db.models import Q
 from django.contrib.auth.decorators import user_passes_test
 from .helpers import outsource_group_check
 import logging
-from .filters import DocOrderHeaderFilter, CartridgeOrderFilter
+from .filters import DocOrderHeaderFilter, CartridgeOrderFilter, MaintenanceOrderFilter
 from django_filters.views import FilterView
 from django.utils.timezone import now
 from django.forms import CharField
@@ -1103,12 +1103,42 @@ class MaintenanceOrderListView(ListView):
     ordering = "order_datetime"
     context_object_name = "orders"
 
+    def get_queryset(self):
+        user = self.request.user
+        orders = MaintenanceOrder.objects.filter(Q(maintenanceaction__manager_user=user)|Q(maintenanceaction__executor_user=user)).exclude(maintenanceaction__status__status_name=MaintenanceActionStatus.ARCHIVE).distinct()
+        return orders
+
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         outsource_group = request.user.groups.filter(name='outsource').exists()
         if user.is_active and not outsource_group:
             return super(MaintenanceOrderListView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
+
+
+class MaintenanceMyOrderListView(ListView):
+    template_name = "repair/maintenance_my_order.html"
+    model = MaintenanceOrder
+    ordering = "-id"
+    context_object_name = "orders"
+
+    def get_queryset(self):
+        user = self.request.user
+        orders = MaintenanceOrder.objects.filter(Q(maintenanceaction__manager_user=user)|Q(maintenanceaction__executor_user=user)).exclude(maintenanceaction__status__status_name=MaintenanceActionStatus.ARCHIVE).distinct()
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(MaintenanceMyOrderListView, self).get_context_data(**kwargs)
+        context["outsource"] = self.outsource
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active and not self.outsource:
+            return super(MaintenanceMyOrderListView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
 
@@ -1184,3 +1214,31 @@ class MaintenanceActionCreateView(CreateView):
         if self.order.last_status() == "Архивный" and not request.user.is_superuser:
             return redirect("repair:maintenance_detail", order_id=kwargs["order_id"])
         return super(MaintenanceActionCreateView, self).dispatch(request, *args, **kwargs)
+
+
+class MaintenanceOrderArchiveView(FilterView):
+    filterset_class = MaintenanceOrderFilter
+    template_name = "repair/maintenance_order_archive.html"
+    outsource = True
+
+    def get_queryset(self):
+        user = self.request.user
+        orders = MaintenanceOrder.objects.filter(maintenanceaction__status__status_name=MaintenanceActionStatus.ARCHIVE).order_by('-id').distinct()
+        if self.outsource:
+            orders = orders.filter(maintenanceaction__executor_user=user)
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(MaintenanceOrderArchiveView, self).get_context_data(**kwargs)
+        context['outsource'] = self.outsource
+        if self.request.GET.get('all'):
+            context['object_list'] = self.get_queryset()
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active:
+            return super(MaintenanceOrderArchiveView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)

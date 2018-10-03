@@ -1,5 +1,5 @@
 {% if outsource %}
-    <li><a href="{% url 'repair:index' %}"></span>Ремонты</a></li>
+    <li><a href="{% url 'repair:index' %}">Ремонты</a></li>
     <li class="dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Картриджи <span class="caret"></span></a>
           <ul class="dropdown-menu">
@@ -9,7 +9,7 @@
     <li class="dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Архив <span class="caret"></span></a>
           <ul class="dropdown-menu">
-            <li><a href="{% url 'repair:order_archive' %}"></span>Ремонты</a></li>
+            <li><a href="{% url 'repair:order_archive' %}">Ремонты</a></li>
             <li role="separator" class="divider"></li>
             <li><a href="{% url 'repair:cartridge_order_archive' %}">Картриджи</a></li>
           </ul>
@@ -18,38 +18,35 @@
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Ремонты <span class="caret"></span></a>
             <ul class="dropdown-menu">
-                <li><a href="{% url 'repair:index' %}"></span>Текущие заказы</a></li>
-                <li><a href="{% url 'repair:order_my' %}"></span>Мои заказы</a></li>
+                <li><a href="{% url 'repair:index' %}">Все ремонты</a></li>
+                <li><a href="{% url 'repair:order_my' %}">Мои ремонты</a></li>
             </ul>
     </li>
     <li class="dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Работы <span class="caret"></span></a>
           <ul class="dropdown-menu">
-            <li><a href="{% url 'repair:maintenance_order_add' %}">Работы - новый заказ</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href="{% url 'repair:maintenance_order_list' %}">Работы - текущие заказы</a></li>
+            <li><a href="{% url 'repair:maintenance_order_list' %}">Все работы</a></li>
+            <li><a href="{% url 'repair:maintenance_my_orders' %}">Мои работы</a></li>
           </ul>
     </li>
     <li class="dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Картриджи <span class="caret"></span></a>
           <ul class="dropdown-menu">
-            <li><a href="{% url 'repair:cartridge_order_add' %}">Картридж - новый заказ</a></li>
+            <li><a href="{% url 'repair:cartridge_orders' %}">Все заказы</a></li>
             <li><a href="{% url 'repair:cartridge_my_orders' %}">Мои заказы</a></li>
-            <li><a href="{% url 'repair:cartridge_orders' %}">Картриджи - текущие заказы</a></li>
-                <li role="separator" class="divider"></li>
-            <li><a href="{% url 'repair:cartridges' %}">Справочник картриджи</a></li>
-            <li><a href="{% url 'repair:cartridge_create' %}">Новый картридж</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'repair:cartridges' %}">База картриджей</a></li>
           </ul>
     </li>
-    <li><a href="{% url 'repair:clients' %}"></span>Клиенты</a></li>
+    <li><a href="{% url 'repair:clients' %}">Клиенты</a></li>
     {% if user.is_superuser %}
-    <li><a href="{% url 'repair:assessment' %}"></span>Начисления</a></li>
+    <li><a href="{% url 'repair:assessment' %}">Начисления</a></li>
     {% endif %}
     <li class="dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Архив <span class="caret"></span></a>
           <ul class="dropdown-menu">
             <li><a href="{% url 'repair:order_archive' %}">Ремонты</a></li>
-            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'repair:maintenance_order_archive' %}">Работы</a></li>
             <li><a href="{% url 'repair:cartridge_order_archive' %}">Картриджи</a></li>
           </ul>
     </li>

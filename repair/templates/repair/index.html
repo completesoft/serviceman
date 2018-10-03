@@ -33,8 +33,7 @@
       </p>
     {% endfor %}
   {% endif %}
-    <h2 class="sub-header">Ремонты - текущие заказы</h2>
-
+   <h2 class="sub-header">Все ремонты</h2>
 {% endblock %}
 
 
@@ -47,9 +46,10 @@
       </div>
       <div class="panel-body">
         <form class="form" action="" method="get" autocomplete="off" id="filter_form">
-            {%bootstrap_field daterange_widget_form.period placeholder='----------'%}
-            {% bootstrap_form filter.form bound_css_class=''%}
-              {% buttons %}
+            {%bootstrap_field daterange_widget_form.period placeholder='----------' form_group_class='form-group col-md-4'%}
+            {% bootstrap_form filter.form bound_css_class='' form_group_class='form-group col-md-8'%}
+            <div class="col-md-8">
+              {% buttons  %}
                 <button type="submit" class="btn btn-primary">
                   {% bootstrap_icon "search" %} Фильтровать
                 </button>
@@ -57,6 +57,7 @@
                    {% bootstrap_icon "th" %} Показать все записи
                 </button>
               {% endbuttons %}
+            </div>
         </form>
       </div>
     </div>

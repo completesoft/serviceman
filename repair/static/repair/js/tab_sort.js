@@ -99,7 +99,7 @@ $(document).ready(function(){
         ],
         "firstDay": 1
     },
-    "opens": "left"
+    "opens": "right"
    });
 
    dateRangeInit(document.getElementById('id_date_from'), document.getElementById('id_date_to'), dateP);

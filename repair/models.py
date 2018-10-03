@@ -299,7 +299,7 @@ class CartridgeAction(models.Model):
     executor_user = models.ForeignKey(User,verbose_name="Исполнитель заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
     setting_user = models.ForeignKey(User,verbose_name="Установил статус заказа", related_name='+',on_delete=models.SET_NULL, null=True, blank=False)
     status = models.ForeignKey(CartridgeActionStatus, verbose_name="Статус заказа", on_delete=models.SET_NULL, null=True, blank=False)
-    action_content = models.TextField("Манипуляции с картриджем", max_length=100, default="", null=True, blank=True)
+    action_content = models.TextField("Комментарии", max_length=100, default="", null=True, blank=True)
 
     class Meta:
         db_table = 'cartridge_action'
@@ -356,9 +356,7 @@ class MaintenanceOrder(models.Model):
         return self.maintenanceaction_set.all().latest()
 
     def last_status(self):
-        # acts = self.cartridgeaction_set.all().latest()
         return self.maintenanceaction_set.all().latest().status.get_status_name_display()
-        # return acts.status.status_name
     last_status.short_description = 'Статус заказа'
 
     def status_expired(self):

@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block sub_header_progress_bar %}
-    <h2 class="sub-header">Картриджи - Детали заказа</h2>
+    <h2 class="sub-header">Картриджи - детали заказа</h2>
 {% endblock %}
 
 
@@ -46,6 +46,25 @@
             </div>
         </div>
       </div>
+      {% if not outsource %}
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Заказчик</h3>
+          </div>
+          <div class="panel-body">
+              <div class="col-md-4">
+                    <p class="bold">Наименование:</p>
+                    <p>{{ order.cartridge.client }}</p>
+              </div>
+              <div class="col-md-4">
+                    <p class="bold">Размещение:</p>
+                    <p>{{ order.client_position }}</p>
+              </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
     <div class="row">
       <div class="col-md-6">
@@ -74,30 +93,6 @@
             </div>
         </div>
       </div>
-
-      {% if not outsource %}
-
-      <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Заказчик</h3>
-          </div>
-          <div class="panel-body">
-              <div class="col-md-4">
-                    <p class="bold">Наименование:</p>
-                    <p>{{ order.cartridge.client }}</p>
-              </div>
-              <div class="col-md-4">
-                    <p class="bold">Размещение:</p>
-                    <p>{{ order.client_position }}</p>
-              </div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-    </div>
-
-    <div class="row">
       <div class="col-md-6">
 
         <div class="panel panel-default">
@@ -106,21 +101,6 @@
           </div>
           <div class="panel-body">
                 <p>{{ order.defect }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="panel panel-success">
-          <div class="panel-heading">
-            <h3 class="panel-title">Выполненные работы</h3>
-          </div>
-          <div class="panel-body">
-            {% for act in order_action %}
-              <p>
-                  {{ act.action_content }}
-              </p>
-            {% endfor %}
           </div>
         </div>
       </div>
@@ -139,7 +119,7 @@
                   <thead>
                     <th>Дата</th>
                     <th>Статус</th>
-                    <th>Выполненные работы</th>
+                    <th>Комментарии</th>
                     <th>Руководитель заказа</th>
                     <th>Исполнитель заказа</th>
                     <th>Установил статус</th>

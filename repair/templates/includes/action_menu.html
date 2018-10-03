@@ -24,10 +24,13 @@
             <li><a href="{% url 'repair:cartridge_action_add' order_id=order.id %}"><span class="glyphicon glyphicon-plus"></span> Картридж - изменить статус</a></li>
         {% endif %}
         {% if '9' in menu_set %}
-            <li><a href="{% url 'repair:cartridge_order_add' %}"><span class="glyphicon glyphicon-plus"></span> Картридж - новый заказ</a></li>
+            <li><a href="{% url 'repair:cartridge_order_add' %}"><span class="glyphicon glyphicon-plus"></span> Картриджи - новый заказ</a></li>
         {% endif %}
         {% if 'a' in menu_set %}
             <li><a href="{% url 'repair:maintenance_order_add' %}"><span class="glyphicon glyphicon-plus"></span> Работы - новый заказ</a></li>
+        {% endif %}
+        {% if 'b' in menu_set %}
+            <li><a href="{% url 'repair:cartridge_create' %}"><span class="glyphicon glyphicon-plus"></span> Зарегистрировать картридж</a></li>
         {% endif %}
     {% else %}
         {% if '4' in menu_set %}

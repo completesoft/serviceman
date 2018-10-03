@@ -4,12 +4,12 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
-  padding-top: 70px;
+  padding-top: 120px;
 }
 
 @media (max-width: 1050px) {
     body{
-        padding-top: 115px;
+        padding-top: 165px;
     }
 }
 
@@ -106,7 +106,7 @@ body {
 
 .action-menu-header > a.navbar-brand{
     color: #dc0d16;
-    font-size: 20px;
+    font-size: 18px;
     margin-left: 25px !important;
 }
 

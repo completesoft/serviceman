@@ -5,7 +5,8 @@ from .views import (OrderCreateView, MyOrderListView, OrderDetailView, ActionCre
                     CartridgeListView, CartridgeOrderCreateView, cartridge_update, CartridgeCreateView, CartridgeOrderDetailView,
                     CartridgeActionCreateView, MaintenanceOrderCreateView, MaintenanceOrderListView, MaintenanceOrderDetailView,
                     MaintenanceActionCreateView, CartridgeOrderArchiveView, DocOrderHeaderListView, cartridge_add_spare,
-                    cartridge_del_spare, cartridge_add_service, cartridge_del_service)
+                    cartridge_del_spare, cartridge_add_service, cartridge_del_service, MaintenanceMyOrderListView,
+                    MaintenanceOrderArchiveView)
 
 
 app_name = 'repair'
@@ -44,6 +45,8 @@ urlpatterns = [
     url(r'^cartridge-order-archive/$', CartridgeOrderArchiveView.as_view(), name="cartridge_order_archive"),
     url(r'^maintenance/order_add$', MaintenanceOrderCreateView.as_view(), name='maintenance_order_add'),
     url(r'^maintenance/order_list$', MaintenanceOrderListView.as_view(), name='maintenance_order_list'),
+    url(r'^my-maintenance-order/$', MaintenanceMyOrderListView.as_view(), name="maintenance_my_orders"),
     url(r'^maintenance/(?P<order_id>\d+)/$', MaintenanceOrderDetailView.as_view(), name="maintenance_detail"),
     url(r'^maintenance/(?P<order_id>\d+)/action_add$', MaintenanceActionCreateView.as_view(), name="maintenance_action_add"),
+    url(r'^maintenance-order-archive/$', MaintenanceOrderArchiveView.as_view(), name="maintenance_order_archive"),
 ]

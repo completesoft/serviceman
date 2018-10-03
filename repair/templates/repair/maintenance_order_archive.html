@@ -7,29 +7,15 @@
 
 
 {% block sidebar_action %}
-{% if not outsource %}
-  {% include "includes/action_menu.html" with menu_set="9" %}
-{% endif %}
 {% endblock %}
 
 
 {% block sub_header_progress_bar %}
-  {% if messages %}
-    {% for message in messages %}
-      <p>
-        <div class="alert alert alert-success alert-dismissable">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          {{ message }}
-        </div>
-      </p>
-    {% endfor %}
-  {% endif %}
-  <h2 class="sub-header">Все заказы</h2>
+    <h2 class="sub-header">Работы - Архивные заказы</h2>
 {% endblock %}
 
 
 {% block table_main %}
-
 {% load bootstrap3 %}
 <div class="col-md-12">
     <div class="panel panel-default">
@@ -53,18 +39,14 @@
 </div>
 
 
-
-
 <div class="col-md-12">
   <div class="table-responsive">
-    <table class="table table-hover table-striped" id="table">
+    <table class="table table-hover table-striped tablesorter" id="table">
       <thead>
-        <th><span class="glyphicon glyphicon-barcode"> ID</span></th>
+        <th><span class="glyphicon glyphicon-barcode"></span> ID</th>
         <th>Дата приемки</th>
         <th>Статус</th>
-        {% if not outsource %}
-        <th>Клиент</th>
-        {% endif %}
+        {% if not outsource %}<th>Клиент</th>{% endif %}
         <th>Модель</th>
         <th>Серийный номер</th>
         <th class="hidden-xs">Заявленная неисправность</th>
@@ -79,20 +61,18 @@
         {% endif %}
         <th></th>
         <th></th>
-        <th></th>
+        <th class="hidden-xs"></th>
         <th><input type="text" placeholder="Search"/></th>
       </tfoot>
 
       {% for order in object_list %}
-      <tr {%if order.status_expired %} class="expired"{% endif %}>
+      <tr>
         <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}">{{ order.id }}</a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-          {% with order.last_status as last_act %}
-            <td>{% include "includes/order_status.html" %}</td>
-          {% endwith %}
-          {%if not outsource %}
-            <td>{{ order.cartridge.client.client_name }}</td>
-          {% endif %}
+        {% with order.last_status as last_act %}
+          <td>{% include "includes/order_status.html" %}</td>
+        {% endwith %}
+        {% if not outsource %}<td>{{ order.cartridge.client.client_name }}</td>{% endif %}
         <td>{{ order.cartridge.model }}</td>
         <td>{{ order.cartridge.serial_number }}</td>
         <td class="hidden-xs">{{ order.defect }}</td>

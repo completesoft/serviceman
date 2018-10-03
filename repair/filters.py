@@ -46,7 +46,7 @@ class MaintenanceOrderFilter(django_filters.FilterSet):
     order_datetime = django_filters.DateRangeFilter(field_name='order_datetime', label='Период')
 
     class Meta:
-        model = DocOrderHeader
+        model = MaintenanceOrder
         fields = ['order_datetime', 'client']
 
     def filter_queryset(self, queryset):
