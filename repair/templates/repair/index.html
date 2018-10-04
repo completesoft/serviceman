@@ -2,13 +2,6 @@
 {% load staticfiles %}
 {% load repair_tags %}
 
-{% block other_css %}
-<script type="text/javascript" src="{% static 'repair/js/moment.min.js' %}" defer></script>
-<script type="text/javascript" src="{% static 'repair/js/daterangepicker.js' %}" defer></script>
-<link rel="stylesheet" type="text/css" href="{% static 'repair/css/daterangepicker.css'%}">
-{% endblock %}
-
-
 
 {% block top_menu %}
   {% include "includes/top_menu.html" %}
@@ -112,6 +105,9 @@
 
 
 {% block script_block %}
+  <script type="text/javascript" src="{% static 'repair/js/moment.min.js' %}" defer></script>
+  <script type="text/javascript" src="{% static 'repair/js/daterangepicker.js' %}" defer></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'repair/css/daterangepicker.css'%}">
   <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
   <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}" defer></script>
   <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}" defer></script>

@@ -205,7 +205,7 @@ class Cartridge(models.Model):
 
     add_datetime = models.DateTimeField("Дата регистрации в базе", auto_now_add=True)
     model = models.CharField('Модель', max_length=100, null=False, blank=False)
-    serial_number = models.CharField('Модель', max_length=100, null=False, blank=False)
+    serial_number = models.CharField('Модель', max_length=100, null=False, blank=False, unique=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_DEFAULT, default='None', null=False, blank=False)
 
 

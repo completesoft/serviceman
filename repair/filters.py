@@ -29,15 +29,16 @@ class DocOrderHeaderFilter(django_filters.FilterSet):
 
 
 class CartridgeOrderFilter(django_filters.FilterSet):
-    order_datetime = django_filters.DateRangeFilter(field_name='order_datetime', label='Период')
+    date_from = django_filters.DateFilter(field_name='order_datetime', lookup_expr='date__gte', widget=HiddenInput)
+    date_to = django_filters.DateFilter(field_name='order_datetime', lookup_expr='date__lte', widget=HiddenInput)
     client = django_filters.ModelChoiceFilter(field_name='cartridge__client', queryset=clients, label='Клиент')
 
     class Meta:
         model = CartridgeOrder
-        exclude = ['defect', 'client_position', 'cartridge']
+        exclude = ['defect', 'client_position', 'cartridge', 'order_datetime']
 
     def filter_queryset(self, queryset):
-        if any(self.form.cleaned_data.values()):
+        if self.form.is_valid() and any(self.form.cleaned_data.values()):
             return super(CartridgeOrderFilter, self).filter_queryset(queryset)
         return queryset.none()
 

@@ -660,12 +660,14 @@ class ServiceRewardAssessment(ListView):
 
 class CartridgeOrderListView(FilterView):
     filterset_class = CartridgeOrderFilter
+    daterange_widget_form = DateRangeWidgetForm
+    context_object_name = "object_list"
     template_name = "repair/cartridge_orders.html"
-    ordering = ["-order_datetime"]
+    # ordering = ["-order_datetime"]
     outsource = True
 
     def get_queryset(self):
-        orders = CartridgeOrder.objects.exclude(cartridgeaction__status__status_name=6).order_by('-id').distinct()
+        orders = CartridgeOrder.objects.exclude(cartridgeaction__status__status_name=CartridgeActionStatus.ARCHIVE).order_by('-id').distinct()
         if self.outsource:
             user = self.request.user
             orders = orders.filter(cartridgeaction__executor_user=user)
@@ -673,6 +675,7 @@ class CartridgeOrderListView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderListView, self).get_context_data(**kwargs)
+        context['daterange_widget_form'] = self.daterange_widget_form()
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
