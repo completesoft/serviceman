@@ -1,0 +1,5 @@
+{% load bootstrap3 %}
+<form action="{% url 'repair:maintenance_add_service' order_id=order_id %}" method="POST" id="service_form" autocomplete="off">
+{% csrf_token %}
+    {% bootstrap_form service_form %}
+</form>

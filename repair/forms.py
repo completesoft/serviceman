@@ -2,7 +2,7 @@ from django import forms
 from .models import (DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent,
                            DirStatus, Clients, ClientsDep, Reward, Storage, CartridgeOrder, Cartridge, CartridgeAction,
                      CartridgeActionStatus, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus, CartridgeOrderServiceContent,
-                     CartridgeOrderSparesContent)
+                     CartridgeOrderSparesContent, MaintenanceOrderSparesContent, MaintenanceOrderServiceContent)
 from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
@@ -261,6 +261,25 @@ class CartridgeSpareForm(forms.ModelForm):
 class CartridgeServiceForm(forms.ModelForm):
     class Meta:
         model = CartridgeOrderServiceContent
+        fields = ["service_name", "service_qty", "cost"]
+
+    service_name = forms.CharField(label="Наименование работ", required=True, widget=forms.Textarea(attrs={'class':'form-control', 'cols': '30', 'rows': '4'}))
+    service_qty = forms.IntegerField(label="Кол-во", required=True, min_value=1, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    cost = forms.IntegerField(label="Стоимость 1 шт", required=True, min_value=0, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+
+
+class MaintenanceSpareForm(forms.ModelForm):
+    class Meta:
+        model = MaintenanceOrderSparesContent
+        fields = ["spare_name", "spare_serial", "spares_qty"]
+
+    spare_name = forms.CharField(label='Наименование запчасти', required=True, widget=forms.Textarea(attrs={'class':'form-control', 'cols': '30', 'rows': '4'}))
+    spare_serial = forms.CharField(label='Серийный номер запчасти', required=True, max_length=100, widget=forms.TextInput(attrs={'class':'form-control'}))
+    spares_qty = forms.IntegerField(label='Кол-во', required=True, min_value=1, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+
+class MaintenanceServiceForm(forms.ModelForm):
+    class Meta:
+        model = MaintenanceOrderServiceContent
         fields = ["service_name", "service_qty", "cost"]
 
     service_name = forms.CharField(label="Наименование работ", required=True, widget=forms.Textarea(attrs={'class':'form-control', 'cols': '30', 'rows': '4'}))

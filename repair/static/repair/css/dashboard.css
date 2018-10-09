@@ -182,14 +182,18 @@ p.bold {
     font-weight: bold;
 }
 
+.badge{
+    min-width: 70px;
+}
+
 a span.badge:hover {
   background-color: #3986c2;
 }
-
+/*
 a span.badge{
     border-radius: .25em;
 }
-
+*/
 .input-group[class~="pd-15"]{
     padding-right: 15px;
     padding-left: 15px;

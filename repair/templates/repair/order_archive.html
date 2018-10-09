@@ -16,27 +16,8 @@
 
 {% block table_main %}
 {% load bootstrap3 %}
-<div class="col-md-12">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Фильтр заказов</h3>
-      </div>
-      <div class="panel-body">
-        <form class="form" action="" method="get" autocomplete="off" id="filter_form">
-            {% bootstrap_form filter.form %}
-              {% buttons %}
-                <button type="submit" class="btn btn-primary">
-                  {% bootstrap_icon "search" %} Фильтровать
-                </button>
-                <button id="get_all" type="button" class="btn btn-info" value="all">
-                   {% bootstrap_icon "th" %} Показать все записи
-                </button>
-              {% endbuttons %}
-        </form>
-      </div>
-    </div>
-</div>
 
+{% include "includes/date_client_order_filter.html" %}
 
 <div class="col-md-12">
   <div class="table-responsive">
@@ -66,7 +47,7 @@
 
       {% for order in object_list %}
       <tr>
-        <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
+        <td><a href="{% url 'repair:order_detail' order_id=order.id %}"><span class="badge">{{ order.order_barcode }}</span></a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
         {% with order.last_status as last_act %}
           <td>{% include "includes/order_status.html" %}</td>
@@ -85,6 +66,9 @@
 
 
 {% block script_block %}
+  <script type="text/javascript" src="{% static 'repair/js/moment.min.js' %}" defer></script>
+  <script type="text/javascript" src="{% static 'repair/js/daterangepicker.js' %}" defer></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'repair/css/daterangepicker.css'%}">
   <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
   <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}"></script>
   <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>

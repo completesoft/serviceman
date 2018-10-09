@@ -1,0 +1,10 @@
+{% if service %}
+<tr>
+    <td>{{ service.add_datetime|date:"d.m.Y H:i"}}</td>
+    <td>{{ service.service_name }}</td>
+    <td>{{ service.service_qty }}</td>
+    <td>{{ service.cost }}</td>
+    <td>{{ service.setting_user.get_full_name }}</td>
+    <td><button type="button" class="btn btn-danger delete" url="{% url 'repair:maintenance_del_service' %}" order="{{ order_id }}" value="{{ service.id }}"><span class="glyphicon glyphicon-remove"></span> Удалить </button></td>
+</tr>
+{% endif %}

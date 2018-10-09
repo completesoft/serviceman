@@ -56,7 +56,7 @@
       <tbody>
         {% for order in orders %}
         <tr {%if order.status_expired %} class="expired"{% endif %}>
-          <td><a href="{% url 'repair:order_detail' order_id=order.id %}">{{ order.order_barcode }}</a></td>
+          <td><a href="{% url 'repair:order_detail' order_id=order.id %}"><span class="badge">{{ order.order_barcode }}</span></a></td>
           <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
             {% with order.last_status as last_act %}
               <td>{% include "includes/order_status.html" %}</td>

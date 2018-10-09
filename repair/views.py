@@ -6,11 +6,10 @@ from django.contrib.auth.models import Group, User
 from django.contrib.auth.views import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import deprecate_current_app
-from django.views.decorators.cache import never_cache
 from .models import (DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent,
                      DocOrderSparesContent, Clients, ClientsDep, Reward, Storage, CartridgeOrder, CartridgeActionStatus,
                      Cartridge, CartridgeAction, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus, CartridgeOrderSparesContent,
-                     CartridgeOrderServiceContent)
+                     CartridgeOrderServiceContent, MaintenanceOrderServiceContent, MaintenanceOrderSparesContent)
 from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
@@ -21,26 +20,21 @@ from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, Servi
                      CartridgeFilterOrderForm, CartridgeRegularActionForm, CartridgeSuperActionForm,
                      MaintenanceOrderForm, MaintenanceRegularActionForm, DateRangeWidgetForm,
                      MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm, CartridgeServiceForm,
-                     CartridgeSpareForm)
+                     CartridgeSpareForm, MaintenanceServiceForm, MaintenanceSpareForm)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
-# from serviceman.settings import LOGIN_URL
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import FieldError, ValidationError, ObjectDoesNotExist
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
-from django.core.paginator import Paginator, InvalidPage
 from django.middleware.csrf import get_token
 from django.db.models import Q
-from django.contrib.auth.decorators import user_passes_test
-from .helpers import outsource_group_check
 import logging
 from .filters import DocOrderHeaderFilter, CartridgeOrderFilter, MaintenanceOrderFilter
+from .helpers import barcode_generator
 from django_filters.views import FilterView
-from django.utils.timezone import now
-from django.forms import CharField
 
 logger = logging.getLogger('user.activity')
 LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
@@ -114,6 +108,7 @@ class OrderCreateView(CreateView):
     template_name = "repair/order_add.html"
 
     def get(self, request, *args, **kwargs):
+        self.initial["order_barcode"] = barcode_generator(self.model, request.user)
         return super(OrderCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -413,12 +408,15 @@ def dep_update(request, **kwargs):
 
 class OrderArchiveView(FilterView):
     filterset_class = DocOrderHeaderFilter
+    daterange_widget_form = DateRangeWidgetForm
     template_name = "repair/order_archive.html"
-    context_object_name = "filter"
+    context_object_name = "object_list"
+    outsource = True
+
 
     def get_queryset(self):
         user = self.request.user
-        if user.groups.filter(name='outsource').exists():
+        if self.outsource:
             orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).filter(docorderaction__status__status_name="Архивный").order_by('-id').distinct()
         else:
             orders = DocOrderHeader.objects.filter(docorderaction__status__status_name="Архивный").distinct()
@@ -426,12 +424,15 @@ class OrderArchiveView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(OrderArchiveView, self).get_context_data(**kwargs)
+        context['daterange_widget_form'] = self.daterange_widget_form()
+        context['outsource'] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        self.outsource = request.user.groups.filter(name='outsource').exists()
         if request.user.is_active:
             return super(OrderArchiveView, self).dispatch(request, *args, **kwargs)
         else:
@@ -663,7 +664,6 @@ class CartridgeOrderListView(FilterView):
     daterange_widget_form = DateRangeWidgetForm
     context_object_name = "object_list"
     template_name = "repair/cartridge_orders.html"
-    # ordering = ["-order_datetime"]
     outsource = True
 
     def get_queryset(self):
@@ -903,7 +903,7 @@ def cartridge_del_spare(request):
                                                                                      order.cartridge.client.client_name, order.cartridge.model)
             logger.info(msg)
         return JsonResponse(data)
-    return redirect("repair:order_detail", order_id=request.POST.get("order_id"))
+    return redirect("repair:cartridge_order_detail", order_id=request.POST.get("order_id"))
 
 
 @login_required
@@ -1017,6 +1017,7 @@ class CartridgeActionCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.order_id = self.kwargs['order_id']
+        form.instance.setting_user = self.request.user
         return super(CartridgeActionCreateView, self).form_valid(form)
 
     @method_decorator(login_required)
@@ -1033,7 +1034,9 @@ class CartridgeActionCreateView(CreateView):
 
 class CartridgeOrderArchiveView(FilterView):
     filterset_class = CartridgeOrderFilter
+    daterange_widget_form = DateRangeWidgetForm
     template_name = "repair/cartridge_order_archive.html"
+    context_object_name = "object_list"
     outsource = True
 
     def get_queryset(self):
@@ -1045,6 +1048,7 @@ class CartridgeOrderArchiveView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderArchiveView, self).get_context_data(**kwargs)
+        context['daterange_widget_form'] = self.daterange_widget_form()
         context['outsource'] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
@@ -1100,22 +1104,29 @@ class MaintenanceOrderCreateView(CreateView):
         return resp
 
 
-class MaintenanceOrderListView(ListView):
+class MaintenanceOrderListView(FilterView):
+    filterset_class = MaintenanceOrderFilter
+    daterange_widget_form = DateRangeWidgetForm
     template_name = "repair/maintenance_order_list.html"
-    model = MaintenanceOrder
-    ordering = "order_datetime"
-    context_object_name = "orders"
+    context_object_name = "object_list"
+    outsource = True
 
     def get_queryset(self):
-        user = self.request.user
-        orders = MaintenanceOrder.objects.filter(Q(maintenanceaction__manager_user=user)|Q(maintenanceaction__executor_user=user)).exclude(maintenanceaction__status__status_name=MaintenanceActionStatus.ARCHIVE).distinct()
+        orders = MaintenanceOrder.objects.exclude(maintenanceaction__status__status_name=MaintenanceActionStatus.ARCHIVE).order_by('-id').distinct()
         return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(MaintenanceOrderListView, self).get_context_data(**kwargs)
+        context['daterange_widget_form'] = self.daterange_widget_form()
+        context["outsource"] = self.outsource
+        if self.request.GET.get('all'):
+            context['object_list'] = self.get_queryset()
+        return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        user = request.user
-        outsource_group = request.user.groups.filter(name='outsource').exists()
-        if user.is_active and not outsource_group:
+        self.outsource = request.user.groups.filter(name='outsource').exists()
+        if request.user.is_active and not self.outsource:
             return super(MaintenanceOrderListView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -1155,6 +1166,10 @@ class MaintenanceOrderDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(MaintenanceOrderDetailView, self).get_context_data(**kwargs)
         context["order_action"] = MaintenanceAction.objects.filter(order=self.object).order_by("action_datetime")
+        context['spare_form'] = MaintenanceSpareForm()
+        context['service_form'] = MaintenanceServiceForm()
+        context['spares'] = MaintenanceOrderSparesContent.objects.filter(order=self.object)
+        context['services'] = MaintenanceOrderServiceContent.objects.filter(order=self.object)
         context["outsource"] = self.outsource_group
         return context
 
@@ -1171,9 +1186,120 @@ class MaintenanceOrderDetailView(DetailView):
         else:
             return redirect(LOGIN_URL)
 
+@login_required
+def maintenance_add_spare(request, order_id):
+    try:
+        order = MaintenanceOrder.objects.get(pk=order_id)
+        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+        if order.last_status() != 'В работе':
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
+    if request.method == "POST" and request.is_ajax():
+        spare_form = MaintenanceSpareForm(request.POST)
+        if spare_form.is_valid():
+            obj_spare = spare_form.save(commit=False)
+            obj_spare.order = order
+            obj_spare.setting_user = request.user
+            obj_spare.save()
+            new_spare_form = MaintenanceSpareForm()
+            form = render_to_string('repair/ajax/maintenance_add_spare_form.html',
+                                    context={'spare_form': new_spare_form, 'order_id': order_id}, request=request)
+            tr = render_to_string('repair/ajax/maintenance_add_spare_tr.html',
+                                  context={'order_id': order_id, "spare": obj_spare}, request=request)
+            msg = "*{}* ДОБАВИЛ запчасть по заказу РАБОТЫ. Заказ -{}-{}-".format(request.user.get_full_name(),
+                                                                           order.id,
+                                                                           order.client.client_name)
+            logger.info(msg)
+        else:
+            form = render_to_string('repair/ajax/maintenance_add_spare_form.html',
+                                    context={'spare_form': spare_form, 'order_id': order.id}, request=request)
+            tr = "error"
+        data = {"form": form, "tr": tr}
+        return JsonResponse(data)
+    return HttpResponseNotFound()
+
+@login_required
+def maintenance_del_spare(request):
+    data = {"error": 1}
+    if request.method == "POST" and request.is_ajax():
+        try:
+            order = MaintenanceOrder.objects.get(pk=request.POST.get("order_id"))
+            spare = MaintenanceOrderSparesContent.objects.get(pk=request.POST["spare_id"])
+            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+                raise ObjectDoesNotExist("Access denied")
+        except ObjectDoesNotExist as msg:
+            data = {'error': msg}
+            return JsonResponse(data)
+        if spare in order.maintenanceordersparescontent_set.all():
+            spare.delete()
+            data = {"error": 0}
+            msg = "*{}* УДАЛИЛ запчасть по заказу РАБОТЫ. Заказ -{}-{}-".format(request.user.get_full_name(), order.id,
+                                                                                     order.client.client_name)
+            logger.info(msg)
+        return JsonResponse(data)
+    return redirect("repair:maintenance_detail", order_id=request.POST.get("order_id"))
+
+
+@login_required
+def maintenance_add_service(request, order_id):
+    try:
+        order = MaintenanceOrder.objects.get(pk=order_id)
+        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            raise ObjectDoesNotExist("Access denied")
+        if order.last_status() != 'В работе':
+            raise ObjectDoesNotExist("Access denied")
+    except ObjectDoesNotExist as msg:
+        return HttpResponseNotFound(msg)
+    if request.method == "POST" and request.is_ajax():
+        service_form = MaintenanceServiceForm(request.POST)
+        if service_form.is_valid():
+            obj_service = service_form.save(commit=False)
+            obj_service.order = order
+            obj_service.setting_user = request.user
+            obj_service.save()
+            new_service_form = MaintenanceServiceForm()
+            form = render_to_string('repair/ajax/maintenance_add_service_form.html',
+                                    context={'service_form': new_service_form, 'order_id': order_id}, request=request)
+            tr = render_to_string('repair/ajax/maintenance_add_service_tr.html',
+                                  context={'order_id': order_id, "service": obj_service}, request=request)
+            msg = "*{}* ДОБАВИЛ работы по заказу РАБОТЫ. Заказ -{}-{}-".format(request.user.get_full_name(),
+                                                                           order.id,
+                                                                           order.client.client_name)
+            logger.info(msg)
+        else:
+            form = render_to_string('repair/ajax/maintenance_add_service_form.html',
+                                    context={'service_form': service_form, 'order_id': order.id}, request=request)
+            tr = "error"
+        data = {"form": form, "tr": tr}
+        return JsonResponse(data)
+    return HttpResponseNotFound()
+
+
+@login_required
+def maintenance_del_service(request):
+    data = {"error": 1}
+    if request.method == "POST" and request.is_ajax():
+        try:
+            order = MaintenanceOrder.objects.get(pk=request.POST.get("order_id"))
+            service = MaintenanceOrderServiceContent.objects.get(pk=request.POST["service_id"])
+            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+                raise ObjectDoesNotExist("Access denied")
+        except ObjectDoesNotExist as msg:
+            data = {'error': msg}
+            return JsonResponse(data)
+        if service in order.maintenanceorderservicecontent_set.all():
+            service.delete()
+            data = {"error": 0}
+            msg = "*{}* УДАЛИЛ работы по заказу РАБОТЫ. Заказ -{}-{}-".format(request.user.get_full_name(), order.id,
+                                                                                     order.client.client_name)
+            logger.info(msg)
+        return JsonResponse(data)
+    return redirect("repair:maintenance_detail", order_id=request.POST.get("order_id"))
+
 
 class MaintenanceActionCreateView(CreateView):
-    # form_class = MaintenanceRegularActionForm
     model = MaintenanceAction
     template_name = 'repair/maintenance_action_add.html'
 
@@ -1182,7 +1308,6 @@ class MaintenanceActionCreateView(CreateView):
             self.form_class = MaintenanceRegularActionForm
         else:
             self.form_class = MaintenanceSuperActionForm
-        # last_action = MaintenanceOrder.objects.get(pk=kwargs["order_id"]).maintenanceaction_set.latest()
         last_action = self.order.maintenanceaction_set.latest()
         self.initial['manager_user'] = last_action.manager_user
         self.initial['executor_user'] = last_action.executor_user
@@ -1206,6 +1331,7 @@ class MaintenanceActionCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.order_id = self.kwargs['order_id']
+        form.instance.setting_user = self.request.user
         return super(MaintenanceActionCreateView, self).form_valid(form)
 
     @method_decorator(login_required)
@@ -1221,18 +1347,20 @@ class MaintenanceActionCreateView(CreateView):
 
 class MaintenanceOrderArchiveView(FilterView):
     filterset_class = MaintenanceOrderFilter
+    daterange_widget_form = DateRangeWidgetForm
     template_name = "repair/maintenance_order_archive.html"
+    context_object_name = "object_list"
     outsource = True
 
     def get_queryset(self):
-        user = self.request.user
         orders = MaintenanceOrder.objects.filter(maintenanceaction__status__status_name=MaintenanceActionStatus.ARCHIVE).order_by('-id').distinct()
         if self.outsource:
-            orders = orders.filter(maintenanceaction__executor_user=user)
+            orders = orders.filter(maintenanceaction__executor_user=self.request.user)
         return orders
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceOrderArchiveView, self).get_context_data(**kwargs)
+        context['daterange_widget_form'] = self.daterange_widget_form()
         context['outsource'] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
@@ -1241,7 +1369,7 @@ class MaintenanceOrderArchiveView(FilterView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         self.outsource = request.user.groups.filter(name='outsource').exists()
-        if request.user.is_active:
+        if request.user.is_active and not self.outsource:
             return super(MaintenanceOrderArchiveView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)

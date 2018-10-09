@@ -322,7 +322,7 @@ class CartridgeOrderServiceContent(models.Model):
         verbose_name_plural = "Картриджи - выполненные работы"
 
 
-class CartridgeOrderSparesContent (models.Model):
+class CartridgeOrderSparesContent(models.Model):
 
     add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
     order = models.ForeignKey(CartridgeOrder, on_delete=models.CASCADE, null=False, blank=False)
