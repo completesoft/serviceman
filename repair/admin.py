@@ -2,7 +2,8 @@ from django.contrib.auth.models import Group
 from django.contrib import admin
 from .models import ( DocOrderHeader, DocOrderAction, DocOrderServiceContent, Storage,
                      DocOrderSparesContent, DirStatus, Clients, ClientsDep, Reward, CartridgeOrder, CartridgeAction,
-                      Cartridge, CartridgeActionStatus, MaintenanceActionStatus, MaintenanceAction)
+                      Cartridge, CartridgeActionStatus, MaintenanceActionStatus, MaintenanceAction, MaintenanceOrder,
+                      MaintenanceOrderServiceContent, MaintenanceOrderSparesContent)
 from django.core import serializers
 import os
 
@@ -49,3 +50,6 @@ admin.site.register(CartridgeAction)
 admin.site.register(CartridgeOrder)
 admin.site.register(MaintenanceActionStatus)
 admin.site.register(MaintenanceAction)
+admin.site.register(MaintenanceOrder)
+admin.site.register(MaintenanceOrderSparesContent)
+admin.site.register(MaintenanceOrderServiceContent)
