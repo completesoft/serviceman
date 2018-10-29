@@ -312,7 +312,7 @@ class CartridgeOrderServiceContent(models.Model):
 
     add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
     order = models.ForeignKey(CartridgeOrder, on_delete=models.CASCADE, null=False, blank=False)
-    service_name = models.TextField("Наименование работ", max_length=255, null=False, blank=False)
+    service_name = models.TextField("Вид работ", max_length=255, null=False, blank=False)
     service_qty = models.PositiveIntegerField("Кол-во", default=1, null=False, blank=False)
     cost = models.PositiveIntegerField("Стоимость 1 шт", default=0, null=True, blank=False)
     setting_user = models.ForeignKey(User, verbose_name="Добавил выполненую работу", on_delete=models.SET_NULL, null=True, blank=False)
@@ -321,6 +321,24 @@ class CartridgeOrderServiceContent(models.Model):
         verbose_name = "Картриджи - выполненные работы"
         verbose_name_plural = "Картриджи - выполненные работы"
 
+
+class CartridgeServiceType(models.Model):
+
+    FILL = 0
+    REPAIR = 1
+    OTHER = 2
+
+    service_set = (
+        (FILL, 'Заправка'),
+        (REPAIR, 'Ремонт'),
+        (OTHER, 'Прочее'),
+    )
+
+    service_type = models.PositiveIntegerField("Вид работ", choices=service_set, unique=True, null=False, blank=False)
+
+    class Meta:
+        verbose_name = "Картриджи - виды работы"
+        verbose_name_plural = "Картриджи - виды работы"
 
 class CartridgeOrderSparesContent(models.Model):
 

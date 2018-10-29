@@ -38,6 +38,7 @@
         <th>Серийный номер</th>
         {% if not outsource %}
         <th>Клиент</th>
+        <th>Размещение</th>
         {% endif %}
       </thead>
       <tfoot>
@@ -46,6 +47,7 @@
         <th><input type="text" placeholder="Search"/></th>
         <th><input type="text" placeholder="Search"/></th>
         {% if not outsource %}
+        <th><input type="text" placeholder="Search"/></th>
         <th><input type="text" placeholder="Search"/></th>
         {% endif %}
       </tfoot>
@@ -58,6 +60,7 @@
         <td>{{ cartridge.serial_number }}</td>
           {%if not outsource %}
             <td>{{ cartridge.client.client_name }}</td>
+            <td>{{ cartridge.client_position }}</td>
           {% endif %}
       </tr>
       {% endfor %}

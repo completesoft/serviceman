@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import ( DocOrderHeader, DocOrderAction, DocOrderServiceContent, Storage,
                      DocOrderSparesContent, DirStatus, Clients, ClientsDep, Reward, CartridgeOrder, CartridgeAction,
                       Cartridge, CartridgeActionStatus, MaintenanceActionStatus, MaintenanceAction, MaintenanceOrder,
-                      MaintenanceOrderServiceContent, MaintenanceOrderSparesContent)
+                      MaintenanceOrderServiceContent, MaintenanceOrderSparesContent, CartridgeServiceType)
 from django.core import serializers
 import os
 
@@ -48,6 +48,7 @@ admin.site.register(CartridgeActionStatus)
 admin.site.register(Cartridge)
 admin.site.register(CartridgeAction)
 admin.site.register(CartridgeOrder)
+admin.site.register(CartridgeServiceType)
 admin.site.register(MaintenanceActionStatus)
 admin.site.register(MaintenanceAction)
 admin.site.register(MaintenanceOrder)
