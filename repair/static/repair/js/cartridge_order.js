@@ -3,18 +3,22 @@
 $(document).ready(function(){
 
     $("#filter_cartridge_form").on("click", "#filter_cartridge_btn", {form : "#filter_cartridge_form", dest_select:'#id_cartridge'}, get_cartridge);
+    $('#id_cartridge').on('change', {dest_field:'#id_client_position'}, change_position);
 
 });
 
+function change_position(event){
+    val = ($('option:selected',this).attr('client_position')==null) ? '' : $('option:selected',this).attr('client_position');
+    $(event.data.dest_field).attr('value', val);
+}
+
 function get_cartridge(event){
-    console.log(event.data)
     var form = $(event.data.form)
     var csrf = getCookie('csrftoken');
     var url = form.attr("action");
     var values = form.serializeArray();
     var destination = $(event.data.dest_select);
 
-    console.log(values);
     $.ajax({
             data: values,
             type: form.attr("method"),
@@ -25,16 +29,14 @@ function get_cartridge(event){
                 }
             },
             success: function(json, textStatus, request){
-                console.log(json);
-                console.log(textStatus);
-                console.log(request);
                 destination.empty();
+                $('#id_cartridge').trigger('change');
                 if (json.redirect) {
                     window.location.href = json.redirect+'?next='+window.location.pathname;
                 }
                 else {
                     $.each(json.cartridge, function(i, item) {
-                        destination.append($('<option></option>').attr('value', item.id).text('Model:'+item.model+' S.n:'+item.serial_number+' Клиент:'+item.client__client_name));
+                        destination.append($('<option></option>').attr({value: item.id, client_position: item.client_position}).text('Model:'+item.model+' S.n:'+item.serial_number+' Клиент:'+item.client__client_name));
                     });
                 }
             }
@@ -61,7 +63,5 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
-
 
 })(jQuery);

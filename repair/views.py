@@ -970,7 +970,7 @@ def cartridge_update(request, **kwargs):
         return redirect(LOGIN_URL)
     user = request.user
     outsource_group = request.user.groups.filter(name='outsource').exists()
-    cartridge_preset = {'cartridge': [{'id': '', 'model': '--------', 'serial_number': '--------', 'client__client_name': '--------'}], 'redirect': ''}
+    cartridge_preset = {'cartridge': [{'id': '','client_position': '', 'model': '--------', 'serial_number': '--------', 'client__client_name': '--------'}], 'redirect': ''}
     if user.is_active and not outsource_group:
         filter_form = CartridgeFilterOrderForm(request.POST)
         if filter_form.is_valid():
@@ -978,7 +978,7 @@ def cartridge_update(request, **kwargs):
             if filter_form.cleaned_data['client']:
                 cartridge_set = cartridge_set.filter(client=filter_form.cleaned_data['client'])
             if cartridge_set:
-                cartridge_preset['cartridge'].extend(cartridge_set.values('id', 'model','serial_number', 'client__client_name'))
+                cartridge_preset['cartridge'].extend(cartridge_set.values('id', 'client_position', 'model','serial_number', 'client__client_name'))
     else:
         cartridge_preset['redirect'] = reverse('login')
     return JsonResponse(cartridge_preset, safe=False)

@@ -207,7 +207,7 @@ class Cartridge(models.Model):
     model = models.CharField('Модель', max_length=100, null=False, blank=False)
     serial_number = models.CharField('Модель', max_length=100, null=False, blank=False, unique=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_DEFAULT, default='None', null=False, blank=False)
-
+    client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=True)
 
     class Meta:
         db_table = 'cartridge'

@@ -161,7 +161,7 @@ class CartridgeActionExpressForm(forms.ModelForm):
 class CartridgeCreateForm(forms.ModelForm):
     class Meta:
         model = Cartridge
-        fields = ['client', 'model', 'serial_number']
+        fields = ['client', 'model', 'serial_number', 'client_position']
 
     client = forms.ModelChoiceField(label="Клиент", queryset=Clients.objects.all(), required=True,
                                     widget=forms.Select(attrs={'class': 'form-control'}))
@@ -169,6 +169,8 @@ class CartridgeCreateForm(forms.ModelForm):
                                     widget=forms.TextInput(attrs={'class': 'form-control'}))
     serial_number = forms.CharField(label='Серийный номер', required=True, max_length=100,
                                     widget=forms.TextInput(attrs={'class': 'form-control'}))
+    client_position = forms.CharField(max_length=100, label="Размещение у клиента", required=False,
+                                      widget=forms.TextInput(attrs={'class': 'form-control'}))
 
 
 class CartridgeOrderForm (forms.ModelForm):
@@ -179,7 +181,7 @@ class CartridgeOrderForm (forms.ModelForm):
     cartridge = forms.ModelChoiceField(label="Картридж", queryset=Cartridge.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
     defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
-    client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    client_position = forms.CharField(max_length=100, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
 
 class CartridgeFilterOrderForm (forms.Form):
@@ -232,7 +234,7 @@ class MaintenanceRegularActionForm(forms.ModelForm):
         fields = ['status', 'action_content']
 
     status = forms.ModelChoiceField(label="Статус заказа", required=True, queryset=MaintenanceActionStatus.objects.exclude(status_name__in=[4,5]), widget=forms.Select(attrs={'class':'form-control'}))
-    action_content = forms.CharField(label="Выполненные работы", required=True, widget=forms.Textarea(attrs={'class': 'form-control'}))
+    action_content = forms.CharField(label="Комментарий", required=True, widget=forms.Textarea(attrs={'class': 'form-control'}))
 
 
 class MaintenanceSuperActionForm(MaintenanceRegularActionForm):

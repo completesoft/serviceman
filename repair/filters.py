@@ -20,7 +20,7 @@ class DocOrderHeaderFilter(django_filters.FilterSet):
 
     class Meta:
         model = DocOrderHeader
-        fields = ['client']
+        fields = ['client', 'order_barcode']
 
     def filter_queryset(self, queryset):
         if self.form.is_valid() and any(self.form.cleaned_data.values()):
