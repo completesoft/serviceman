@@ -2,7 +2,7 @@ from django import forms
 from .models import (DocOrderHeader, DocOrderAction, DocOrderSparesContent, DocOrderServiceContent,
                            DirStatus, Clients, ClientsDep, Reward, Storage, CartridgeOrder, Cartridge, CartridgeAction,
                      CartridgeActionStatus, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus, CartridgeOrderServiceContent,
-                     CartridgeOrderSparesContent, MaintenanceOrderSparesContent, MaintenanceOrderServiceContent)
+                     CartridgeOrderSparesContent, MaintenanceOrderSparesContent, MaintenanceOrderServiceContent, CartridgeServiceType)
 from django.contrib.auth.models import User, Group
 from django.forms import ModelChoiceField, CharField, IntegerField
 from django.forms import widgets
@@ -176,10 +176,12 @@ class CartridgeCreateForm(forms.ModelForm):
 class CartridgeOrderForm (forms.ModelForm):
     class Meta:
         model = CartridgeOrder
-        fields = ["cartridge", "defect", "client_position"]
+        fields = ["cartridge", 'service_type', "defect", "client_position"]
 
     cartridge = forms.ModelChoiceField(label="Картридж", queryset=Cartridge.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
-    defect = forms.CharField(max_length=255, required=True, label="Заявленная неисправность", widget=forms.Textarea(attrs={'class':'form-control'}))
+    service_type = forms.ModelChoiceField(label="Вид работ", queryset=CartridgeServiceType.objects.all(), required=True,
+                                       widget=forms.Select(attrs={'class': 'form-control'}))
+    defect = forms.CharField(max_length=255, required=True, label="Комментарий", widget=forms.Textarea(attrs={'class':'form-control'}))
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client_position = forms.CharField(max_length=100, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
 

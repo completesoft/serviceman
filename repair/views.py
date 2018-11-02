@@ -788,7 +788,7 @@ class CartridgeOrderCreateView(CreateView):
                                     setting_user=self.request.user,
                                     executor_user=User.objects.get(pk=self.request.POST["executor"]),
                                     status=CartridgeActionStatus.objects.get(status_name=0),
-                                    action_content='Заказ принят')
+                                    action_content=instance.defect)
         ord_action.save()
         msg = "*{}* ДОБАВИЛ заказ КАРТРИДЖ -{}-{}-".format(self.request.user.get_full_name(), instance.id, instance.cartridge.client.client_name)
         logger.info(msg)

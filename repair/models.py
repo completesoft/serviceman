@@ -249,13 +249,35 @@ class CartridgeActionStatus(models.Model):
         return "{}".format(self.get_status_name_display())
 
 
+class CartridgeServiceType(models.Model):
+
+    FILL = 0
+    REPAIR = 1
+    OTHER = 2
+
+    service_set = (
+        (FILL, 'Заправка'),
+        (REPAIR, 'Ремонт'),
+        (OTHER, 'Прочее'),
+    )
+
+    service_type = models.PositiveIntegerField("Вид работ", choices=service_set, unique=True, null=False, blank=False)
+
+    class Meta:
+        verbose_name = "Справочник виды работ КАРТРИДЖИ"
+        verbose_name_plural = "Справочник виды работ КАРТРИДЖИ"
+
+    def __str__(self):
+        return "{}".format(self.get_service_type_display())
+
 
 class CartridgeOrder(models.Model):
 
     order_datetime = models.DateTimeField("Дата заказа", auto_now_add=True)
     cartridge = models.ForeignKey(Cartridge, verbose_name='Картридж', on_delete=models.CASCADE, null=False, blank=False)
-    defect = models.CharField("Заявленная неисправность", default='', max_length=255, null=False, blank=False)
+    defect = models.CharField("Комментарий", default='', max_length=255, null=False, blank=False)
     client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=False)
+    service_type = models.ForeignKey(CartridgeServiceType, verbose_name='Вид работ', default=None, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         db_table = 'cartridge_order'
@@ -321,24 +343,6 @@ class CartridgeOrderServiceContent(models.Model):
         verbose_name = "Картриджи - выполненные работы"
         verbose_name_plural = "Картриджи - выполненные работы"
 
-
-class CartridgeServiceType(models.Model):
-
-    FILL = 0
-    REPAIR = 1
-    OTHER = 2
-
-    service_set = (
-        (FILL, 'Заправка'),
-        (REPAIR, 'Ремонт'),
-        (OTHER, 'Прочее'),
-    )
-
-    service_type = models.PositiveIntegerField("Вид работ", choices=service_set, unique=True, null=False, blank=False)
-
-    class Meta:
-        verbose_name = "Картриджи - виды работы"
-        verbose_name_plural = "Картриджи - виды работы"
 
 class CartridgeOrderSparesContent(models.Model):
 
