@@ -33,6 +33,15 @@ class DocOrderHeaderAdmin(admin.ModelAdmin):
     list_display = ("order_datetime", "last_status", "order_barcode", "client", "client_corp", "device_name")
 
 
+class MaintenanceOrderAdmin(admin.ModelAdmin):
+    list_display = ('order_datetime', 'id', 'client')
+    empty_value_display = 'None'
+    list_filter = ('order_datetime', ('client', admin.RelatedOnlyFieldListFilter))
+
+
+class ClientsAdmin(admin.ModelAdmin):
+    list_display = ('client_name', 'client_corp')
+    list_filter = ('client_corp',)
 
 
 admin.site.register(DocOrderHeader, DocOrderHeaderAdmin)
@@ -40,7 +49,7 @@ admin.site.register(DocOrderAction)
 admin.site.register(DocOrderServiceContent)
 admin.site.register(DocOrderSparesContent)
 admin.site.register(DirStatus, DirStatusAdmin)
-admin.site.register(Clients)
+admin.site.register(Clients, ClientsAdmin)
 admin.site.register(ClientsDep)
 admin.site.register(Reward)
 admin.site.register(Storage)
@@ -51,6 +60,6 @@ admin.site.register(CartridgeOrder)
 admin.site.register(CartridgeServiceType)
 admin.site.register(MaintenanceActionStatus)
 admin.site.register(MaintenanceAction)
-admin.site.register(MaintenanceOrder)
+admin.site.register(MaintenanceOrder, MaintenanceOrderAdmin)
 admin.site.register(MaintenanceOrderSparesContent)
 admin.site.register(MaintenanceOrderServiceContent)

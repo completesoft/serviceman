@@ -377,7 +377,7 @@ def handlePopAdd(request, addForm, field):
     else:
         form = addForm()
     pageContext = {'form': form, 'field': field}
-    return render_to_response("repair/client_add_popup.html", pageContext)
+    return render(request, "repair/client_add_popup.html", pageContext)
 
 
 @login_required
@@ -721,6 +721,22 @@ class CartridgeListView(ListView):
     model = Cartridge
     ordering = "add_datetime"
     context_object_name = "cartridges"
+
+    def post(self, request, *args, **kwargs):
+
+        data = {"status": '', "client_position": ''}
+        if request.is_ajax():
+            try:
+                cartridge = Cartridge.objects.get(pk=request.POST.get("id"))
+            except ObjectDoesNotExist as msg:
+                return JsonResponse(data)
+            cartridge.client_position = request.POST.get("client_position")
+            cartridge.save()
+            data = {"status": '1', "client_position": cartridge.client_position}
+            return JsonResponse(data)
+        else:
+            return HttpResponseNotFound()
+
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):

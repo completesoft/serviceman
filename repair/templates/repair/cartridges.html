@@ -1,6 +1,11 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
 
+{% block other_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+
+
 {% block top_menu %}
   {% include "includes/top_menu.html" %}
 {% endblock %}
@@ -54,13 +59,20 @@
 
       {% for cartridge in cartridges %}
       <tr>
-        <td><a href="">{{ cartridge.id }}</a></td>
+        <td><span class="badge">{{ cartridge.id }}</span></td>
         <td>{{ cartridge.add_datetime|date:"d.m.Y" }}</td>
         <td>{{ cartridge.model }}</td>
         <td>{{ cartridge.serial_number }}</td>
           {%if not outsource %}
             <td>{{ cartridge.client.client_name }}</td>
-            <td>{{ cartridge.client_position }}</td>
+            <td>
+              <div class="input-group">
+                <input type="text" class="form-control position" readonly dupm="{{ cartridge.client_position }}" value="{{ cartridge.client_position }}">
+                <span class="input-group-btn">
+                  <button class="btn btn-default upd-location" title="Обновить" type="button" cartridge="{{ cartridge.id }}"><i class="fa fa-refresh"></i></button>
+                </span>
+              </div>
+            </td>
           {% endif %}
       </tr>
       {% endfor %}
@@ -71,6 +83,6 @@
 
 {% block script_block %}
   <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-  <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}"></script>
   <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'repair/js/cartridges_location_update.js' %}"></script>
 {% endblock %}

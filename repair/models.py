@@ -32,8 +32,8 @@ class DocOrderHeader(models.Model):
 
     class Meta:
         db_table = 'doc_order_header'
-        verbose_name = "Заказ"
-        verbose_name_plural = "Заказы"
+        verbose_name = "Ремонты - заказы"
+        verbose_name_plural = "Ремонты - заказы"
 
     def __str__(self):
         return "{} ИД заказа {}".format(self.order_datetime, self.id)
@@ -87,8 +87,8 @@ class DirStatus(models.Model):
 
     class Meta:
         db_table = 'dir_status'
-        verbose_name = "Справочник состояний (fixturizable+Group)"
-        verbose_name_plural = "Справочник состояний (fixturizable+Group)"
+        verbose_name = "Справочник состояний РЕМОНТЫ"
+        verbose_name_plural = "Справочник состояний РЕМОНТЫ"
 
     def __str__(self):
         return "{}".format(self.status_name)
@@ -119,8 +119,8 @@ class DocOrderAction(models.Model):
 
     class Meta:
         db_table = 'doc_order_action'
-        verbose_name = "Состояние заказа"
-        verbose_name_plural = "Состояние заказа"
+        verbose_name = "Ремонты - статусы заказов"
+        verbose_name_plural = "Ремонты - статусы заказов"
         get_latest_by = "action_datetime"
 
     def __str__(self):
@@ -139,11 +139,11 @@ class DocOrderServiceContent(models.Model):
 
     class Meta:
         db_table = 'doc_order_service_content'
-        verbose_name = "Выполненные работы"
-        verbose_name_plural = "Выполненные работы"
+        verbose_name = "Ремонты - выполненные работы"
+        verbose_name_plural = "Ремонты - выполненные работы"
 
 
-class DocOrderSparesContent (models.Model):
+class DocOrderSparesContent(models.Model):
 
     add_datetime = models.DateTimeField("Дата операции", auto_now_add=True)
     order = models.ForeignKey(DocOrderHeader, on_delete=models.CASCADE, null=False, blank=False)
@@ -154,8 +154,8 @@ class DocOrderSparesContent (models.Model):
 
     class Meta():
         db_table = 'doc_order_spares_content'
-        verbose_name = "Использованные запчасти"
-        verbose_name_plural = "Использованные запчасти"
+        verbose_name = "Ремонты - использованные запчасти"
+        verbose_name_plural = "Ремонты - использованные запчасти"
 
 
 class ClientsDep(models.Model):
@@ -193,8 +193,8 @@ class Reward(models.Model):
 
     class Meta:
         db_table = 'reward'
-        verbose_name = 'Выплаты'
-        verbose_name_plural = 'Выплаты'
+        verbose_name = 'Ремонты - выплаты'
+        verbose_name_plural = 'Ремонты - выплаты'
 
 
     def __str__(self):
@@ -418,8 +418,8 @@ class MaintenanceActionStatus(models.Model):
 
     class Meta:
         db_table = 'maintenance_action_status'
-        verbose_name = 'Работы - СПРАВОЧНИК статусов'
-        verbose_name_plural = 'Работы - СПРАВОЧНИК статусов'
+        verbose_name = 'Справочник состояний РАБОТЫ'
+        verbose_name_plural = 'Справочник состояний РАБОТЫ'
 
     def __str__(self):
         return "{}".format(self.get_status_name_display())
@@ -441,8 +441,8 @@ class MaintenanceAction(models.Model):
 
     class Meta:
         db_table = 'maintenance_action'
-        verbose_name = "Работы - выполненные работы"
-        verbose_name_plural = "Работы - выполненные работы"
+        verbose_name = "Работы - статусы заказов"
+        verbose_name_plural = "Работы - статусы заказов"
         get_latest_by = "action_datetime"
 
     def __str__(self):

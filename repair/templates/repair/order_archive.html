@@ -17,7 +17,29 @@
 {% block table_main %}
 {% load bootstrap3 %}
 
-{% include "includes/date_client_order_filter.html" %}
+<div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Фильтр заказов</h3>
+      </div>
+      <div class="panel-body">
+        <form class="form" action="" method="get" autocomplete="off" id="filter_form">
+            {%bootstrap_field daterange_widget_form.period placeholder='----------' form_group_class='form-group col-md-4'%}
+            {% bootstrap_form filter.form bound_css_class='' form_group_class='form-group col-md-4'%}
+            <div class="col-md-8">
+              {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                  {% bootstrap_icon "search" %} Фильтровать
+                </button>
+                <button id="get_all" type="button" class="btn btn-info" value="all">
+                   {% bootstrap_icon "th" %} Показать все записи
+                </button>
+              {% endbuttons %}
+            </div>
+        </form>
+      </div>
+    </div>
+</div>
 
 <div class="col-md-12">
   <div class="table-responsive">
