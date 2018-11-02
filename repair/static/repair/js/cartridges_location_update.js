@@ -67,8 +67,6 @@ function get_cartridge(event){
     var url = window.location.href;
     var values = {'id': $(this).attr('cartridge'), 'client_position': $input.val()};
 
-    console.log(input_text);
-
     var color = $i.css('color');
     update_anim($i, true);
     $.ajax({

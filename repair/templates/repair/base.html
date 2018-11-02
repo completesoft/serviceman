@@ -48,7 +48,6 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <!-- <li><a href="{% url 'repair:index' %}"></span>ServiceMan</a></li> -->
             {% block top_menu %}{% endblock %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
@@ -63,19 +62,19 @@
         <!--Action menu -->
       <div class="container-fluid">
         <div class="navbar-header action-menu-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-action" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Action navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
+          <!--<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-action" aria-expanded="false" aria-controls="navbar">-->
+            <!--<span class="sr-only">Action navigation</span>-->
+            <!--<span class="icon-bar"></span>-->
+            <!--<span class="icon-bar"></span>-->
+            <!--<span class="icon-bar"></span>-->
+          <!--</button>-->
           <a class="navbar-brand" href="#">Меню действий:</a>
         </div>
-        <div id="navbar-action" class="navbar-collapse collapse navbar-action">
+        <!--<div id="navbar-action" class="navbar-collapse collapse navbar-action">-->
           <ul class="nav navbar-nav">
             {% block sidebar_action %}{% endblock %}
           </ul>
-        </div>
+        <!--</div>-->
       </div>
     </nav>
 
