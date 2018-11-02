@@ -80,7 +80,8 @@ function get_cartridge(event){
             },
             error: function() {
                 $i.css('color', 'red');
-                $input.prop('readonly', false);
+                console.log($input.prop('dump'))
+                $input.removeAttr('readonly');
                 $input.val($input.prop('dump'));
                 $input.prop('readonly', true);
                 update_anim($i, false);
