@@ -198,3 +198,7 @@ a span.badge{
     padding-right: 15px;
     padding-left: 15px;
 }
+
+.word-wrap {
+    word-wrap: break-word;
+}

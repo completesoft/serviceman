@@ -181,9 +181,19 @@ class CartridgeOrderForm (forms.ModelForm):
     cartridge = forms.ModelChoiceField(label="Картридж", queryset=Cartridge.objects.all(), required=True, widget=forms.Select(attrs={'class':'form-control'}))
     service_type = forms.ModelChoiceField(label="Вид работ", queryset=CartridgeServiceType.objects.all(), required=True,
                                        widget=forms.Select(attrs={'class': 'form-control'}))
-    defect = forms.CharField(max_length=255, required=True, label="Комментарий", widget=forms.Textarea(attrs={'class':'form-control'}))
+    defect = forms.CharField(max_length=255, required=False, label="Комментарий", widget=forms.Textarea(attrs={'class':'form-control'}))
     executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"), required=True, empty_label="Выберите исполнителя", widget=forms.Select(attrs={'class':'form-control'}))
     client_position = forms.CharField(max_length=100, label="Размещение у клиента", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super(CartridgeOrderForm, self).clean()
+        service_type = cleaned_data.get("service_type").service_type in (CartridgeServiceType.OTHER, CartridgeServiceType.REPAIR)
+        defect = cleaned_data.get("subject")
+
+        if service_type and not defect:
+            raise forms.ValidationError(
+                "При виде работ \"{}\" или \"{}\" заполнение поля \"Комментарии\" обязательно".format(*CartridgeServiceType.objects.filter(service_type__in=[CartridgeServiceType.REPAIR, CartridgeServiceType.OTHER]))
+            )
 
 
 class CartridgeFilterOrderForm (forms.Form):

@@ -61,6 +61,8 @@
     <div class="col-md-12">
       <form class="form-horizontal" action="" method="post" autocomplete="off">
         {% csrf_token %}
+        {% load bootstrap3 %}
+          {% bootstrap_form_errors form %}
         {% for field in form %}
           <div class="form-group">
 

@@ -774,7 +774,10 @@ class CartridgeOrderCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderCreateView, self).get_context_data(**kwargs)
-        context['form'].fields['cartridge'].queryset = Cartridge.objects.none()
+        if not context['form'].is_bound:
+            context['form'].fields['cartridge'].queryset = Cartridge.objects.none()
+        if context['form']['cartridge'].data:
+            context['form'].fields['cartridge'].queryset = Cartridge.objects.filter(pk=context['form']['cartridge'].data)
         context['filter_form'] = CartridgeFilterOrderForm()
         return context
 

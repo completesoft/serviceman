@@ -215,7 +215,7 @@ class Cartridge(models.Model):
         verbose_name_plural = 'Картриджи'
 
     def __str__(self):
-        return 'Model:{} S.n.-{}'.format(self.model, self.serial_number)
+        return 'Model:{} S.n.-{} Клиент: {}'.format(self.model, self.serial_number, self.client)
 
 
 class CartridgeActionStatus(models.Model):
