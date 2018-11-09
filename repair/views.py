@@ -675,6 +675,7 @@ class CartridgeOrderListView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderListView, self).get_context_data(**kwargs)
+        context['order_prefix'] = CartridgeOrder.PREFIX
         context['daterange_widget_form'] = self.daterange_widget_form()
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
@@ -704,6 +705,7 @@ class CartridgeMyOrderListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeMyOrderListView, self).get_context_data(**kwargs)
+        context['order_prefix'] = CartridgeOrder.PREFIX
         context["outsource"] = self.outsource
         return context
 
@@ -828,6 +830,7 @@ class CartridgeOrderDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderDetailView, self).get_context_data(**kwargs)
         context['order_action'] = CartridgeAction.objects.filter(order=self.object).order_by("action_datetime")
+        context['order_prefix'] = CartridgeOrder.PREFIX
         context['outsource'] = self.outsource
         context['action_formset'] = self.get_action_formset()
         context['spare_form'] = CartridgeSpareForm()
@@ -1019,6 +1022,7 @@ class CartridgeActionCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeActionCreateView, self).get_context_data(**kwargs)
+        context['order_prefix'] = CartridgeOrder.PREFIX
         context['current_action'] = CartridgeAction.objects.filter(order__id=self.kwargs['order_id']).latest()
         context['order'] = CartridgeOrder.objects.get(pk=self.kwargs['order_id'])
         return context
@@ -1064,6 +1068,7 @@ class CartridgeOrderArchiveView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderArchiveView, self).get_context_data(**kwargs)
+        context['order_prefix'] = CartridgeOrder.PREFIX
         context['daterange_widget_form'] = self.daterange_widget_form()
         context['outsource'] = self.outsource
         if self.request.GET.get('all'):
@@ -1133,6 +1138,7 @@ class MaintenanceOrderListView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceOrderListView, self).get_context_data(**kwargs)
+        context['order_prefix'] = MaintenanceOrder.PREFIX
         context['daterange_widget_form'] = self.daterange_widget_form()
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
@@ -1161,6 +1167,7 @@ class MaintenanceMyOrderListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceMyOrderListView, self).get_context_data(**kwargs)
+        context['order_prefix'] = MaintenanceOrder.PREFIX
         context["outsource"] = self.outsource
         return context
 
@@ -1181,6 +1188,7 @@ class MaintenanceOrderDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceOrderDetailView, self).get_context_data(**kwargs)
+        context['order_prefix'] = MaintenanceOrder.PREFIX
         context["order_action"] = MaintenanceAction.objects.filter(order=self.object).order_by("action_datetime")
         context['spare_form'] = MaintenanceSpareForm()
         context['service_form'] = MaintenanceServiceForm()
@@ -1332,6 +1340,7 @@ class MaintenanceActionCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceActionCreateView, self).get_context_data(**kwargs)
+        context['order_prefix'] = MaintenanceOrder.PREFIX
         context['current_action'] = MaintenanceAction.objects.filter(order__id=self.kwargs['order_id']).latest()
         context['order'] = MaintenanceOrder.objects.get(pk=self.kwargs['order_id'])
         return context
@@ -1376,6 +1385,7 @@ class MaintenanceOrderArchiveView(FilterView):
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceOrderArchiveView, self).get_context_data(**kwargs)
+        context['order_prefix'] = MaintenanceOrder.PREFIX
         context['daterange_widget_form'] = self.daterange_widget_form()
         context['outsource'] = self.outsource
         if self.request.GET.get('all'):

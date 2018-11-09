@@ -39,7 +39,7 @@
       <div class="panel-body">
         <form class="form" action="" method="get" autocomplete="off" id="filter_form">
             {%bootstrap_field daterange_widget_form.period placeholder='----------' form_group_class='form-group col-md-4'%}
-            {% bootstrap_form filter.form bound_css_class='' form_group_class='form-group col-md-8'%}
+            {% bootstrap_form filter.form bound_css_class='' form_group_class='form-group col-md-4'%}
             <div class="col-md-8">
               {% buttons %}
                 <button type="submit" class="btn btn-primary">
@@ -88,7 +88,7 @@
 
       {% for order in object_list %}
       <tr {%if order.status_expired %} class="expired"{% endif %}>
-        <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}"><span class="badge">{{ order.id }}</span></a></td>
+        <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}"><span class="badge">{{ order_prefix }}{{ order.id }}</span></a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
           {% with order.last_status as last_act %}
             <td>{% include "includes/order_status.html" %}</td>

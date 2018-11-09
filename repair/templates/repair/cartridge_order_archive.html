@@ -48,7 +48,7 @@
 
       {% for order in object_list %}
       <tr>
-        <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}"><span class="badge">{{ order.id }}</span></a></td>
+        <td><a href="{% url 'repair:cartridge_order_detail' order_id=order.id %}"><span class="badge">{{ order_prefix }}{{ order.id }}</span></a></td>
         <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
         {% with order.last_status as last_act %}
           <td>{% include "includes/order_status.html" %}</td>

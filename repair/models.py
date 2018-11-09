@@ -272,6 +272,7 @@ class CartridgeServiceType(models.Model):
 
 
 class CartridgeOrder(models.Model):
+    PREFIX = 'K-'
 
     order_datetime = models.DateTimeField("Дата заказа", auto_now_add=True)
     cartridge = models.ForeignKey(Cartridge, verbose_name='Картридж', on_delete=models.CASCADE, null=False, blank=False)
@@ -359,6 +360,8 @@ class CartridgeOrderSparesContent(models.Model):
 
 
 class MaintenanceOrder(models.Model):
+    PREFIX = 'W-'
+
     order_datetime = models.DateTimeField("Дата", auto_now_add=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_NULL, null=True, blank=False)
     client_dep = models.ForeignKey('ClientsDep', verbose_name="Отделение клиента", null=True, blank=True)

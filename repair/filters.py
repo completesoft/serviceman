@@ -46,7 +46,7 @@ class CartridgeOrderFilter(django_filters.FilterSet):
 class MaintenanceOrderFilter(django_filters.FilterSet):
     date_from = django_filters.DateFilter(field_name='order_datetime', lookup_expr='date__gte', widget=HiddenInput)
     date_to = django_filters.DateFilter(field_name='order_datetime', lookup_expr='date__lte', widget=HiddenInput)
-    client = django_filters.ModelChoiceFilter(field_name='cartridge__client', queryset=clients, label='Клиент')
+    client = django_filters.ModelChoiceFilter(field_name='client', queryset=clients, label='Клиент')
 
     class Meta:
         model = MaintenanceOrder
