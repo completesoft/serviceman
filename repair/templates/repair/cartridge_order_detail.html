@@ -23,16 +23,17 @@
               <h3 class="panel-title">Заказ Картридж</h3>
             </div>
             <div class="panel-body">
-              <div class="col-sm-2 col-md-2">
-               <p class="bold">ID: <span class="badge">{{ order_prefix }}{{ order.id }}</span></p>
-              </div>
-              <div class="col-sm-2 col-md-2 word-wrap">
-               <p class="bold">Модель:{{ order.certridge.model }}</p>
-               <p>{{ order.cartridge.model }}</p>
-              </div>
-              <div class="col-sm-2 col-md-2 word-wrap">
-               <p class="bold">Серийный №:</p>
-               <p>{{ order.cartridge.serial_number }}</p>
+              <div class="row">
+              <div class="col-sm-6 col-md-6">
+                  <div class="col-sm-12 col-md-12">
+                   <p class="bold">ID: <span class="badge">{{ order_prefix }}{{ order.id }}</span></p>
+                  </div>
+                  <div class="col-sm-12 col-md-12">
+                   <p><strong>Модель:</strong> {{ order.cartridge.model }}</p>
+                  </div>
+                  <div class="col-sm-12 col-md-12">
+                   <p><strong>Серийный №:</strong> {{ order.cartridge.serial_number }}</p>
+                  </div>
               </div>
               <div class="col-sm-6 col-md-6">
                   <div class="btn-toolbar" role="toolbar" aria-labelledby="CNFNECF">
@@ -51,6 +52,8 @@
                   {% endfor %}
                   </div>
               </div>
+            </div>
+
             </div>
         </div>
       </div>
