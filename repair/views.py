@@ -996,7 +996,7 @@ def cartridge_update(request, **kwargs):
     if user.is_active and not outsource_group:
         filter_form = CartridgeFilterOrderForm(request.POST)
         if filter_form.is_valid():
-            cartridge_set = Cartridge.objects.filter(serial_number__contains=filter_form.cleaned_data['serial_number'])
+            cartridge_set = Cartridge.objects.filter(serial_number__icontains=filter_form.cleaned_data['serial_number'])
             if filter_form.cleaned_data['client']:
                 cartridge_set = cartridge_set.filter(client=filter_form.cleaned_data['client'])
             if cartridge_set:

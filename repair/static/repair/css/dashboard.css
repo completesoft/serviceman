@@ -12,13 +12,13 @@ body {
         padding-top: 165px;
     }
 }
-
+/*
 @media (max-width: 768px) {
     body{
-        padding-top: 65px;
+        padding-top: 95px;
     }
 }
-
+*/
 .detail-mg-top{
     margin-top: 25px;
 }
@@ -201,4 +201,19 @@ a span.badge{
 
 .word-wrap {
     word-wrap: break-word;
+}
+
+#version{
+  position: fixed; /* Абсолютное позиционирование */
+  z-index: 50;
+  right: 50px;
+  bottom: 50px;
+  /* Ширина блока */
+  border: 1px solid #000; /* Параметры рамки */
+  padding: 5px; /* Поля вокруг текста */
+  font-family: sans-serif; /* Рубленый шрифт */
+  font-size: 9pt; /* Размер шрифта */
+  color: #333; /* Цвет текста */
+  background: #ECF5E4; /* Цвет фона */
+  opacity: 0.5;
 }
