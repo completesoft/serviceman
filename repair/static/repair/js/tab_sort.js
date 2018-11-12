@@ -117,6 +117,13 @@ $(document).ready(function(){
       document.getElementById('id_date_to').value = '';
    });
 
+   $('#table tr').dblclick(function() {
+        var href = $(this).find("a").attr("href");
+        if(href) {
+            window.location = href;
+        }
+    });
+
 });
 
 function addParam(){
