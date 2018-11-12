@@ -5,7 +5,8 @@ from datetime import timedelta
 from django.contrib.admin.widgets import AdminDateWidget
 from django.forms import HiddenInput, ModelChoiceField, CharField, IntegerField, DateField
 from django.forms import Form
-
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 def clients(request):
     if request.user.groups.filter(name='outsource').exists():
@@ -25,7 +26,8 @@ class DocOrderHeaderFilter(django_filters.FilterSet):
     def filter_queryset(self, queryset):
         if self.form.is_valid() and any(self.form.cleaned_data.values()):
             return super(DocOrderHeaderFilter, self).filter_queryset(queryset)
-        return queryset.none()
+        return queryset.filter(order_datetime__gte=timezone.now()-timedelta(days=7))
+
 
 
 class CartridgeOrderFilter(django_filters.FilterSet):
@@ -41,7 +43,7 @@ class CartridgeOrderFilter(django_filters.FilterSet):
     def filter_queryset(self, queryset):
         if self.form.is_valid() and any(self.form.cleaned_data.values()):
             return super(CartridgeOrderFilter, self).filter_queryset(queryset)
-        return queryset.none()
+        return queryset.filter(order_datetime__gte=timezone.now()-timedelta(days=7))
 
 
 class MaintenanceOrderFilter(django_filters.FilterSet):
@@ -57,4 +59,4 @@ class MaintenanceOrderFilter(django_filters.FilterSet):
     def filter_queryset(self, queryset):
         if self.form.is_valid() and any(self.form.cleaned_data.values()):
             return super(MaintenanceOrderFilter, self).filter_queryset(queryset)
-        return queryset.none()
+        return queryset.filter(order_datetime__gte=timezone.now()-timedelta(days=7))

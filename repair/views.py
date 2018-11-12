@@ -35,6 +35,8 @@ import logging
 from .filters import DocOrderHeaderFilter, CartridgeOrderFilter, MaintenanceOrderFilter
 from .helpers import barcode_generator
 from django_filters.views import FilterView
+from django.utils import timezone
+from datetime import timedelta
 
 logger = logging.getLogger('user.activity')
 LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
@@ -65,6 +67,8 @@ class DocOrderHeaderListView(FilterView):
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
+        if not self.filterset.is_bound:
+            context['object_list']=self.get_queryset().filter(order_datetime__gte=timezone.now()-timedelta(days=7))
         return context
 
     @method_decorator(login_required)
@@ -680,6 +684,8 @@ class CartridgeOrderListView(FilterView):
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
+        if not self.filterset.is_bound:
+            context['object_list']=self.get_queryset().filter(order_datetime__gte=timezone.now()-timedelta(days=7))
         return context
 
     @method_decorator(login_required)
@@ -1146,6 +1152,8 @@ class MaintenanceOrderListView(FilterView):
         context["outsource"] = self.outsource
         if self.request.GET.get('all'):
             context['object_list'] = self.get_queryset()
+        if not self.filterset.is_bound:
+            context['object_list']=self.get_queryset().filter(order_datetime__gte=timezone.now()-timedelta(days=7))
         return context
 
     @method_decorator(login_required)

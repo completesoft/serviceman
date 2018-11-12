@@ -218,7 +218,7 @@ class MaintenanceOrderForm(forms.ModelForm):
                                         widget=forms.Select(attrs={'class': 'form-control'}))
     client_position = forms.CharField(max_length=150, label="Размещение у клиента", required=False,
                                       widget=forms.TextInput(attrs={'class': 'form-control'}))
-    executor = MyModelChoiceField(label="Исполнитель заказа", queryset=User.objects.all(),
+    executor = MyModelChoiceField(label="Исполнитель заказа", queryset= User.objects.filter(groups__name="serviceman"),
                                   required=True, empty_label="Выберите исполнителя",
                                   widget=forms.Select(attrs={'class': 'form-control'}))
     list_of_jobs = forms.CharField(max_length=255, required=True, label="Список работ",
