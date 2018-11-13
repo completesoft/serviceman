@@ -29,17 +29,36 @@
 
 
 {% block table_main %}
-    <div class="row detail-mg-top">
+    <div id="CheckOneC" class="row detail-mg-top">
       <div class="col-md-3">
         <div class="panel panel-info">
             <div class="panel-heading">
               <h3 class="panel-title">Штрихкод</h3>
             </div>
             <div class="panel-body">
-               <span id="barcode">{{ order.order_barcode }}</span><br/><button id="baseq">Реализация</button>&nbsp<button id="baseq2">Поступление</button>
+                <span id="barcode" class="badge">{{ order.order_barcode }}</span>
             </div>
         </div>
       </div>
+      {% if user.is_superuser %}
+      <div class="col-md-9">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+              <h3 class="panel-title">Интеграция 1С</h3>
+            </div>
+            <div class="panel-body">
+               {% load bootstrap3 %}
+               <div class="col-md-3">
+                   <button id="OneC" type="button" class="btn btn-lg btn-success">
+                       {% bootstrap_icon "list-alt" %} Проверить
+                   </button>
+               </div>
+               <div id="insCheck" class="col-md-9">
+               </div>
+            </div>
+        </div>
+      </div>
+    {% endif %}
     </div>
     <div class="row">
       <div class="col-md-6">

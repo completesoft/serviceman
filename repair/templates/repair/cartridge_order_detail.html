@@ -16,8 +16,8 @@
 
 
 {% block table_main %}
-    <div class="row detail-mg-top">
-      <div class="col-md-6">
+    <div id="CheckOneC" class="row detail-mg-top">
+      <div class="col-md-5">
         <div class="panel panel-info">
             <div class="panel-heading">
               <h3 class="panel-title">Заказ Картридж</h3>
@@ -26,7 +26,7 @@
               <div class="row">
               <div class="col-sm-6 col-md-6">
                   <div class="col-sm-12 col-md-12">
-                   <p class="bold">ID: <span class="badge">{{ order_prefix }}{{ order.id }}</span></p>
+                   <p class="bold">ID: <span class="badge" id="barcode">{{ order_prefix }}{{ order.id }}</span></p>
                   </div>
                   <div class="col-sm-12 col-md-12">
                    <p><strong>Модель:</strong> {{ order.cartridge.model }}</p>
@@ -57,28 +57,28 @@
             </div>
         </div>
       </div>
-      {% if not outsource %}
-      <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Заказчик</h3>
+      {% if user.is_superuser %}
+          <div class="col-md-7">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Интеграция 1С</h3>
+                </div>
+                <div class="panel-body">
+                   {% load bootstrap3 %}
+                   <div class="col-sm-4 col-md-4 col-lg-3">
+                       <button id="OneC" type="button" class="btn btn-lg btn-success">
+                           {% bootstrap_icon "list-alt" %} Проверить
+                       </button>
+                   </div>
+                   <div id="insCheck" class="col-sm-9 col-md-9 col-lg-9">
+                   </div>
+                </div>
+            </div>
           </div>
-          <div class="panel-body">
-              <div class="col-md-4">
-                    <p class="bold">Наименование:</p>
-                    <p>{{ order.cartridge.client }}</p>
-              </div>
-              <div class="col-md-4">
-                    <p class="bold">Размещение:</p>
-                    <p>{{ order.client_position }}</p>
-              </div>
-          </div>
-        </div>
-      </div>
       {% endif %}
     </div>
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-5">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <h3 class="panel-title">Данные заказа</h3>
@@ -104,14 +104,34 @@
             </div>
         </div>
       </div>
-      <div class="col-md-6">
 
+      {% if not outsource %}
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Заказчик</h3>
+          </div>
+          <div class="panel-body">
+              <div class="col-md-7">
+                    <p class="bold">Наименование:</p>
+                    <p>{{ order.cartridge.client }}</p>
+              </div>
+              <div class="col-md-5">
+                    <p class="bold">Размещение:</p>
+                    <p>{{ order.client_position }}</p>
+              </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="col-md-{%if not outsource %}3{% else %}7{% endif %}">
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Заказанные работы</h3>
           </div>
           <div class="panel-body">
-                <p>{{ order.service_type }}</p>
+              <p>{{ order.service_type }}</p>
           </div>
         </div>
       </div>
@@ -317,4 +337,5 @@
 
 {% block script_block %}
 <script type="text/javascript" src="{% static 'repair/js/spare_service_action.js' %}"></script>
+<script type="text/javascript" src="{% static 'repair/js/checkOneC.js' %}"></script>
 {% endblock %}

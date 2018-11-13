@@ -17,51 +17,46 @@
 {% endblock %}
 
 {% block table_main %}
-    <div class="row detail-mg-top">
-      <div class="col-md-6">
+    <div id="CheckOneC" class="row detail-mg-top">
+      <div class="col-md-3">
         <div class="panel panel-info">
             <div class="panel-heading">
               <h3 class="panel-title">Заказ РАБОТЫ</h3>
             </div>
             <div class="panel-body">
-              <div class="col-sm-3 col-md-3">
-               <p class="bold">ID: <span class="badge">{{ order_prefix }}{{ order.id }}</span></p>
+              <div class="col-sm-5 col-md-5">
+                  <p class="bold">ID:</p>
+                  <p><span class="badge" id="barcode">{{ order_prefix }}{{ order.id }}</span></p>
               </div>
-              <div class="col-sm-9 col-md-9">
+              <div class="col-sm-7 col-md-7">
                   <p class="bold">Комментарий к заказу:</p>
                   <p>{{ order.order_comment }}</p>
               </div>
             </div>
         </div>
       </div>
-      {% if not outsource %}
-      <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Заказчик</h3>
-          </div>
-          <div class="panel-body">
-              <div class="col-md-4">
-                    <p class="bold">Наименование:</p>
-                    <p>{{ order.client }}</p>
-              </div>
-              <div class="col-md-4">
-                    <p class="bold">Размещение:</p>
-                    <p>{{ order.client_position }}</p>
-              </div>
-              {%if order.client.client_corp %}
-              <div class="col-md-4">
-                    <p class="bold">Подразделение:</p>
-                    <p>{{ order.client_dep.client_dep_name }}</p>
-              </div>
-              {% endif %}
-          </div>
+      {% if user.is_superuser %}
+      <div class="col-md-9">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+              <h3 class="panel-title">Интеграция 1С</h3>
+            </div>
+            <div class="panel-body">
+               {% load bootstrap3 %}
+               <div class="col-md-3">
+                   <button id="OneC" type="button" class="btn btn-lg btn-success">
+                       {% bootstrap_icon "list-alt" %} Проверить
+                   </button>
+               </div>
+               <div id="insCheck" class="col-md-9">
+               </div>
+            </div>
         </div>
       </div>
       {% endif %}
     </div>
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-5">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <h3 class="panel-title">Данные заказа</h3>
@@ -87,7 +82,32 @@
             </div>
         </div>
       </div>
-      <div class="col-md-6">
+      {% if not outsource %}
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Заказчик</h3>
+          </div>
+          <div class="panel-body">
+              <div class="col-md-4">
+                    <p class="bold">Наименование:</p>
+                    <p>{{ order.client }}</p>
+              </div>
+              <div class="col-md-4">
+                    <p class="bold">Размещение:</p>
+                    <p>{{ order.client_position }}</p>
+              </div>
+              {%if order.client.client_corp %}
+              <div class="col-md-4">
+                    <p class="bold">Подразделение:</p>
+                    <p>{{ order.client_dep.client_dep_name }}</p>
+              </div>
+              {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      <div class="col-md-{%if not outsource %}3{% else %}7{% endif %}">
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Заказанные работы</h3>
@@ -125,7 +145,7 @@
                     <td>{{ act.action_content }}</td>
                     <td>{{ act.manager_user.get_full_name }}</td>
                     <td>{{ act.executor_user.get_full_name }}</td>
-                    <td>{{ act.setting_user.get_full_name }}{{act.id}}</td>
+                    <td>{{ act.setting_user.get_full_name }}</td>
                   </tr>
                   {% empty %}
                   <tr>НЕТ ЗАПИСЕЙ</tr>
@@ -280,4 +300,5 @@
 
 {% block script_block %}
 <script type="text/javascript" src="{% static 'repair/js/spare_service_action.js' %}"></script>
+<script type="text/javascript" src="{% static 'repair/js/checkOneC.js' %}"></script>
 {% endblock %}
