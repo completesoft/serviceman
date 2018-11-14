@@ -7,10 +7,25 @@ $(document).ready(function(){
 });
 
 function checkDoc(event){
-    var result_text = '';
     var barcode = $("#barcode").text();
     var $dest = $(this).parent('div').next('div');
-    var barcode = $("#barcode").text()
+    var $i = $(this).children('i').first();
+    var barcode = $("#barcode").text();
+    var AjaxState = {
+        objectChecked: 3,
+        checked: function(){
+            return this.objectChecked<=0;
+        },
+        markAction: function(){
+            this.objectChecked--;
+        },
+        recordStr: function(view, str){
+            this[view]+=str;
+        },
+        orderView: '',
+        saleView: '',
+        incomeView: ''
+    };
     $dest.empty();
 
     function boolCheck(bool) {
@@ -23,68 +38,91 @@ function checkDoc(event){
 
     $.ajax
         ({
-          async: false,
           type: "GET",
           url: "http://192.168.168.110/cs-base/odata/standard.odata/Document_ЗаказПокупателя?$format=json&$filter=substringof('"+barcode+"',Комментарий) eq true",
           dataType: 'json',
           headers: {'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')},
+          beforeSend: function(xhr, settings) {
+            $i.addClass('fa-spin');
+            console.log('CROSS Before '+this.crossDomain);
+          },
           success: function (data){
+            AjaxState.markAction();
             if(data.value.length > 0){
                 $.each( data.value, function( i, item ) {
-                    result_text +="<p class='bg-secondary'>"+"Заказ "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>";
+                    console.log(AjaxState.orderView);
+                    AjaxState.recordStr('orderView', "<p class='bg-secondary'>"+"Заказ "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>");
                 });
             }else{
-                result_text +="<p class='bg-secondary'>"+"Заказ ОТСУТСТВУЕТ"+"</p>";
+                AjaxState.recordStr('orderView', "<p class='bg-secondary'>"+"Заказ ОТСУТСТВУЕТ"+"</p>");
             }
           },
           error: function(jqXHR, textStatus, errorThrown){
-            result_text +="<p class='bg-secondary'>"+textStatus+" "+errorThrown+"</p>";
+            AjaxState.markAction();
+            AjaxState.recordStr('orderView', "<p class='bg-secondary'>"+"Нет соединения с сервером -"+textStatus+"</p>");
           },
-          timeout: 3000
+          complete: function(jqXHR){
+            console.log(AjaxState.checked());
+            if (AjaxState.checked()){
+                $dest.append(AjaxState.orderView+AjaxState.saleView+AjaxState.incomeView);
+                $i.removeClass('fa-spin');
+            }
+          },
         });
     $.ajax
         ({
-          async: false,
           type: "GET",
           url: "http://192.168.168.110/cs-base/odata/standard.odata/Document_РеализацияТоваровУслуг?$format=json&$filter=substringof('"+barcode+"',Комментарий) eq true",
           dataType: 'json',
           headers: {'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')},
           success: function (data){
+            AjaxState.markAction();
             if(data.value.length > 0){
                 $.each( data.value, function( i, item ) {
-                    result_text +="<p class='bg-success'>"+"Реализация "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>";
+                    AjaxState.recordStr('saleView', "<p class='bg-success'>"+"Реализация "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>");
                 });
             }else{
-               result_text +="<p class='bg-success'>"+"Реализация ОТСУТСТВУЕТ"+"</p>";
+               AjaxState.recordStr('saleView', "<p class='bg-success'>"+"Реализация ОТСУТСТВУЕТ"+"</p>");
             }
           },
           error: function(jqXHR, textStatus, errorThrown){
-            result_text +="<p class='bg-success'>"+textStatus+" "+errorThrown+"</p>";
+            AjaxState.markAction();
+            AjaxState.recordStr('saleView', "<p class='bg-success'>"+"Нет соединения с сервером -"+textStatus+"</p>");
           },
-          timeout: 3000
+          complete: function(jqXHR){
+            if (AjaxState.checked()){
+                $dest.append(AjaxState.orderView+AjaxState.saleView+AjaxState.incomeView);
+                $i.removeClass('fa-spin');
+            }
+          },
         });
     $.ajax
         ({
-          async: false,
           type: "GET",
           url: "http://192.168.168.110/cs-base/odata/standard.odata/Document_ПоступлениеТоваровУслуг?$format=json&$filter=substringof('"+barcode+"',Комментарий) eq true",
           dataType: 'json',
           headers: {'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')},
           success: function (data){
+            AjaxState.markAction();
             if(data.value.length > 0){
                 $.each( data.value, function( i, item ) {
-                    result_text +="<p class='bg-info'>"+"Поступление "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>";
+                    AjaxState.recordStr('incomeView', "<p class='bg-info'>"+"Поступление "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>");
                 });
             }else{
-                result_text +="<p class='bg-info'>"+"Поступление ОТСУТСТВУЕТ"+"</p>";
+                AjaxState.recordStr('incomeView', "<p class='bg-info'>"+"Поступление ОТСУТСТВУЕТ"+"</p>");
             }
           },
           error: function(jqXHR, textStatus, errorThrown){
-            result_text +="<p class='bg-info'>"+textStatus+" "+errorThrown+"</p>";
+            AjaxState.markAction();
+            AjaxState.recordStr('incomeView', "<p class='bg-info'>"+"Нет соединения с сервером -"+textStatus+"</p>");
           },
-          timeout: 3000
+          complete: function(jqXHR){
+            if (AjaxState.checked()){
+                $dest.append(AjaxState.orderView+AjaxState.saleView+AjaxState.incomeView);
+                $i.removeClass('fa-spin');
+            }
+          },
         });
-    $dest.append(result_text);
 }
 
 })(jQuery);
