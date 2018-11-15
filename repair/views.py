@@ -116,7 +116,6 @@ class OrderCreateView(CreateView):
         return super(OrderCreateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.success_url = reverse("repair:index")
         return super(OrderCreateView, self).post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -134,6 +133,10 @@ class OrderCreateView(CreateView):
             return super(OrderCreateView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
+
+    def get_success_url(self):
+        self.success_url = reverse("repair:order_detail", kwargs={'order_id': self.object.id})
+        return super(OrderCreateView, self).get_success_url()
 
     def form_valid(self, form):
         resp = super(OrderCreateView, self).form_valid(form)
@@ -788,8 +791,11 @@ class CartridgeOrderCreateView(CreateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.success_url = reverse('repair:cartridge_orders')
         return super(CartridgeOrderCreateView, self).post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        self.success_url = reverse("repair:cartridge_order_detail", kwargs={'order_id': self.object.id})
+        return super(CartridgeOrderCreateView, self).get_success_url()
 
     def form_valid(self, form):
         resp = super(CartridgeOrderCreateView, self).form_valid(form)
@@ -1100,7 +1106,6 @@ class MaintenanceOrderCreateView(CreateView):
     template_name = "repair/maintenance_order_add.html"
 
     def post(self, request, *args, **kwargs):
-        self.success_url = reverse("repair:maintenance_order_list")
         return super(MaintenanceOrderCreateView, self).post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -1118,6 +1123,10 @@ class MaintenanceOrderCreateView(CreateView):
             return super(MaintenanceOrderCreateView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
+
+    def get_success_url(self):
+        self.success_url = reverse("repair:maintenance_detail", kwargs={'order_id': self.object.id})
+        return super(MaintenanceOrderCreateView, self).get_success_url()
 
     def form_valid(self, form):
         resp = super(MaintenanceOrderCreateView, self).form_valid(form)

@@ -188,11 +188,11 @@ class CartridgeOrderForm (forms.ModelForm):
     def clean(self):
         cleaned_data = super(CartridgeOrderForm, self).clean()
         service_type = cleaned_data.get("service_type").service_type in (CartridgeServiceType.OTHER, CartridgeServiceType.REPAIR)
-        defect = cleaned_data.get("subject")
+        defect = cleaned_data.get("defect")
 
         if service_type and not defect:
             raise forms.ValidationError(
-                "При виде работ \"{}\" или \"{}\" заполнение поля \"Комментарии\" обязательно".format(*CartridgeServiceType.objects.filter(service_type__in=[CartridgeServiceType.REPAIR, CartridgeServiceType.OTHER]))
+                "При виде работ \"{}\" или \"{}\" заполнение поля \"Комментарий\" обязательно".format(*CartridgeServiceType.objects.filter(service_type__in=[CartridgeServiceType.REPAIR, CartridgeServiceType.OTHER]))
             )
 
 
