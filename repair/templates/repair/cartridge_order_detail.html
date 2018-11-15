@@ -1,6 +1,10 @@
 {% extends "repair/base.html" %}
 {% load staticfiles %}
 
+{% block other_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+
 {% block top_menu %}
   {% include "includes/top_menu.html" %}
 {% endblock %}
@@ -64,13 +68,10 @@
                   <h3 class="panel-title">Интеграция 1С</h3>
                 </div>
                 <div class="panel-body">
-                   {% load bootstrap3 %}
                    <div class="col-sm-4 col-md-4 col-lg-3">
-                       <button id="OneC" type="button" class="btn btn-lg btn-success">
-                           {% bootstrap_icon "list-alt" %} Проверить
-                       </button>
+                        <button id="OneC" type="button" class="btn btn-success" title="Проверить"><i class="fa fa-refresh"></i> Проверить</button>
                    </div>
-                   <div id="insCheck" class="col-sm-9 col-md-9 col-lg-9">
+                   <div id="insCheck" class="col-sm-12 col-md-12 col-lg-9">
                    </div>
                 </div>
             </div>
