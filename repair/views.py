@@ -20,7 +20,8 @@ from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, Servi
                      CartridgeFilterOrderForm, CartridgeRegularActionForm, CartridgeSuperActionForm,
                      MaintenanceOrderForm, MaintenanceRegularActionForm, DateRangeWidgetForm,
                      MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm, CartridgeServiceForm,
-                     CartridgeSpareForm, MaintenanceServiceForm, MaintenanceSpareForm)
+                     CartridgeSpareForm, MaintenanceServiceForm, MaintenanceSpareForm, MaintenanceActionExpressForm,
+                     ActionExpressForm)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
 from django.conf import settings
@@ -56,9 +57,9 @@ class DocOrderHeaderListView(FilterView):
     def get_queryset(self):
         user = self.request.user
         if self.outsource:
-            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).exclude(docorderaction__status__status_name="Архивный").distinct()
+            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).exclude(docorderaction__status__status_name=DirStatus.ARCHIVE).distinct()
         else:
-            orders = DocOrderHeader.objects.exclude(docorderaction__status__status_name="Архивный").distinct()
+            orders = DocOrderHeader.objects.exclude(docorderaction__status__status_name=DirStatus.ARCHIVE).distinct()
         return orders
 
     def get_context_data(self, **kwargs):
@@ -89,7 +90,7 @@ class MyOrderListView(ListView):
 
     def get_queryset(self):
         user = self.request.user
-        orders = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user)|Q(docorderaction__executor_user=user)).exclude(docorderaction__status__status_name="Архивный").distinct()
+        orders = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user)|Q(docorderaction__executor_user=user)).exclude(docorderaction__status__status_name=DirStatus.ARCHIVE).distinct()
         return orders
 
     def get_context_data(self, **kwargs):
@@ -145,7 +146,7 @@ class OrderCreateView(CreateView):
                                     manager_user=self.request.user,
                                     setting_user=self.request.user,
                                     executor_user=User.objects.get(pk=self.request.POST["executor"]),
-                                    status=DirStatus.objects.get(status_name="Новый"),
+                                    status=DirStatus.objects.get(status_name=DirStatus.NEW),
                                     storage=Storage.objects.get(pk=self.request.POST["storage"]))
         ord_action.save()
         msg = "*{}* ДОБАВИЛ заказ -{}-{}-{}-".format(self.request.user.get_full_name(), instance.order_barcode, instance.client.client_name, instance.device_name)
@@ -160,17 +161,46 @@ class OrderDetailView(DetailView):
     context_object_name = "order"
     pk_url_kwarg = "order_id"
 
+    status_map = {DirStatus.NEW: [DirStatus.IN_WORK, ],
+                  DirStatus.IN_WORK: [DirStatus.COMPLETED, ],
+                  DirStatus.COMPLETED: [DirStatus.IN_WORK, DirStatus.TO_CLIENT, ],
+                  DirStatus.TO_CLIENT: [DirStatus.IN_WORK, DirStatus.ARCHIVE, ],
+                  }
+
+    def get_action_formset(self):
+        status = self.object.last_action().status.status_name
+        form_set = []
+        if self.status_map.get(status):
+            form_set = [ActionExpressForm(status_set=self.status_map[status], initial={
+                'status': DirStatus.objects.get(status_name=st)}) for st in self.status_map[status]]
+        return form_set
+
     def get_context_data(self, **kwargs):
         context = super(OrderDetailView, self).get_context_data(**kwargs)
         context["order_action"] = DocOrderAction.objects.filter(doc_order=self.object).order_by("action_datetime")
         context["spares"] = DocOrderSparesContent.objects.filter(order=self.object)
         context["services"] = DocOrderServiceContent.objects.filter(order=self.object)
-        service_form = ServiceForm()
-        context["service_form"] = service_form
-        spare_form = SpareForm()
-        context["spare_form"] = spare_form
+        context["service_form"] = ServiceForm()
+        context["spare_form"] = SpareForm()
+        context['action_formset'] = self.get_action_formset()
         context["outsource"] = self.request.user.groups.filter(name='outsource').exists()
         return context
+
+    def post(self, request, *args, **kwargs):
+        order = self.get_object()
+        action = order.last_action()
+        if self.status_map.get(action.status.status_name):
+            form_action = ActionExpressForm(request.POST, status_set = self.status_map[action.status.status_name])
+            if form_action.is_valid():
+                new_action = form_action.save(commit=False)
+                new_action.doc_order = order
+                new_action.manager_user = action.manager_user
+                new_action.executor_user = action.executor_user
+                new_action.setting_user = request.user
+                new_action.storage = action.storage
+                new_action.action_comment = new_action.action_comment
+                new_action.save()
+        return super(OrderDetailView, self).get(request, *args, **kwargs)
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -205,7 +235,7 @@ class ActionCreateView(CreateView):
             self.form_class = ActionFormOut
         else:
             self.form_class = ActionForm
-        if not request.user.is_superuser and request.POST["status"] == "Архивный":
+        if not request.user.is_superuser and request.POST["status"] == DirStatus.ARCHIVE:
             return self.get(request, *args, **kwargs)
         return super(ActionCreateView, self).post(request, *args, **kwargs)
 
@@ -217,7 +247,7 @@ class ActionCreateView(CreateView):
             form.instance.manager_user = last_act.manager_user
             form.instance.executor_user = last_act.executor_user
         msg = "*{}* ИЗМЕНИЛ статус заказа \"{}\"-->\"{}\". Заказ -{}-{}-{}-".format(
-            self.request.user.get_full_name(), form.instance.doc_order.last_status(), form.instance.status,
+            self.request.user.get_full_name(), form.instance.doc_order.last_status().status_name, form.instance.status,
             form.instance.doc_order.order_barcode, form.instance.doc_order.client.client_name, form.instance.doc_order.device_name)
         logger.info(msg)
         return super(ActionCreateView, self).form_valid(form)
@@ -228,9 +258,9 @@ class ActionCreateView(CreateView):
         context["outsource"] = self.request.user.groups.filter(name='outsource').exists()
         if not self.request.user.is_superuser:
             if context["outsource"]:
-                context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name__in=["Архивный", "Передан клиенту"])
+                context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name__in=[DirStatus.ARCHIVE, DirStatus.TO_CLIENT])
             else:
-                context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name="Архивный")
+                context["form"].fields["status"].queryset = DirStatus.objects.exclude(status_name=DirStatus.ARCHIVE)
         return context
 
     @method_decorator(login_required)
@@ -239,7 +269,7 @@ class ActionCreateView(CreateView):
         if not request.user.is_active:
             return redirect(LOGIN_URL)
         order = DocOrderHeader.objects.get(pk=self.kwargs["order_id"])
-        if order.last_status() == "Архивный" and not request.user.is_superuser:
+        if order.last_status().status_name == DirStatus.ARCHIVE and not request.user.is_superuser:
             return redirect("repair:order_detail", order_id=kwargs["order_id"])
         return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
 
@@ -424,9 +454,9 @@ class OrderArchiveView(FilterView):
     def get_queryset(self):
         user = self.request.user
         if self.outsource:
-            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).filter(docorderaction__status__status_name="Архивный").order_by('-id').distinct()
+            orders = DocOrderHeader.objects.filter(docorderaction__executor_user=user).filter(docorderaction__status__status_name=DirStatus.ARCHIVE).order_by('-id').distinct()
         else:
-            orders = DocOrderHeader.objects.filter(docorderaction__status__status_name="Архивный").distinct()
+            orders = DocOrderHeader.objects.filter(docorderaction__status__status_name=DirStatus.ARCHIVE).distinct()
         return orders
 
     def get_context_data(self, **kwargs):
@@ -451,9 +481,9 @@ class OrderArchiveView(FilterView):
 def ajax_add_service(request, order_id):
     try:
         order = DocOrderHeader.objects.get(pk=order_id)
-        if order.last_status() == "Архивный" and not request.user.is_superuser:
+        if order.last_status().status_name == DirStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
-        if order.last_status() != "В работе":
+        if order.last_status().status_name != DirStatus.IN_WORK:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -487,7 +517,7 @@ def service(request):
     try:
         order_id = request.GET.get("order_id") if request.GET else request.POST.get("order_id")
         order = DocOrderHeader.objects.get(pk=order_id)
-        if order.last_status() == "Архивный" and not request.user.is_superuser:
+        if order.last_status().status_name == DirStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -514,9 +544,9 @@ def service(request):
 def ajax_add_spare(request, order_id):
     try:
         order = DocOrderHeader.objects.get(pk=order_id)
-        if order.last_status() == "Архивный" and not request.user.is_superuser:
+        if order.last_status().status_name == DirStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
-        if order.last_status() != "В работе":
+        if order.last_status().status_name != DirStatus.IN_WORK:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -552,7 +582,7 @@ def spare(request):
     try:
         order_id = request.GET.get("order_id") if request.GET else request.POST.get("order_id")
         order = DocOrderHeader.objects.get(pk=order_id)
-        if order.last_status() == "Архивный" and not request.user.is_superuser:
+        if order.last_status().status_name == DirStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -828,11 +858,12 @@ class CartridgeOrderDetailView(DetailView):
     context_object_name = "order"
     pk_url_kwarg = "order_id"
     outsource = True
-    status_map = {0:[1,],
-                  1:[3,],
-                  3:[1, 5,],
-                  5:[1, 6,],
-                  }
+
+    status_map = {CartridgeActionStatus.NEW:[CartridgeActionStatus.IN_WORK,],
+              CartridgeActionStatus.IN_WORK:[CartridgeActionStatus.COMPLETED,],
+              CartridgeActionStatus.COMPLETED:[CartridgeActionStatus.IN_WORK, CartridgeActionStatus.TO_CLIENT,],
+              CartridgeActionStatus.TO_CLIENT:[CartridgeActionStatus.IN_WORK, CartridgeActionStatus.ARCHIVE,],
+              }
 
     def get_action_formset(self):
         status = self.object.last_action().status.status_name
@@ -865,7 +896,7 @@ class CartridgeOrderDetailView(DetailView):
                 new_action.manager_user = action.manager_user
                 new_action.executor_user = action.executor_user
                 new_action.setting_user = request.user
-                new_action.action_content = 'Быстрая установка статуса'
+                new_action.action_content = new_action.action_content
                 new_action.save()
         return super(CartridgeOrderDetailView, self).get(request, *args, **kwargs)
 
@@ -887,9 +918,9 @@ class CartridgeOrderDetailView(DetailView):
 def cartridge_add_spare(request, order_id):
     try:
         order = CartridgeOrder.objects.get(pk=order_id)
-        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+        if order.last_status().status_name == CartridgeActionStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
-        if order.last_status() != 'В работе':
+        if order.last_status().status_name != CartridgeActionStatus.IN_WORK:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -925,7 +956,7 @@ def cartridge_del_spare(request):
         try:
             order = CartridgeOrder.objects.get(pk=request.POST.get("order_id"))
             spare = CartridgeOrderSparesContent.objects.get(pk=request.POST["spare_id"])
-            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            if order.last_status().status_name == CartridgeActionStatus.ARCHIVE and not request.user.is_superuser:
                 raise ObjectDoesNotExist("Access denied")
         except ObjectDoesNotExist as msg:
             data = {'error': msg}
@@ -944,9 +975,9 @@ def cartridge_del_spare(request):
 def cartridge_add_service(request, order_id):
     try:
         order = CartridgeOrder.objects.get(pk=order_id)
-        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+        if order.last_status().status_name == CartridgeActionStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
-        if order.last_status() != 'В работе':
+        if order.last_status().status_name != CartridgeActionStatus.IN_WORK:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -982,7 +1013,7 @@ def cartridge_del_service(request):
         try:
             order = CartridgeOrder.objects.get(pk=request.POST.get("order_id"))
             service = CartridgeOrderServiceContent.objects.get(pk=request.POST["service_id"])
-            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            if order.last_status().status_name == CartridgeActionStatus.ARCHIVE and not request.user.is_superuser:
                 raise ObjectDoesNotExist("Access denied")
         except ObjectDoesNotExist as msg:
             data = {'error': msg}
@@ -1061,7 +1092,7 @@ class CartridgeActionCreateView(CreateView):
         if not request.user.is_active:
             return redirect(LOGIN_URL)
         self.order = CartridgeOrder.objects.get(pk=self.kwargs["order_id"])
-        if self.order.last_status() == "Архивный" and not request.user.is_superuser:
+        if self.order.last_status().status_name == CartridgeActionStatus.ARCHIVE and not request.user.is_superuser:
             return redirect("repair:cartridge_order_detail", order_id=kwargs["order_id"])
         return super(CartridgeActionCreateView, self).dispatch(request, *args, **kwargs)
 
@@ -1076,7 +1107,7 @@ class CartridgeOrderArchiveView(FilterView):
 
     def get_queryset(self):
         user = self.request.user
-        orders = CartridgeOrder.objects.filter(cartridgeaction__status__status_name=6).order_by('-id').distinct()
+        orders = CartridgeOrder.objects.filter(cartridgeaction__status__status_name=CartridgeActionStatus.ARCHIVE).order_by('-id').distinct()
         if self.outsource:
             orders = orders.filter(cartridgeaction__executor_user=user)
         return orders
@@ -1135,7 +1166,7 @@ class MaintenanceOrderCreateView(CreateView):
                                     manager_user=self.request.user,
                                     setting_user=self.request.user,
                                     executor_user=User.objects.get(pk=self.request.POST["executor"]),
-                                    status=MaintenanceActionStatus.objects.get(status_name=0))
+                                    status=MaintenanceActionStatus.objects.get(status_name=MaintenanceActionStatus.NEW))
         ord_action.save()
         msg = "*{}* ДОБАВИЛ заказ РАБОТЫ -{}-{}-".format(self.request.user.get_full_name(), instance.id, instance.client.client_name)
         logger.info(msg)
@@ -1205,6 +1236,36 @@ class MaintenanceOrderDetailView(DetailView):
     model = MaintenanceOrder
     context_object_name = "order"
     pk_url_kwarg = "order_id"
+    outsource = True
+
+    status_map = {MaintenanceActionStatus.NEW: [MaintenanceActionStatus.IN_WORK, ],
+                  MaintenanceActionStatus.IN_WORK: [MaintenanceActionStatus.COMPLETED, ],
+                  MaintenanceActionStatus.COMPLETED: [MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.TO_CLIENT, ],
+                  MaintenanceActionStatus.TO_CLIENT: [MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.ARCHIVE, ],
+                  }
+
+    def get_action_formset(self):
+        status = self.object.last_action().status.status_name
+        form_set = []
+        if self.status_map.get(status):
+            form_set = [MaintenanceActionExpressForm(status_set=self.status_map[status], initial={
+                'status': MaintenanceActionStatus.objects.get(status_name=st)}) for st in self.status_map[status]]
+        return form_set
+
+    def post(self, request, *args, **kwargs):
+        order = self.get_object()
+        action = order.last_action()
+        if self.status_map.get(action.status.status_name):
+            form_action = MaintenanceActionExpressForm(request.POST, status_set = self.status_map[action.status.status_name])
+            if form_action.is_valid():
+                new_action = form_action.save(commit=False)
+                new_action.order = order
+                new_action.manager_user = action.manager_user
+                new_action.executor_user = action.executor_user
+                new_action.setting_user = request.user
+                new_action.action_content = new_action.action_content
+                new_action.save()
+        return super(MaintenanceOrderDetailView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(MaintenanceOrderDetailView, self).get_context_data(**kwargs)
@@ -1212,6 +1273,7 @@ class MaintenanceOrderDetailView(DetailView):
         context["order_action"] = MaintenanceAction.objects.filter(order=self.object).order_by("action_datetime")
         context['spare_form'] = MaintenanceSpareForm()
         context['service_form'] = MaintenanceServiceForm()
+        context['action_formset'] = self.get_action_formset()
         context['spares'] = MaintenanceOrderSparesContent.objects.filter(order=self.object)
         context['services'] = MaintenanceOrderServiceContent.objects.filter(order=self.object)
         context["outsource"] = self.outsource_group
@@ -1234,9 +1296,9 @@ class MaintenanceOrderDetailView(DetailView):
 def maintenance_add_spare(request, order_id):
     try:
         order = MaintenanceOrder.objects.get(pk=order_id)
-        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+        if order.last_status().status_name == MaintenanceActionStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
-        if order.last_status() != 'В работе':
+        if order.last_status().status_name != MaintenanceActionStatus.IN_WORK:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -1271,7 +1333,7 @@ def maintenance_del_spare(request):
         try:
             order = MaintenanceOrder.objects.get(pk=request.POST.get("order_id"))
             spare = MaintenanceOrderSparesContent.objects.get(pk=request.POST["spare_id"])
-            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            if order.last_status().status_name == MaintenanceActionStatus.ARCHIVE and not request.user.is_superuser:
                 raise ObjectDoesNotExist("Access denied")
         except ObjectDoesNotExist as msg:
             data = {'error': msg}
@@ -1290,9 +1352,9 @@ def maintenance_del_spare(request):
 def maintenance_add_service(request, order_id):
     try:
         order = MaintenanceOrder.objects.get(pk=order_id)
-        if order.last_status() == 'Архивный' and not request.user.is_superuser:
+        if order.last_status().status_name == MaintenanceActionStatus.ARCHIVE and not request.user.is_superuser:
             raise ObjectDoesNotExist("Access denied")
-        if order.last_status() != 'В работе':
+        if order.last_status().status_name != MaintenanceActionStatus.IN_WORK:
             raise ObjectDoesNotExist("Access denied")
     except ObjectDoesNotExist as msg:
         return HttpResponseNotFound(msg)
@@ -1328,7 +1390,7 @@ def maintenance_del_service(request):
         try:
             order = MaintenanceOrder.objects.get(pk=request.POST.get("order_id"))
             service = MaintenanceOrderServiceContent.objects.get(pk=request.POST["service_id"])
-            if order.last_status() == 'Архивный' and not request.user.is_superuser:
+            if order.last_status().status_name == MaintenanceActionStatus.ARCHIVE and not request.user.is_superuser:
                 raise ObjectDoesNotExist("Access denied")
         except ObjectDoesNotExist as msg:
             data = {'error': msg}
@@ -1385,7 +1447,7 @@ class MaintenanceActionCreateView(CreateView):
         if not request.user.is_active:
             return redirect(LOGIN_URL)
         self.order = MaintenanceOrder.objects.get(pk=self.kwargs["order_id"])
-        if self.order.last_status() == "Архивный" and not request.user.is_superuser:
+        if self.order.last_status().status_name == MaintenanceActionStatus.ARCHIVE and not request.user.is_superuser:
             return redirect("repair:maintenance_detail", order_id=kwargs["order_id"])
         return super(MaintenanceActionCreateView, self).dispatch(request, *args, **kwargs)
 

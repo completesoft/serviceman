@@ -4,21 +4,21 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
-  padding-top: 120px;
+  padding-top: 70px;
 }
 
 @media (max-width: 1050px) {
     body{
-        padding-top: 165px;
+        padding-top: 115px;
     }
 }
-/*
-@media (max-width: 768px) {
+
+@media (max-width: 765px) {
     body{
-        padding-top: 95px;
+        padding-top: 50px;
     }
 }
-*/
+
 .detail-mg-top{
     margin-top: 25px;
 }
@@ -206,4 +206,8 @@ a span.badge{
 #version{
     color: #337ab7;
     font-size: 14px;
+}
+
+.btn-toolbar>.btn {
+    margin-bottom: 5px;
 }

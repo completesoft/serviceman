@@ -1,5 +1,5 @@
 from django.utils import timezone
-from .models import DocOrderHeader
+from .models import DocOrderHeader, DirStatus
 
 
 def zero_padding(str):
@@ -9,7 +9,7 @@ def zero_padding(str):
 
 
 def barcode_generator(model, user):
-    orders = model.objects.filter(order_datetime__date=timezone.now().date(), docorderaction__setting_user=user, docorderaction__status__status_name="Новый").distinct()
+    orders = model.objects.filter(order_datetime__date=timezone.now().date(), docorderaction__setting_user=user, docorderaction__status__status_name=DirStatus.NEW).distinct()
     if orders:
         order = orders.latest('order_datetime')
         barcode_last_two_digit = order.order_barcode[-2:]

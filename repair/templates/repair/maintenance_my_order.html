@@ -30,45 +30,59 @@
 
 
 {% block table_main %}
-<div class="col-md-12">
-  <div class="table-responsive">
-    <table class="table table-hover table-striped" id="table">
-      <thead>
-        <th><span class="glyphicon glyphicon-tasks"></span> ID</th>
-        <th>Дата приемки</th>
-        <th>Статус</th>
-        {% if not outsource %}
-        <th>Клиент</th>
-        {% endif %}
-        <th>Список работ</th>
-        <th>Мастер</th>
-      </thead>
-      <tfoot>
-        <th><input type="text" placeholder="Search"/></th>
-        <th><input type="text" placeholder="Search"/></th>
-        <th><input type="text" placeholder="Search"/></th>
-        {% if not outsource %}
-        <th><input type="text" placeholder="Search"/></th>
-        {% endif %}
-        <th></th>
-        <th><input type="text" placeholder="Search"/></th>
-      </tfoot>
 
-      {% for order in orders %}
-      <tr {%if order.status_expired %} class="expired"{% endif %}>
-        <td><a href="{% url 'repair:maintenance_detail' order_id=order.id %}"> <span class="badge">{{ order_prefix }}{{ order.id }}</span></a></td>
-        <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
-          {% with order.last_status as last_act %}
-            <td>{% include "includes/order_status.html" %}</td>
-          {% endwith %}
-          {%if not outsource %}
-            <td>{{ order.client.client_name }}</td>
+<div class="col-md-12">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Действия</h3>
+    </div>
+    <div class="panel-body">
+      {% include "includes/action_inline.html" with menu_set='21' %}
+    </div>
+  </div>
+</div>
+
+<div class="col-md-12">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped" id="table">
+        <thead>
+          <th><span class="glyphicon glyphicon-tasks"></span> ID</th>
+          <th>Дата приемки</th>
+          <th>Статус</th>
+          {% if not outsource %}
+          <th>Клиент</th>
           {% endif %}
-        <td>{{ order.list_of_jobs }}</td>
-        <td>{{ order.last_action.executor_user.get_full_name }}</td>
-      </tr>
-      {% endfor %}
-    </table>
+          <th>Список работ</th>
+          <th>Мастер</th>
+        </thead>
+        <tfoot>
+          <th><input type="text" placeholder="Search"/></th>
+          <th><input type="text" placeholder="Search"/></th>
+          <th><input type="text" placeholder="Search"/></th>
+          {% if not outsource %}
+          <th><input type="text" placeholder="Search"/></th>
+          {% endif %}
+          <th></th>
+          <th><input type="text" placeholder="Search"/></th>
+        </tfoot>
+
+        {% for order in orders %}
+        <tr {%if order.status_expired %} class="expired"{% endif %}>
+          <td><a href="{% url 'repair:maintenance_detail' order_id=order.id %}"> <span class="badge">{{ order_prefix }}{{ order.id }}</span></a></td>
+          <td>{{ order.order_datetime|date:"d.m.Y" }}</td>
+            {% with order.last_status as last_act %}
+              <td>{% include "includes/order_status.html" %}</td>
+            {% endwith %}
+            {%if not outsource %}
+              <td>{{ order.client.client_name }}</td>
+            {% endif %}
+          <td>{{ order.list_of_jobs }}</td>
+          <td>{{ order.last_action.executor_user.get_full_name }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}

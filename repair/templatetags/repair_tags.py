@@ -29,3 +29,7 @@ def is_expire(datetime_registration, expiry_duration=0):
             if last_date.weekday() in [5, 6]:
                 last_date += timedelta(days=1)
     return timezone.now() > last_date
+
+@register.simple_tag
+def define(val=None):
+  return val

@@ -1,0 +1,15 @@
+{% if last_act == 0 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-default" data-toggle="modal" data-target="#{{ form_id }}Modal">Новый</button>
+{% elif last_act == 1 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-primary" data-toggle="modal" data-target="#{{ form_id }}Modal">В работе</button>
+{% elif last_act == 2 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-warning" data-toggle="modal" data-target="#{{ form_id }}Modal">Ожидание</button>
+{% elif last_act == 3 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-success" data-toggle="modal" data-target="#{{ form_id }}Modal">Выполнен</button>
+{% elif last_act == 4 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-danger" data-toggle="modal" data-target="#{{ form_id }}Modal">Просрочен</button>
+{% elif last_act == 5 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-success" data-toggle="modal" data-target="#{{ form_id }}Modal">Передан клиенту</button>
+{% elif last_act == 6 %}
+  <button type="button" form="{{ form_id }}" class="btn btn-danger" data-toggle="modal" data-target="#{{ form_id }}Modal">Архивный</button>
+{% endif %}

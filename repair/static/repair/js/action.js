@@ -40,13 +40,31 @@ $(document).ready(function(){
       ajaxSpareDel(this);
     });
 
+    $('#copy').on('click', copyID);
+
 });
+
+
+function copyID(event){
+  var orderId = document.getElementById('barcode');
+  var range = document.createRange();
+  range.selectNode(orderId);
+  window.getSelection().addRange(range);
+  try {
+    document.execCommand('copy');
+  } catch(err) {
+    console.log('Can`t copy');
+  }
+  window.getSelection().removeAllRanges();
+}
 
 function checkDoc(event){
     var barcode = $("#barcode").text();
-    var $dest = $(this).parent('div').next('div');
+    var $oneCdocList = $('#insCheck');
+    var $dest = $('#insCheck').find('div.modal-body').first();
     var $i = $(this).children('i').first();
-    var barcode = $("#barcode").text();
+    var alterDest = $('#insCheck').find('div.modal-body').first()
+
     var AjaxState = {
         objectChecked: 3,
         checked: function(){
@@ -80,13 +98,11 @@ function checkDoc(event){
           headers: {'Authorization': 'Basic ' + btoa('api:Q2w3E4r5')},
           beforeSend: function(xhr, settings) {
             $i.addClass('fa-spin');
-            console.log('CROSS Before '+this.crossDomain);
           },
           success: function (data){
             AjaxState.markAction();
             if(data.value.length > 0){
                 $.each( data.value, function( i, item ) {
-                    console.log(AjaxState.orderView);
                     AjaxState.recordStr('orderView', "<p class='bg-secondary'>"+"Заказ "+item.Date.slice(0,10)+" № "+item.Number+" : "+item.СуммаДокумента+" "+boolCheck(item.Posted)+"</p>");
                 });
             }else{
@@ -98,10 +114,10 @@ function checkDoc(event){
             AjaxState.recordStr('orderView', "<p class='bg-secondary'>"+"Нет соединения с сервером -"+textStatus+"</p>");
           },
           complete: function(jqXHR){
-            console.log(AjaxState.checked());
             if (AjaxState.checked()){
                 $dest.append(AjaxState.orderView+AjaxState.saleView+AjaxState.incomeView);
                 $i.removeClass('fa-spin');
+                $oneCdocList.modal('show');
             }
           },
         });
@@ -129,6 +145,7 @@ function checkDoc(event){
             if (AjaxState.checked()){
                 $dest.append(AjaxState.orderView+AjaxState.saleView+AjaxState.incomeView);
                 $i.removeClass('fa-spin');
+                $oneCdocList.modal('show');
             }
           },
         });
@@ -156,6 +173,7 @@ function checkDoc(event){
             if (AjaxState.checked()){
                 $dest.append(AjaxState.orderView+AjaxState.saleView+AjaxState.incomeView);
                 $i.removeClass('fa-spin');
+                $oneCdocList.modal('show');
             }
           },
 

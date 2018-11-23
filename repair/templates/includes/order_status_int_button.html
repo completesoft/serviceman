@@ -1,15 +1,15 @@
 {% if last_act == 0 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-default">Новый</button>
+  <button type="button" form="{{ form_id }}" class="btn btn-default">Новый</button>
 {% elif last_act == 1 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-primary">В работе</button>
+  <button type="button" form="{{ form_id }}" class="btn btn-primary">В работе</button>
 {% elif last_act == 2 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-warning">Ожидание</button>
+  <button type="button" form="{{ form_id }}" class="btn btn-warning">Ожидание</button>
 {% elif last_act == 3 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-success">Выполнен</button>
+  <button type="buttom" form="{{ form_id }}" class="btn btn-success">Выполнен</button>
 {% elif last_act == 4 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-danger">Просрочен</button>
+  <button type="button" form="{{ form_id }}" class="btn btn-danger">Просрочен</button>
 {% elif last_act == 5 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-success">Передан клиенту</button>
+  <button type="button" form="{{ form_id }}" class="btn btn-success">Передан клиенту</button>
 {% elif last_act == 6 %}
-  <button type="submit" form="{{ form_id }}" class="btn btn-danger">Архивный</button>
+  <button type="button" form="{{ form_id }}" class="btn btn-danger">Архивный</button>
 {% endif %}

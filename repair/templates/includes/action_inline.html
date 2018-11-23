@@ -1,0 +1,28 @@
+{% load repair_tags bootstrap3%}
+{% if menu_set|first == '1' %}
+    {% define menu_set|slice:'1:' as acts %}
+    {% for act in acts %}
+        {% if act == '1' %}
+                <!-- Добавить новый заказ Ремонты -->
+                <a class="btn btn-success" href="{% url 'repair:order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+        {% endif %}
+    {% endfor %}
+{% elif menu_set|first == '2' %}
+    {% define menu_set|slice:'1:' as acts %}
+    {% for act in acts %}
+        {% if act == '1' %}
+                <!-- Добавить новый заказ Работы -->
+                <a class="btn btn-success" href="{% url 'repair:maintenance_order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+        {% endif %}
+    {% endfor %}
+{% elif menu_set|first == '3' %}
+    {% define menu_set|slice:'1:' as acts %}
+    {% for act in acts %}
+        {% if act == '1' %}
+                <!-- Добавить новый заказ Картриджи -->
+                <a class="btn btn-success" href="{% url 'repair:cartridge_order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+        {% endif %}
+    {% endfor %}
+{% else %}
+    <p class="text-warning">Доступных действий нет</p>
+{% endif %}

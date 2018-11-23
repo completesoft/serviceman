@@ -44,7 +44,7 @@ class DocOrderHeader(models.Model):
 
     def last_status(self):
         acts = self.docorderaction_set.all().latest()
-        return acts.status.status_name
+        return acts.status
     last_status.short_description = 'Статус заказа'
 
     def client_corp(self):
@@ -73,16 +73,25 @@ class DocOrderHeader(models.Model):
 
 class DirStatus(models.Model):
 
-    # status_set = (
-    #     ('Новый', 'Новый'),
-    #     ('В работе', 'В работе'),
-    #     ('Ожидание', 'Ожидание'),
-    #     ('Выполнен', 'Выполнен'),
-    #     ('Просрочен', 'Просрочен'),
-    #     ('Передан клиенту', 'Передан клиенту')
-    # )
+    NEW = 0
+    IN_WORK = 1
+    WAITING = 2
+    COMPLETED = 3
+    EXPIRED = 4
+    TO_CLIENT = 5
+    ARCHIVE = 6
 
-    status_name = models.CharField("Состояние", max_length=100, null=False, blank=False)
+    status_set = (
+        (NEW, 'Новый'),
+        (IN_WORK, 'В работе'),
+        (WAITING, 'Ожидание'),
+        (COMPLETED, 'Выполнен'),
+        (EXPIRED, 'Просрочен'),
+        (TO_CLIENT, 'Передан клиенту'),
+        (ARCHIVE, 'Архивный')
+    )
+
+    status_name = models.PositiveIntegerField("Состояние", choices=status_set, null=False, blank=False, default=0)
     expiry_time = models.PositiveIntegerField('Допустимая продолжительность статуса', help_text='в часах', default=0)
 
     class Meta:
@@ -91,7 +100,7 @@ class DirStatus(models.Model):
         verbose_name_plural = "Справочник состояний РЕМОНТЫ"
 
     def __str__(self):
-        return "{}".format(self.status_name)
+        return "{}".format(self.get_status_name_display())
 
 
 class Storage(models.Model):
@@ -293,7 +302,7 @@ class CartridgeOrder(models.Model):
         return acts
 
     def last_status(self):
-        return self.cartridgeaction_set.all().latest().status.get_status_name_display()
+        return self.cartridgeaction_set.all().latest().status
     last_status.short_description = 'Статус заказа'
 
     def status_expired(self):
@@ -381,7 +390,7 @@ class MaintenanceOrder(models.Model):
         return self.maintenanceaction_set.all().latest()
 
     def last_status(self):
-        return self.maintenanceaction_set.all().latest().status.get_status_name_display()
+        return self.maintenanceaction_set.all().latest().status
     last_status.short_description = 'Статус заказа'
 
     def status_expired(self):
@@ -444,7 +453,7 @@ class MaintenanceAction(models.Model):
                                      on_delete=models.SET_NULL, null=True, blank=False)
     status = models.ForeignKey(MaintenanceActionStatus, verbose_name="Статус заказа", on_delete=models.CASCADE,
                                null=False, blank=False)
-    action_content = models.TextField("Выполненные работы", max_length=100, default="Заказ принят", null=True, blank=True)
+    action_content = models.TextField("Выполненные работы", max_length=100, default="", null=True, blank=True)
 
     class Meta:
         db_table = 'maintenance_action'

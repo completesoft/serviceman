@@ -31,120 +31,113 @@
 
 {% block table_main %}
     <div id="CheckOneC" class="row detail-mg-top">
-      <div class="col-md-5">
+
+      <div class="col-md-3">
         <div class="panel panel-info">
             <div class="panel-heading">
-              <h3 class="panel-title">Заказ Картридж</h3>
+              <h3 class="panel-title">Инфо заказа</h3>
             </div>
             <div class="panel-body">
               <div class="row">
-              <div class="col-sm-6 col-md-6">
-                  <div class="col-sm-12 col-md-12">
-                   <p class="bold">ID: <span class="badge" id="barcode">{{ order_prefix }}{{ order.id }}</span></p>
+                  <div class="col-sm-12 col-md-12 col-lg-12">
+                   <p class="bold">ID: <span class="badge" id="barcode">{{ order_prefix }}{{ order.id }}</span>
+                       <button id="copy" type="button" class="btn btn-default btn-xs">Copy</button>
+                      {% if user.is_superuser %}<button id="OneC" type="button" class="btn btn-success btn-xs" title="Проверить"><i class="fa fa-refresh"></i> 1С</button>{% endif %}
+                   </p>
                   </div>
-                  <div class="col-sm-12 col-md-12">
-                   <p><strong>Модель:</strong> {{ order.cartridge.model }}</p>
+                  <div class="col-sm-12 col-md-12 col-lg-12">
+                   <p><b>Модель:</b> {{ order.cartridge.model }}</p>
                   </div>
-                  <div class="col-sm-12 col-md-12">
-                   <p><strong>Серийный №:</strong> {{ order.cartridge.serial_number }}</p>
+                  <div class="col-sm-12 col-md-12 col-lg-12">
+                   <p><b>Серийный №:</b> {{ order.cartridge.serial_number }}</p>
                   </div>
-              </div>
-              <div class="col-sm-6 col-md-6">
-                  <div class="btn-toolbar" role="toolbar" aria-labelledby="CNFNECF">
-                      <p><strong>Быстрая установка статуса:</strong></p>
-                  {% for form in action_formset %}
-                    <form class="form-horizontal" id="{{ forloop.counter }}" action="" method="post" autocomplete="off">
-                       {% csrf_token %}
-                        {{ form }}
-                    </form>
-                  {% endfor %}
-
-                  {% for form in action_formset %}
-                      <div class="btn-group" role="group" aria-label="...">
-                          {% include "includes/order_status_int_button.html" with last_act=form.status.value form_id=forloop.counter %}
-                      </div>
-                  {% endfor %}
+                  <div class="col-sm-12 col-md-12 col-lg-12">
+                      <p><b>Дата оформления: </b>{{ order.order_datetime|date:"d.m.Y" }}</p>
+                  </div>
+                  <div class="col-sm-12 col-md-12 col-lg-12">
+                      <p><b>Кем оформлен: </b>{{ order_action.0.setting_user.get_full_name }}</p>
+                  </div>
+                  <div class="col-sm-12 col-md-12 col-lg-12">
+                      <p><b>Текущий статус: </b>{% with order.last_status as last_act %}{% include "includes/order_status.html" %}{% endwith %}</p>
                   </div>
               </div>
-            </div>
-
             </div>
         </div>
       </div>
-      {% if user.is_superuser %}
-          <div class="col-md-7">
+      <div class="col-md-9">
+        <div class="col-md-4">
             <div class="panel panel-success">
                 <div class="panel-heading">
-                  <h3 class="panel-title">Интеграция 1С</h3>
+                    <h3 class="panel-title">Смена статуса</h3>
                 </div>
                 <div class="panel-body">
-                   <div class="col-sm-4 col-md-4 col-lg-3">
-                        <button id="OneC" type="button" class="btn btn-success" title="Проверить"><i class="fa fa-refresh"></i> Проверить</button>
-                   </div>
-                   <div id="insCheck" class="col-sm-12 col-md-12 col-lg-9">
-                   </div>
-                </div>
-            </div>
-          </div>
-      {% endif %}
-    </div>
-    <div class="row">
-      <div class="col-md-5">
-        <div class="panel panel-success">
-            <div class="panel-heading">
-                <h3 class="panel-title">Данные заказа</h3>
-            </div>
-            <div class="panel-body">
-                <div class="col-sm-4 col-md-4">
-                    <p class="bold">Дата оформления:</p>
-                    <p>{{ order.order_datetime|date:"d.m.Y" }}</p>
-                </div>
-                <div class="col-sm-4 col-md-4">
-                    <p class="bold">Кем оформлен:</p>
-                    <p>{{ order_action.0.setting_user.get_full_name }}</p>
-
-                </div>
-                <div class="col-sm-4 col-md-4">
-                    <p class="bold">Текущий статус:</p>
-                    <p>
-                    {% with order.last_status as last_act %}
-                        {% include "includes/order_status.html" %}
-                    {% endwith %}
-                    </p>
+                    <div class="btn-toolbar" role="toolbar" aria-labelledby="CNFNECF">
+                        {% load bootstrap3 %}
+                      <div class="btn-toolbar">
+                          {% for form in action_formset %}
+                              {% include "includes/order_status_modal_button.html" with last_act=form.status.value form_id=forloop.counter %}
+                          {% endfor %}
+                      </div>
+                      {% for form in action_formset %}
+                        <!-- Modal -->
+                        <div class="modal fade" id="{{ forloop.counter }}Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                          <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">Смена статуса</h4>
+                              </div>
+                              <div class="modal-body">
+                                <form id="{{ forloop.counter }}" action="" method="post" autocomplete="off">
+                                   {% csrf_token %}
+                                    {% bootstrap_form form %}
+                                </form>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+                                <button type="submit" form="{{ forloop.counter }}" class="btn btn-primary">Сохранить</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
-      </div>
 
-      {% if not outsource %}
-      <div class="col-md-4">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Заказчик</h3>
-          </div>
-          <div class="panel-body">
-              <div class="col-md-7">
-                    <p class="bold">Наименование:</p>
-                    <p>{{ order.cartridge.client }}</p>
+        <div class="col-md-4">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Заказанные работы</h3>
               </div>
-              <div class="col-md-5">
-                    <p class="bold">Размещение:</p>
-                    <p>{{ order.client_position }}</p>
+              <div class="panel-body">
+                  <p>{{ order.service_type }}</p>
               </div>
-          </div>
+            </div>
         </div>
-      </div>
-      {% endif %}
-
-      <div class="col-md-{%if not outsource %}3{% else %}7{% endif %}">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Заказанные работы</h3>
-          </div>
-          <div class="panel-body">
-              <p>{{ order.service_type }}</p>
-          </div>
+        {% if not outsource %}
+        <div class="col-md-4">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Заказчик</h3>
+              </div>
+              <div class="panel-body">
+                  <div class="col-md-12">
+                        <p><b>Наименование: </b>{{ order.cartridge.client }}</p>
+                  </div>
+                  {%if order.client.client_corp %}
+                  <div class="col-md-12">
+                        <p><b>Подразделение: </b>{{ order.client_dep.client_dep_name }}</p>
+                  </div>
+                  {% endif %}
+                  <div class="col-md-12">
+                        <p><b>Размещение: </b>{{ order.client_position }}</p>
+                  </div>
+              </div>
+            </div>
         </div>
+        {% endif %}
       </div>
     </div>
 
@@ -170,7 +163,7 @@
                   {% for act in order_action %}
                   <tr>
                     <td>{{ act.action_datetime|date:"d.m.Y H:i" }}</td>
-                    <td>{% include "includes/order_status.html" with last_act=act.status.get_status_name_display %} </td>
+                    <td>{% include "includes/order_status.html" with last_act=act.status %} </td>
                     <td>{{ act.action_content }}</td>
                     <td>{{ act.manager_user.get_full_name }}</td>
                     <td>{{ act.executor_user.get_full_name }}</td>
@@ -219,7 +212,7 @@
 
                     <tr>
                       <td colspan="5" ></td>
-                      {% if order.last_status != "В работе" %}
+                      {% if order.last_status.status_name != 1 %}
                       <td><button type="button" class="btn btn-success disabled" title="Статус заказа должен быть &quotВ работе&quot"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
                       {% else %}
                       <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_spare_add" id="super_spare_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
@@ -267,7 +260,7 @@
 
                   <tr>
                     <td colspan="5" ></td>
-                    {% if order.last_status != "В работе" %}
+                    {% if order.last_status.status_name != 1 %}
                       <td><button type="button" class="btn btn-success disabled" title="Статус заказа должен быть &quotВ работе&quot"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
                     {% else %}
                       <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_service_add" id="super_service_add"><span class="glyphicon glyphicon-plus"></span> Добавить</button></td>
@@ -284,7 +277,28 @@
         </div>
     </div>
 
-{% if order.last_status == "В работе" %}
+
+{% if user.is_superuser %}
+<!-- 1C Integration modal content -->
+<div class="modal fade" id="insCheck" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Список документов 1С</h4>
+      </div>
+      <div class="modal-body">
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Ознакомлен</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if order.last_status.status_name == 1 %}
     {% load bootstrap3 %}
 <!-- modAl for Spare add -->
 <div id="modal_spare_add" class="modal fade" role="dialog">
