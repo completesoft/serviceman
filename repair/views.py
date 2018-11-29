@@ -21,7 +21,7 @@ from .forms import ( OrderHeaderForm, ActionForm, ActionFormOut,SpareForm, Servi
                      MaintenanceOrderForm, MaintenanceRegularActionForm, DateRangeWidgetForm,
                      MaintenanceSuperActionForm, CartridgeCreateForm, CartridgeActionExpressForm, CartridgeServiceForm,
                      CartridgeSpareForm, MaintenanceServiceForm, MaintenanceSpareForm, MaintenanceActionExpressForm,
-                     ActionExpressForm)
+                     ActionExpressForm, ActionExpressFormOut, CartridgeActionExpressFormOut, MaintenanceActionExpressFormOut)
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404, HttpResponseNotFound
 from django.conf import settings
@@ -34,10 +34,11 @@ from django.middleware.csrf import get_token
 from django.db.models import Q
 import logging
 from .filters import DocOrderHeaderFilter, CartridgeOrderFilter, MaintenanceOrderFilter
-from .helpers import barcode_generator
+from .helpers import barcode_generator, make_qr_code
 from django_filters.views import FilterView
 from django.utils import timezone
 from datetime import timedelta
+
 
 logger = logging.getLogger('user.activity')
 LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
@@ -162,17 +163,37 @@ class OrderDetailView(DetailView):
     pk_url_kwarg = "order_id"
 
     status_map = {DirStatus.NEW: [DirStatus.IN_WORK, ],
-                  DirStatus.IN_WORK: [DirStatus.COMPLETED, ],
-                  DirStatus.COMPLETED: [DirStatus.IN_WORK, DirStatus.TO_CLIENT, ],
+                  DirStatus.IN_WORK: [DirStatus.COMPLETED, DirStatus.WAITING],
+                  DirStatus.COMPLETED: [DirStatus.IN_WORK, DirStatus.TO_CLIENT, DirStatus.WAITING],
+                  DirStatus.WAITING: [DirStatus.IN_WORK, DirStatus.ARCHIVE],
                   DirStatus.TO_CLIENT: [DirStatus.IN_WORK, DirStatus.ARCHIVE, ],
                   }
 
+    def check_outsource(self):
+        return self.request.user.groups.filter(name='outsource').exists()
+
+    def get_form(self):
+        if self.check_outsource():
+            return ActionExpressFormOut
+        else:
+            return ActionExpressForm
+
     def get_action_formset(self):
-        status = self.object.last_action().status.status_name
+        last_act = self.object.last_action()
+        status = last_act.status.status_name
         form_set = []
+        form = self.get_form()
         if self.status_map.get(status):
-            form_set = [ActionExpressForm(status_set=self.status_map[status], initial={
-                'status': DirStatus.objects.get(status_name=st)}) for st in self.status_map[status]]
+            if not self.check_outsource():
+                form_set = [
+                    form(status_set=self.status_map[status], initial={'status': DirStatus.objects.get(status_name=st), 'executor_user': last_act.executor_user})
+                    for st in self.status_map[status]
+                    if self.request.user.is_superuser or st!=DirStatus.ARCHIVE]
+            else:
+                form_set = [
+                    form(status_set=self.status_map[status], initial={'status': DirStatus.objects.get(status_name=st)})
+                    for st in self.status_map[status]
+                    if self.request.user.is_superuser or st != DirStatus.ARCHIVE]
         return form_set
 
     def get_context_data(self, **kwargs):
@@ -189,13 +210,15 @@ class OrderDetailView(DetailView):
     def post(self, request, *args, **kwargs):
         order = self.get_object()
         action = order.last_action()
-        if self.status_map.get(action.status.status_name):
-            form_action = ActionExpressForm(request.POST, status_set = self.status_map[action.status.status_name])
+        if self.status_map.get(action.status.status_name) and (self.request.user.is_superuser or int(self.request.POST.get('status'))!=DirStatus.ARCHIVE):
+            form = self.get_form()
+            form_action = form(request.POST, status_set = self.status_map[action.status.status_name])
             if form_action.is_valid():
                 new_action = form_action.save(commit=False)
+                if self.check_outsource():
+                    new_action.executor_user = action.executor_user
                 new_action.doc_order = order
                 new_action.manager_user = action.manager_user
-                new_action.executor_user = action.executor_user
                 new_action.setting_user = request.user
                 new_action.storage = action.storage
                 new_action.action_comment = new_action.action_comment
@@ -857,27 +880,42 @@ class CartridgeOrderDetailView(DetailView):
     model = CartridgeOrder
     context_object_name = "order"
     pk_url_kwarg = "order_id"
-    outsource = True
 
     status_map = {CartridgeActionStatus.NEW:[CartridgeActionStatus.IN_WORK,],
-              CartridgeActionStatus.IN_WORK:[CartridgeActionStatus.COMPLETED,],
-              CartridgeActionStatus.COMPLETED:[CartridgeActionStatus.IN_WORK, CartridgeActionStatus.TO_CLIENT,],
+              CartridgeActionStatus.IN_WORK:[CartridgeActionStatus.COMPLETED, CartridgeActionStatus.WAITING],
+              CartridgeActionStatus.COMPLETED:[CartridgeActionStatus.IN_WORK, CartridgeActionStatus.TO_CLIENT, CartridgeActionStatus.WAITING],
+              CartridgeActionStatus.WAITING:[CartridgeActionStatus.IN_WORK, CartridgeActionStatus.ARCHIVE],
               CartridgeActionStatus.TO_CLIENT:[CartridgeActionStatus.IN_WORK, CartridgeActionStatus.ARCHIVE,],
               }
 
-    def get_action_formset(self):
-        status = self.object.last_action().status.status_name
-        form_set = []
-        if self.status_map.get(status):
-            form_set = [CartridgeActionExpressForm(status_set=self.status_map[status], initial={'status':CartridgeActionStatus.objects.get(status_name=st)}) for st in self.status_map[status]]
-        return form_set
+    def check_outsource(self):
+        return self.request.user.groups.filter(name='outsource').exists()
 
+    def get_form(self):
+        if self.check_outsource():
+            return CartridgeActionExpressFormOut
+        else:
+            return CartridgeActionExpressForm
+
+    def get_action_formset(self):
+        last_act = self.object.last_action()
+        status = last_act.status.status_name
+        form_set = []
+        Form = self.get_form()
+        if self.status_map.get(status):
+            if not self.check_outsource():
+                form_set = [Form(status_set=self.status_map[status], initial={'status': CartridgeActionStatus.objects.get(status_name=st), 'executor_user': last_act.executor_user})
+                            for st in self.status_map[status] if self.request.user.is_superuser or st != CartridgeActionStatus.ARCHIVE]
+            else:
+                form_set = [Form(status_set=self.status_map[status], initial={'status':CartridgeActionStatus.objects.get(status_name=st)})
+                        for st in self.status_map[status] if self.request.user.is_superuser or st!=CartridgeActionStatus.ARCHIVE]
+        return form_set
 
     def get_context_data(self, **kwargs):
         context = super(CartridgeOrderDetailView, self).get_context_data(**kwargs)
         context['order_action'] = CartridgeAction.objects.filter(order=self.object).order_by("action_datetime")
         context['order_prefix'] = CartridgeOrder.PREFIX
-        context['outsource'] = self.outsource
+        context['outsource'] = self.request.user.groups.filter(name='outsource').exists()
         context['action_formset'] = self.get_action_formset()
         context['spare_form'] = CartridgeSpareForm()
         context['service_form'] = CartridgeServiceForm()
@@ -888,13 +926,15 @@ class CartridgeOrderDetailView(DetailView):
     def post(self, request, *args, **kwargs):
         order = self.get_object()
         action = order.last_action()
-        if self.status_map.get(action.status.status_name):
-            form_action = CartridgeActionExpressForm(request.POST, status_set = self.status_map[action.status.status_name])
+        if self.status_map.get(action.status.status_name) and (self.request.user.is_superuser or int(self.request.POST.get('status'))!=CartridgeActionStatus.ARCHIVE):
+            Form = self.get_form()
+            form_action = Form(request.POST, status_set = self.status_map[action.status.status_name])
             if form_action.is_valid():
                 new_action = form_action.save(commit=False)
+                if self.check_outsource():
+                    new_action.executor_user = action.executor_user
                 new_action.order = order
                 new_action.manager_user = action.manager_user
-                new_action.executor_user = action.executor_user
                 new_action.setting_user = request.user
                 new_action.action_content = new_action.action_content
                 new_action.save()
@@ -904,8 +944,7 @@ class CartridgeOrderDetailView(DetailView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_active:
             order = CartridgeOrder.objects.get(pk=self.kwargs["order_id"])
-            self.outsource = request.user.groups.filter(name='outsource').exists()
-            if self.outsource:
+            if self.check_outsource():
                 act = CartridgeAction.objects.filter(order=order).filter(executor_user=request.user).values_list('action_datetime', flat=True)
                 if not act:
                     return redirect("repair:cartridge_orders")
@@ -1219,13 +1258,12 @@ class MaintenanceMyOrderListView(ListView):
     def get_context_data(self, **kwargs):
         context = super(MaintenanceMyOrderListView, self).get_context_data(**kwargs)
         context['order_prefix'] = MaintenanceOrder.PREFIX
-        context["outsource"] = self.outsource
+        context["outsource"] = self.request.user.groups.filter(name='outsource').exists()
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        self.outsource = request.user.groups.filter(name='outsource').exists()
-        if request.user.is_active and not self.outsource:
+        if request.user.is_active and not request.user.groups.filter(name='outsource').exists():
             return super(MaintenanceMyOrderListView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
@@ -1236,32 +1274,54 @@ class MaintenanceOrderDetailView(DetailView):
     model = MaintenanceOrder
     context_object_name = "order"
     pk_url_kwarg = "order_id"
-    outsource = True
+
 
     status_map = {MaintenanceActionStatus.NEW: [MaintenanceActionStatus.IN_WORK, ],
-                  MaintenanceActionStatus.IN_WORK: [MaintenanceActionStatus.COMPLETED, ],
-                  MaintenanceActionStatus.COMPLETED: [MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.TO_CLIENT, ],
+                  MaintenanceActionStatus.IN_WORK: [MaintenanceActionStatus.COMPLETED, MaintenanceActionStatus.WAITING],
+                  MaintenanceActionStatus.COMPLETED: [MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.TO_CLIENT, MaintenanceActionStatus.WAITING],
+                  MaintenanceActionStatus.WAITING: [MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.ARCHIVE],
                   MaintenanceActionStatus.TO_CLIENT: [MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.ARCHIVE, ],
                   }
 
+    def check_outsource(self):
+        return self.request.user.groups.filter(name='outsource').exists()
+
+    def get_form(self):
+        if self.check_outsource():
+            return MaintenanceActionExpressFormOut
+        else:
+            return MaintenanceActionExpressForm
+
     def get_action_formset(self):
-        status = self.object.last_action().status.status_name
+        last_act = self.object.last_action()
+        status = last_act.status.status_name
         form_set = []
+        Form = self.get_form()
         if self.status_map.get(status):
-            form_set = [MaintenanceActionExpressForm(status_set=self.status_map[status], initial={
-                'status': MaintenanceActionStatus.objects.get(status_name=st)}) for st in self.status_map[status]]
+            if not self.check_outsource():
+                form_set = [
+                    Form(status_set=self.status_map[status], initial={'status': MaintenanceActionStatus.objects.get(status_name=st), 'executor_user': last_act.executor_user})
+                    for st in self.status_map[status]
+                    if self.request.user.is_superuser or st!=MaintenanceActionStatus.ARCHIVE]
+            else:
+                form_set = [
+                    Form(status_set=self.status_map[status],initial={'status': MaintenanceActionStatus.objects.get(status_name=st)})
+                    for st in self.status_map[status]
+                    if self.request.user.is_superuser or st != MaintenanceActionStatus.ARCHIVE]
         return form_set
 
     def post(self, request, *args, **kwargs):
         order = self.get_object()
         action = order.last_action()
-        if self.status_map.get(action.status.status_name):
-            form_action = MaintenanceActionExpressForm(request.POST, status_set = self.status_map[action.status.status_name])
+        if self.status_map.get(action.status.status_name) and (self.request.user.is_superuser or int(self.request.POST.get('status'))!=MaintenanceActionStatus.ARCHIVE):
+            Form = self.get_form()
+            form_action = Form(request.POST, status_set = self.status_map[action.status.status_name])
             if form_action.is_valid():
                 new_action = form_action.save(commit=False)
+                if self.check_outsource():
+                    new_action.executor_user = action.executor_user
                 new_action.order = order
                 new_action.manager_user = action.manager_user
-                new_action.executor_user = action.executor_user
                 new_action.setting_user = request.user
                 new_action.action_content = new_action.action_content
                 new_action.save()
@@ -1276,15 +1336,14 @@ class MaintenanceOrderDetailView(DetailView):
         context['action_formset'] = self.get_action_formset()
         context['spares'] = MaintenanceOrderSparesContent.objects.filter(order=self.object)
         context['services'] = MaintenanceOrderServiceContent.objects.filter(order=self.object)
-        context["outsource"] = self.outsource_group
+        context["outsource"] = self.check_outsource()
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_active:
             order = MaintenanceOrder.objects.get(pk=self.kwargs["order_id"])
-            self.outsource_group = request.user.groups.filter(name='outsource').exists()
-            if self.outsource_group:
+            if self.check_outsource():
                 act = MaintenanceAction.objects.filter(order=order).filter(executor_user=request.user).values_list('action_datetime', flat=True)
                 if not act:
                     return redirect("repair:maintenance_order_list")
@@ -1481,3 +1540,12 @@ class MaintenanceOrderArchiveView(FilterView):
             return super(MaintenanceOrderArchiveView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
+
+
+@login_required
+def qr_code_picture(request):
+
+    img = make_qr_code(request.build_absolute_uri(reverse('repair:cartridges')))
+    response = HttpResponse(content_type="image/png")
+    img.save(response, "PNG")
+    return response

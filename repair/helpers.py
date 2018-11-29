@@ -1,6 +1,6 @@
 from django.utils import timezone
 from .models import DocOrderHeader, DirStatus
-
+import qrcode
 
 def zero_padding(str):
     if len(str)<2:
@@ -17,3 +17,6 @@ def barcode_generator(model, user):
     else:
         barcode = timezone.now().strftime('%y%m%d') + zero_padding(str(user.id)) + '01'
     return barcode
+
+def make_qr_code(string):
+    return qrcode.make(string, box_size=10, border=1)

@@ -4,7 +4,9 @@
     {% for act in acts %}
         {% if act == '1' %}
                 <!-- Добавить новый заказ Ремонты -->
+                {% if not outsource %}
                 <a class="btn btn-success" href="{% url 'repair:order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+                {% endif %}
         {% endif %}
     {% endfor %}
 {% elif menu_set|first == '2' %}
@@ -12,7 +14,9 @@
     {% for act in acts %}
         {% if act == '1' %}
                 <!-- Добавить новый заказ Работы -->
+                {% if not outsource %}
                 <a class="btn btn-success" href="{% url 'repair:maintenance_order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+                {% endif %}
         {% endif %}
     {% endfor %}
 {% elif menu_set|first == '3' %}
@@ -20,7 +24,9 @@
     {% for act in acts %}
         {% if act == '1' %}
                 <!-- Добавить новый заказ Картриджи -->
+                {% if not outsource %}
                 <a class="btn btn-success" href="{% url 'repair:cartridge_order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+                {% endif %}
         {% endif %}
     {% endfor %}
 {% else %}

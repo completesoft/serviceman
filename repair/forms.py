@@ -76,13 +76,31 @@ class ActionFormOut(forms.ModelForm):
     action_comment = forms.CharField(label="Комментарий", required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
 
 
+class ActionExpressFormOut(forms.ModelForm):
+
+    class Meta:
+        model = DocOrderAction
+        fields = ['status','action_comment']
+
+    status = forms.ModelChoiceField(required=True, queryset=DirStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        status_set = kwargs.pop('status_set', None)
+        super(ActionExpressFormOut, self).__init__(*args, **kwargs)
+
+        if status_set:
+            self.fields['status'].queryset = DirStatus.objects.filter(status_name__in=status_set)
+
+
+
 class ActionExpressForm(forms.ModelForm):
 
     class Meta:
         model = DocOrderAction
-        fields = ['status', 'action_comment']
+        fields = ['status', 'executor_user','action_comment']
 
     status = forms.ModelChoiceField(required=True, queryset=DirStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
+    executor_user = MyModelChoiceField(queryset=User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True)
 
     def __init__(self, *args, **kwargs):
         status_set = kwargs.pop('status_set', None)
@@ -163,13 +181,29 @@ class CartridgeSuperActionForm(CartridgeRegularActionForm):
 class CartridgeActionExpressForm(forms.ModelForm):
     class Meta:
         model = CartridgeAction
+        fields = ['status', 'executor_user', 'action_content']
+
+    status = forms.ModelChoiceField(required=True, queryset=CartridgeActionStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
+    executor_user = MyModelChoiceField(queryset=User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True)
+
+    def __init__(self, *args, **kwargs):
+        status_set = kwargs.pop('status_set', None)
+        super(CartridgeActionExpressForm, self).__init__(*args, **kwargs)
+
+        if status_set:
+            self.fields['status'].queryset = CartridgeActionStatus.objects.filter(status_name__in=status_set)
+
+
+class CartridgeActionExpressFormOut(forms.ModelForm):
+    class Meta:
+        model = CartridgeAction
         fields = ['status', 'action_content']
 
     status = forms.ModelChoiceField(required=True, queryset=CartridgeActionStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         status_set = kwargs.pop('status_set', None)
-        super(CartridgeActionExpressForm, self).__init__(*args, **kwargs)
+        super(CartridgeActionExpressFormOut, self).__init__(*args, **kwargs)
 
         if status_set:
             self.fields['status'].queryset = CartridgeActionStatus.objects.filter(status_name__in=status_set)
@@ -280,12 +314,28 @@ class MaintenanceSuperActionForm(MaintenanceRegularActionForm):
                                     widget=forms.Select(attrs={'class': 'form-control'}))
 
 
-class MaintenanceActionExpressForm(forms.ModelForm):
+class MaintenanceActionExpressFormOut(forms.ModelForm):
     class Meta:
         model = MaintenanceAction
         fields = ['status', 'action_content']
 
     status = forms.ModelChoiceField(required=True, queryset=MaintenanceActionStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        status_set = kwargs.pop('status_set', None)
+        super(MaintenanceActionExpressFormOut, self).__init__(*args, **kwargs)
+
+        if status_set:
+            self.fields['status'].queryset = MaintenanceActionStatus.objects.filter(status_name__in=status_set)
+
+
+class MaintenanceActionExpressForm(forms.ModelForm):
+    class Meta:
+        model = MaintenanceAction
+        fields = ['status', 'executor_user','action_content']
+
+    status = forms.ModelChoiceField(required=True, queryset=MaintenanceActionStatus.objects.all(), empty_label=None, to_field_name='status_name', widget=forms.HiddenInput)
+    executor_user = MyModelChoiceField(queryset=User.objects.filter(groups__name="serviceman"), label="Исполнитель заказа", required=True)
 
     def __init__(self, *args, **kwargs):
         status_set = kwargs.pop('status_set', None)

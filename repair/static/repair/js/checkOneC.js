@@ -20,6 +20,8 @@ function copyID(event){
     console.log('Can`t copy');
   }
   window.getSelection().removeAllRanges();
+  $(this).removeClass('btn-default');
+  $(this).addClass('btn-info');
 }
 
 function checkDoc(event){
