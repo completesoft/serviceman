@@ -219,7 +219,7 @@ class CartridgeCreateForm(forms.ModelForm):
     model = forms.CharField(label='Модель', required=True, max_length=100,
                                     widget=forms.TextInput(attrs={'class': 'form-control'}))
     serial_number = forms.CharField(label='Серийный номер', required=True, max_length=100,
-                                    widget=forms.TextInput(attrs={'class': 'form-control'}))
+                                    widget=forms.TextInput(attrs={'class': 'form-control'}), error_messages={'unique': 'Картридж с таким серийным номером уже существует'})
     client_position = forms.CharField(max_length=100, label="Размещение у клиента", required=False,
                                       widget=forms.TextInput(attrs={'class': 'form-control'}))
 

@@ -65,7 +65,7 @@ class MaintenanceOrderFilter(django_filters.FilterSet):
 
 
 class QrCartridgesFilter(django_filters.FilterSet):
-    sn = django_filters.CharFilter(label='S/N' ,field_name='serial_number', lookup_expr='contains')
+    sn = django_filters.CharFilter(label='S/N' ,field_name='serial_number', lookup_expr='icontains')
 
     class Meta:
         model = Cartridge

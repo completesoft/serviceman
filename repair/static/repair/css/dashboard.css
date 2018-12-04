@@ -23,6 +23,11 @@ body {
     margin-top: 25px;
 }
 
+@media (max-width: 480px) {
+    #table.mobile{
+        font-size: 11px;
+    }
+}
 
 
 /*
