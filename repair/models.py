@@ -214,7 +214,7 @@ class Cartridge(models.Model):
 
     add_datetime = models.DateTimeField("Дата регистрации в базе", auto_now_add=True)
     model = models.CharField('Модель', max_length=100, null=False, blank=False)
-    serial_number = models.CharField('Модель', max_length=100, null=False, blank=False, unique=True)
+    serial_number = models.CharField('Серийный номер', max_length=100, null=False, blank=False, unique=True)
     client = models.ForeignKey(Clients, verbose_name="Клиент", on_delete=models.SET_DEFAULT, default='None', null=False, blank=False)
     client_position = models.CharField("Размещение у клиента", max_length=100, default='', null=False, blank=True)
 
@@ -491,3 +491,14 @@ class MaintenanceOrderSparesContent(models.Model):
     class Meta():
         verbose_name = "Работы - использованые запчасти"
         verbose_name_plural = "Работы - использованые запчасти"
+
+
+class UserProfile(models.Model):
+    modified = models.DateTimeField('Последнее изменение', auto_now=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    qruuid = models.UUIDField('Идентификатор', null=True, blank=True)
+    expire = models.PositiveIntegerField('Срок годности(в сек.)', default=7*24*60*60)
+
+    class Meta():
+        verbose_name = 'Профиль пользователя'
+        verbose_name_plural = 'Профили пользователей'

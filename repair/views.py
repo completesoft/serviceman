@@ -9,7 +9,7 @@ from django.contrib.auth.views import deprecate_current_app
 from .models import (DocOrderHeader, DocOrderAction, DirStatus, DocOrderServiceContent,
                      DocOrderSparesContent, Clients, ClientsDep, Reward, Storage, CartridgeOrder, CartridgeActionStatus,
                      Cartridge, CartridgeAction, MaintenanceOrder, MaintenanceAction, MaintenanceActionStatus, CartridgeOrderSparesContent,
-                     CartridgeOrderServiceContent, MaintenanceOrderServiceContent, MaintenanceOrderSparesContent)
+                     CartridgeOrderServiceContent, MaintenanceOrderServiceContent, MaintenanceOrderSparesContent, UserProfile)
 from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
@@ -33,12 +33,13 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.middleware.csrf import get_token
 from django.db.models import Q
 import logging
-from .filters import DocOrderHeaderFilter, CartridgeOrderFilter, MaintenanceOrderFilter
+from .filters import DocOrderHeaderFilter, CartridgeOrderFilter, MaintenanceOrderFilter, QrCartridgesFilter
 from .helpers import barcode_generator, make_qr_code
 from django_filters.views import FilterView
 from django.utils import timezone
 from datetime import timedelta
-
+import uuid
+import time
 
 logger = logging.getLogger('user.activity')
 LOGIN_URL = getattr(settings, 'LOGIN_URL', None)
@@ -1544,8 +1545,44 @@ class MaintenanceOrderArchiveView(FilterView):
 
 @login_required
 def qr_code_picture(request):
-
-    img = make_qr_code(request.build_absolute_uri(reverse('repair:cartridges')))
+    qruuid = request.user.userprofile.qruuid.hex
+    img = make_qr_code(request.build_absolute_uri(reverse('repair:qr_cartridge_list', kwargs={'qruuid': qruuid})))
     response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response
+
+
+@login_required
+def qr_info_page(request):
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except ObjectDoesNotExist:
+        profile = UserProfile.objects.create(user=request.user)
+        profile.save()
+    profile.qruuid = uuid.uuid4().hex
+    profile.save()
+    expiry_time = profile.modified + timedelta(seconds=profile.expire)
+    return render(request, 'repair/qr_info_page.html', {'qruuid': profile.qruuid, 'expiry_time': expiry_time})
+
+
+class QrCartridgesList(FilterView):
+    template_name = 'repair/qr_cartridge_list.html'
+    filterset_class = QrCartridgesFilter
+
+    def get(self, request, *args, **kwargs):
+        qruuid = kwargs.get('qruuid')
+        try:
+            user = UserProfile.objects.get(qruuid=qruuid).user
+        except ObjectDoesNotExist:
+            return HttpResponseRedirect(reverse("repair:invalid_auth_code"))
+        delta = ((user.userprofile.modified + timedelta(seconds=user.userprofile.expire)) - timezone.now()).days
+        if delta<0:
+            return HttpResponseRedirect(reverse("repair:invalid_auth_code"))
+        return super(QrCartridgesList, self).get(request, *args, **kwargs)
+
+            
+def invalid_auth_code(request, **kwargs):
+    return render(request, 'repair/invalid_code.html')
+
+
+

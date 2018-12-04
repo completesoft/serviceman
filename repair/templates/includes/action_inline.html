@@ -28,6 +28,22 @@
                 <a class="btn btn-success" href="{% url 'repair:cartridge_order_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
                 {% endif %}
         {% endif %}
+        {% if act == '2' %}
+                <!-- Добавить новый Картридж -->
+                {% if not outsource %}
+                <a class="btn btn-success" href="{% url 'repair:cartridge_create' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Новый</a>
+                {% endif %}
+        {% endif %}
+    {% endfor %}
+{% elif menu_set|first == '4' %}
+    {% define menu_set|slice:'1:' as acts %}
+    {% for act in acts %}
+        {% if act == '1' %}
+                <!-- Добавить Новый клиент -->
+                {% if not outsource %}
+                <a class="btn btn-success" href="{% url 'repair:clients_add' %}" role="button" disable="True">{% bootstrap_icon "plus" %} Добавить</a>
+                {% endif %}
+        {% endif %}
     {% endfor %}
 {% else %}
     <p class="text-warning">Доступных действий нет</p>

@@ -1,5 +1,5 @@
 import django_filters
-from .models import DocOrderHeader, CartridgeOrder, CartridgeActionStatus, Clients, MaintenanceOrder
+from .models import DocOrderHeader, CartridgeOrder, CartridgeActionStatus, Clients, MaintenanceOrder, Cartridge
 from django.utils.timezone import is_aware, now
 from datetime import timedelta
 from django.contrib.admin.widgets import AdminDateWidget
@@ -7,6 +7,8 @@ from django.forms import HiddenInput, ModelChoiceField, CharField, IntegerField,
 from django.forms import Form
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.forms.widgets import RadioSelect
+
 
 def clients(request):
     if request.user.groups.filter(name='outsource').exists():
@@ -60,3 +62,17 @@ class MaintenanceOrderFilter(django_filters.FilterSet):
         if self.form.is_valid() and any(self.form.cleaned_data.values()):
             return super(MaintenanceOrderFilter, self).filter_queryset(queryset)
         return queryset.filter(order_datetime__gte=timezone.now()-timedelta(days=7))
+
+
+class QrCartridgesFilter(django_filters.FilterSet):
+    sn = django_filters.CharFilter(label='S/N' ,field_name='serial_number', lookup_expr='contains')
+
+    class Meta:
+        model = Cartridge
+        exclude = ['add_datetime', 'model', 'client', 'client_position', 'serial_number']
+
+    def filter_queryset(self, queryset):
+        if any(self.form.cleaned_data.values()):
+            return super(QrCartridgesFilter, self).filter_queryset(queryset)
+        else:
+            return queryset.none()

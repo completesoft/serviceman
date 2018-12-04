@@ -4,6 +4,7 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.db.models.signals import post_save
 import logging
 from django.contrib.auth.models import User
+from .models import UserProfile
 
 logger = logging.getLogger('user.activity')
 
@@ -27,3 +28,10 @@ def login_out(sender, request, user, **kwargs):
         user_name = 'User: AnonymousUser (cause: expired session)'
     msg = "LogOUT: %s"%user_name
     logger.warning(msg)
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        profile = UserProfile.objects.create(user=instance)
+        profile.save()
+

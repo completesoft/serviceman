@@ -1,0 +1,22 @@
+{% extends "repair/base.html" %}
+{% load staticfiles %}
+
+
+
+{% block sub_header_progress_bar %}
+  <h2 class="sub-header">QR-код для входа</h2>
+{% endblock %}
+
+
+{% block table_main %}
+    <div class="qr_code">
+    <p>Для быстрого входа на сайт с мобильного устройства (например, телефона или планшета) отсканируйте этот QR-код:</p>
+    <div><img src="{%url 'repair:qr_cartridge_picture'%}" style="width:200px;" alt="QR"></div>
+    <p>Сгенерированный QR-код действителен <b>{{ expiry_time|timeuntil }}</b>. Если вам требуется другой QR-код, то просто сгенерируйте его снова.</p>
+</div>
+
+{% endblock %}
+
+
+{% block script_block %}
+{% endblock %}

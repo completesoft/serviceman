@@ -29,11 +29,23 @@
       </p>
     {% endfor %}
   {% endif %}
-  <h2 class="sub-header">База картриджей</h2>
+  <h2 class="sub-header">База картриджей <button id="qr" title="QR-access" url="{%url 'repair:qr_info_page'%}"><img style="width:50px;" src="{% static 'repair/img/qr-code-scan-icon-3.jpg.png' %}" alt="QR" title="QR-access"></button></h2>
 {% endblock %}
 
 
 {% block table_main %}
+<div class="col-md-12">
+    <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Действия</h3>
+    </div>
+    <div class="panel-body">
+      {% include "includes/action_inline.html" with menu_set='32' %}
+    </div>
+  </div>
+</div>
+
+<div class="col-md-12">
   <div class="table-responsive">
     <table class="table table-hover table-striped" id="table">
       <thead>
@@ -78,6 +90,7 @@
       {% endfor %}
     </table>
   </div>
+</div>
 {% endblock %}
 
 
@@ -85,4 +98,5 @@
   <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
   <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>
   <script type="text/javascript" src="{% static 'repair/js/cartridges_location_update.js' %}"></script>
+  <script type="text/javascript" src="{% static 'repair/js/qr.js' %}"></script>
 {% endblock %}

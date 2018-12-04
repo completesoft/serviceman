@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru-RU">
+  <head>
+    {% load staticfiles %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="{% static 'repair/img/cs_logo.png' %}">
+
+    <title>ServiceMan</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'repair/css/bootstrap.min.css' %}" rel="stylesheet">
+    {% block other_css %}{% endblock %}
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- Custom styles for this template -->
+    <link href="{% static 'repair/css/dashboard.css' %}" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+
+        <div class="col-sm-9 col-sm-offset-1 col-md-10 col-md-offset-1 main" id="x_block">
+            {% load bootstrap3 %}
+
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title">Фильтр картриджей</h3>
+                  </div>
+                  <div class="panel-body">
+                    <form class="form" action="" method="get" autocomplete="off" id="filter_form">
+                        {% bootstrap_form filter.form bound_css_class='' form_group_class='form-group col-md-3'%}
+                        <div class="col-md-12">
+                          {% buttons %}
+                            <button type="submit" class="btn btn-primary">
+                              {% bootstrap_icon "search" %} Поиск
+                            </button>
+                          {% endbuttons %}
+                        </div>
+                    </form>
+                  </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <table class="table table-hover table-striped" id="table">
+                  <thead>
+                    <th>Серийный номер</th>
+                    <th>Модель</th>
+                    {% if not outsource %}
+                    <th>Клиент</th>
+                    <th>Размещение</th>
+                    {% endif %}
+                  </thead>
+                  <tfoot>
+                    <th><input type="text" placeholder="Search"/></th>
+                    <th><input type="text" placeholder="Search"/></th>
+                    {% if not outsource %}
+                    <th><input type="text" placeholder="Search"/></th>
+                    <th><input type="text" placeholder="Search"/></th>
+                    {% endif %}
+                  </tfoot>
+
+                  {% for cartridge in object_list %}
+                  <tr>
+                    <td>{{ cartridge.serial_number }}</td>
+                    <td>{{ cartridge.model }}</td>
+                      {%if not outsource %}
+                        <td>{{ cartridge.client.client_name }}</td>
+                        <td>{{ cartridge.client_position }}</td>
+                      {% endif %}
+                  </tr>
+                  {% endfor %}
+                </table>
+            </div>
+
+
+        </div>
+      </div>
+    </div>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{% static 'repair/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'repair/js/bootstrap.min.js' %}"></script>
+    {% block script_block %}
+        <link href="{% static 'repair/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+        <script type="text/javascript" src="{% static 'repair/js/jquery.dataTables.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'repair/js/tab_sort.js' %}"></script>
+    {% endblock %}
+  </body>
+</html>
