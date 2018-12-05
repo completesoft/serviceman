@@ -7,14 +7,15 @@ from .views import (OrderCreateView, MyOrderListView, OrderDetailView, ActionCre
                     MaintenanceActionCreateView, CartridgeOrderArchiveView, DocOrderHeaderListView, cartridge_add_spare,
                     cartridge_del_spare, cartridge_add_service, cartridge_del_service, MaintenanceMyOrderListView,
                     MaintenanceOrderArchiveView, maintenance_add_spare, maintenance_del_spare, maintenance_add_service,
-                    maintenance_del_service, qr_code_picture, qr_info_page, QrCartridgesList, invalid_auth_code)
+                    maintenance_del_service, qr_code_picture, qr_info_page, QrCartridgesList, invalid_auth_code,
+                    DashboardMainView)
 
 
 
 app_name = 'repair'
 
 urlpatterns = [
-    url(r'^$', DocOrderHeaderListView.as_view(), name="index"),
+    url(r'^docorder/$', DocOrderHeaderListView.as_view(), name="index"),
     url(r'^myord/$', MyOrderListView.as_view(), name="order_my"),
     url(r'^myord/order_add/$', OrderCreateView.as_view(), name="order_add"),
     url(r'^myord/(?P<order_id>\d+)/$', OrderDetailView.as_view(), name="order_detail"),
@@ -59,4 +60,5 @@ urlpatterns = [
     url(r'^qr-info/$', qr_info_page, name="qr_info_page"),
     url(r'^qr-cartridge-list/(?P<qruuid>[a-z\d]{32})/$', QrCartridgesList.as_view(), name="qr_cartridge_list"),
     url(r'invalid_code/$', invalid_auth_code, name='invalid_auth_code'),
+    url(r'^$', DashboardMainView.as_view(), name='dashboard'),
 ]

@@ -1585,4 +1585,34 @@ def invalid_auth_code(request, **kwargs):
     return render(request, 'repair/invalid_code.html')
 
 
+class DashboardMainView(ListView):
+    template_name = "repair/main.html"
+    model = DocOrderHeader
+    context_object_name = "orders"
 
+    def get_queryset(self):
+        user = self.request.user
+        ords = DocOrderHeader.objects.filter(docorderaction__manager_user=user).distinct()
+        orders = [docord for docord in ords if docord.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED]]
+        print('ORDERS', len(orders))
+        return orders
+
+    def get_context_data(self, **kwargs):
+        context = super(DashboardMainView, self).get_context_data(**kwargs)
+        user = self.request.user
+        main_ord = MaintenanceOrder.objects.filter(maintenanceaction__manager_user=user).distinct()
+        context['maintenance_orders'] = [m for m in main_ord if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED]]
+        cart_ord = CartridgeOrder.objects.filter(cartridgeaction__manager_user=user).distinct()
+        context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED]]
+        print('Main', len(context['maintenance_orders']))
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_active:
+            if request.user.groups.filter(name='outsource').exists():
+                return redirect('repair:index')
+            else:
+                return super(DashboardMainView, self).dispatch(request, *args, **kwargs)
+        else:
+            return redirect(LOGIN_URL)
