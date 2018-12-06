@@ -1609,7 +1609,7 @@ class DashboardMainView(ListView):
         if user.is_superuser:
             context['maintenance_orders'] = [m for m in MaintenanceOrder.objects.all() if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED]]
             context["cartridge_orders"] = [c for c in CartridgeOrder.objects.all() if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED]]
-        if user.groups.filter(name='outsource').exists():
+        elif user.groups.filter(name='outsource').exists():
             cart_ord = CartridgeOrder.objects.filter(Q(cartridgeaction__executor_user=user)|Q(cartridgeaction__setting_user=user)).distinct()
             context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().setting_user)]
             context["outsource"] = True
