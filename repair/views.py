@@ -1594,7 +1594,7 @@ class DashboardMainView(ListView):
         user = self.request.user
         if user.is_superuser:
             orders = [docord for docord in DocOrderHeader.objects.all() if docord.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED]]
-        if user.groups.filter(name='outsource').exists():
+        elif user.groups.filter(name='outsource').exists():
             ords = DocOrderHeader.objects.filter(Q(docorderaction__executor_user=user)|Q(docorderaction__setting_user=user)).distinct()
             orders = [c for c in ords if c.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED] and (
                                                        user == c.last_action().executor_user or user == c.last_action().setting_user)]
