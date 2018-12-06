@@ -1592,27 +1592,37 @@ class DashboardMainView(ListView):
 
     def get_queryset(self):
         user = self.request.user
-        ords = DocOrderHeader.objects.filter(docorderaction__manager_user=user).distinct()
-        orders = [docord for docord in ords if docord.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED]]
-        print('ORDERS', len(orders))
+        if user.is_superuser:
+            orders = [docord for docord in DocOrderHeader.objects.all() if docord.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED]]
+        if user.groups.filter(name='outsource').exists():
+            ords = DocOrderHeader.objects.filter(Q(docorderaction__executor_user=user)|Q(docorderaction__setting_user=user)).distinct()
+            orders = [c for c in ords if c.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED] and (
+                                                       user == c.last_action().executor_user or user == c.last_action().setting_user)]
+        else:
+            ords = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user) | Q(docorderaction__executor_user=user)).distinct()
+            orders = [c for c in ords if c.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().setting_user)]
         return orders
 
     def get_context_data(self, **kwargs):
         context = super(DashboardMainView, self).get_context_data(**kwargs)
         user = self.request.user
-        main_ord = MaintenanceOrder.objects.filter(maintenanceaction__manager_user=user).distinct()
-        context['maintenance_orders'] = [m for m in main_ord if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED]]
-        cart_ord = CartridgeOrder.objects.filter(cartridgeaction__manager_user=user).distinct()
-        context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED]]
-        print('Main', len(context['maintenance_orders']))
+        if user.is_superuser:
+            context['maintenance_orders'] = [m for m in MaintenanceOrder.objects.all() if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED]]
+            context["cartridge_orders"] = [c for c in CartridgeOrder.objects.all() if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED]]
+        if user.groups.filter(name='outsource').exists():
+            cart_ord = CartridgeOrder.objects.filter(Q(cartridgeaction__executor_user=user)|Q(cartridgeaction__setting_user=user)).distinct()
+            context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().setting_user)]
+            context["outsource"] = True
+        else:
+            main_ord = MaintenanceOrder.objects.filter(Q(maintenanceaction__manager_user=user)|Q(maintenanceaction__executor_user=user)).distinct()
+            cart_ord = CartridgeOrder.objects.filter(Q(cartridgeaction__manager_user=user)|Q(cartridgeaction__executor_user=user)).distinct()
+            context['maintenance_orders'] = [m for m in main_ord if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED] and (user == m.last_action().executor_user or user == m.last_action().setting_user)]
+            context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().setting_user)]
         return context
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_active:
-            if request.user.groups.filter(name='outsource').exists():
-                return redirect('repair:index')
-            else:
-                return super(DashboardMainView, self).dispatch(request, *args, **kwargs)
+            return super(DashboardMainView, self).dispatch(request, *args, **kwargs)
         else:
             return redirect(LOGIN_URL)
