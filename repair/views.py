@@ -1600,7 +1600,7 @@ class DashboardMainView(ListView):
                                                        user == c.last_action().executor_user or user == c.last_action().setting_user)]
         else:
             ords = DocOrderHeader.objects.filter(Q(docorderaction__manager_user=user) | Q(docorderaction__executor_user=user)).distinct()
-            orders = [c for c in ords if c.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().setting_user)]
+            orders = [c for c in ords if c.last_status().status_name in [DirStatus.NEW, DirStatus.IN_WORK, DirStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().manager_user)]
         return orders
 
     def get_context_data(self, **kwargs):
@@ -1616,8 +1616,8 @@ class DashboardMainView(ListView):
         else:
             main_ord = MaintenanceOrder.objects.filter(Q(maintenanceaction__manager_user=user)|Q(maintenanceaction__executor_user=user)).distinct()
             cart_ord = CartridgeOrder.objects.filter(Q(cartridgeaction__manager_user=user)|Q(cartridgeaction__executor_user=user)).distinct()
-            context['maintenance_orders'] = [m for m in main_ord if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED] and (user == m.last_action().executor_user or user == m.last_action().setting_user)]
-            context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().setting_user)]
+            context['maintenance_orders'] = [m for m in main_ord if m.last_status().status_name in [MaintenanceActionStatus.NEW, MaintenanceActionStatus.IN_WORK, MaintenanceActionStatus.COMPLETED] and (user == m.last_action().executor_user or user == m.last_action().manager_user)]
+            context["cartridge_orders"] = [c for c in cart_ord if c.last_status().status_name in [CartridgeActionStatus.NEW, CartridgeActionStatus.IN_WORK, CartridgeActionStatus.COMPLETED] and (user == c.last_action().executor_user or user == c.last_action().manager_user)]
         return context
 
     @method_decorator(login_required)
